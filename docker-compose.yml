@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  bot:
+    # 現在のディレクトリにあるDockerfileを使ってコンテナをビルド
+    build: .
+    # コンテナが停止した際に自動で再起動する設定
+    restart: unless-stopped
+    # ボットの設定を「環境変数」としてコンテナに渡す
+    environment:
+      # --- ▼▼▼ ここから下をあなたの環境に合わせて編集 ▼▼▼ ---
+
+      # サーバーのIPアドレス（同じPCなら'localhost', 'host.docker.internal'など）
+      - MC_HOST=large
+      # サーバーのポート番号
+      - MC_PORT=25565
+      # ボットに付けたい好きな名前
+      - MC_USERNAME=断頭台のアウラ
+      # オフラインモードなので 'offline' のまま
+      - MC_AUTH=offline
+      # 接続するサーバーのMinecraftバージョン
+      - MC_VERSION=1.20.1
+
+    networks:
+      - home-network
+
+networks:
+  home-network:
+    external: true
+    name: home-network

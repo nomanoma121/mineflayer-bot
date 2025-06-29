@@ -1,0 +1,23 @@
+{
+  "name": "mineflayer-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomanoma121/mineflayer-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nomanoma121/mineflayer-bot/issues"
+  },
+  "homepage": "https://github.com/nomanoma121/mineflayer-bot#readme",
+  "dependencies": {
+    "mineflayer": "^4.29.0",
+    "mineflayer-pathfinder": "^2.4.5"
+  }
+}
