@@ -15,7 +15,7 @@ services:
       # サーバーのポート番号
       - MC_PORT=25565
       # ボットに付けたい好きな名前
-      - MC_USERNAME=断頭台のアウラ
+      - MC_USERNAME=bot
       # オフラインモードなので 'offline' のまま
       - MC_AUTH=offline
       # 接続するサーバーのMinecraftバージョン
