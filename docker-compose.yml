@@ -15,51 +15,91 @@ services:
   bot00:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot00
 
   bot01:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot01
 
   bot02:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot02
 
   bot03:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot03
 
   bot04:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot04
 
   bot05:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot05
 
   bot06:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot06
 
   bot07:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot07
 
   bot08:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot08
 
   bot09:
     <<: *bot-template
     environment:
+      MC_HOST: 'bot-velocity'
+      MC_PORT: 25577
+      MC_AUTH: 'offline'
+      MC_VERSION: '1.20.1'
       MC_USERNAME: bot09
 
 networks:
