@@ -20,7 +20,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot00
-
+    networks:
+      - home-network
   bot01:
     <<: *bot-template
     environment:
@@ -29,6 +30,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot01
+    networks:
+      - home-network
 
   bot02:
     <<: *bot-template
@@ -38,6 +41,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot02
+    networks:
+      - home-network
 
   bot03:
     <<: *bot-template
@@ -47,6 +52,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot03
+    networks:
+      - home-network
 
   bot04:
     <<: *bot-template
@@ -56,6 +63,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot04
+    networks:
+      - home-network
 
   bot05:
     <<: *bot-template
@@ -65,6 +74,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot05
+    networks:
+      - home-network
 
   bot06:
     <<: *bot-template
@@ -74,6 +85,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot06
+    networks:
+      - home-network
 
   bot07:
     <<: *bot-template
@@ -83,6 +96,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot07
+    networks:
+      - home-network
 
   bot08:
     <<: *bot-template
@@ -92,6 +107,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot08
+    networks:
+      - home-network
 
   bot09:
     <<: *bot-template
@@ -101,6 +118,8 @@ services:
       MC_AUTH: 'offline'
       MC_VERSION: '1.20.1'
       MC_USERNAME: bot09
+    networks:
+      - home-network
 
 networks:
   home-network:
