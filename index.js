@@ -70,7 +70,7 @@ bot.on('chat', (username, message) => {
   if (!target) return;
 
   // ▼「ついてきて」コマンド
-if (message.trim() === "/come") {
+if (message.trim() === "come") {
   // --- ▼ ここからが変更点 ▼ ---
 
   // 1. ボット名から番号を取得 (例: 'bot05' -> 5)
@@ -90,7 +90,7 @@ if (message.trim() === "/come") {
 }
 
   // ▼「とまれ」コマンド
-  if (message.trim() === '/stop') {
+  if (message.trim() === 'stop') {
     bot.chat('その場で停止します。');
     // 目標を解除して移動を停止する
     bot.pathfinder.stop();
