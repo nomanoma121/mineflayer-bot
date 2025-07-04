@@ -70,17 +70,27 @@ bot.on('chat', (username, message) => {
   if (!target) return;
 
   // ▼「ついてきて」コマンド
-  if (message.trim() === 'ついてきて') {
-    bot.chat(`${username}さんを追いかけます！`);
-    
-    // 目標（ゴール）を「プレイヤーを1ブロックの距離で追従し続ける」に設定
-    // ※移動設定はspawn時に済んでいるのでここでは不要
-    const followGoal = new GoalFollow(target, 1);
-    bot.pathfinder.setGoal(followGoal, true); // trueにすると目標を追いかけ続ける
-  }
+if (message.trim() === "/come") {
+  // --- ▼ ここからが変更点 ▼ ---
+
+  // 1. ボット名から番号を取得 (例: 'bot05' -> 5)
+  const botNumber = parseInt(bot.username.replace('bot', ''), 10);
+  
+  // 2. ボット番号を元に追従距離を計算 (1 + 番号)
+  const followDistance = 1 + botNumber;
+
+  bot.chat(`${username}さんを ${followDistance}ブロック の距離で追いかけます！`);
+  
+  // 3. 計算した距離を使って目標を設定
+  const followGoal = new GoalFollow(target, followDistance);
+  
+  // --- ▲ ここまでが変更点 ▲ ---
+  
+  bot.pathfinder.setGoal(followGoal, true); // trueにすると目標を追いかけ続ける
+}
 
   // ▼「とまれ」コマンド
-  if (message.trim() === 'とまれ') {
+  if (message.trim() === '/stop') {
     bot.chat('その場で停止します。');
     // 目標を解除して移動を停止する
     bot.pathfinder.stop();
