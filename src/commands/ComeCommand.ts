@@ -15,13 +15,8 @@ export class ComeCommand implements ICommand {
    */
   public async execute(bot: Bot, username: string, args: string[]): Promise<void> {
     try {
-      // 引数の検証
-      if (args.length === 0) {
-        bot.sendMessage(`使用法: @${bot.getName()} come <プレイヤー名>`);
-        return;
-      }
-
-      const targetPlayerName = args[0];
+      // 引数の検証 - 指定がない場合はコマンド実行者をターゲットにする
+      const targetPlayerName = args.length > 0 ? args[0] : username;
       
       // ターゲットプレイヤーがオンラインかチェック
       const targetPlayer = bot.mc.players[targetPlayerName];
@@ -55,7 +50,7 @@ export class ComeCommand implements ICommand {
    * @returns コマンドの説明
    */
   public getDescription(): string {
-    return '指定されたプレイヤーを一定距離で追従します';
+    return '指定されたプレイヤーを一定距離で追従します（省略時はコマンド実行者）';
   }
 
   /**
@@ -63,6 +58,6 @@ export class ComeCommand implements ICommand {
    * @returns コマンドの使用法
    */
   public getUsage(): string {
-    return '@<botname> come <プレイヤー名>';
+    return '@<botname> come [プレイヤー名]';
   }
 }

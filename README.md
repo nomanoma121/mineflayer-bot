@@ -187,7 +187,7 @@ docker-compose up bot00
 
 | コマンド | 説明 | 使用例 |
 |---------|------|--------|
-| `@bot come <player>` | 指定プレイヤーを追従 | `@bot come player1` |
+| `@bot come [player]` | 指定プレイヤーを追従（省略時は自分） | `@bot come player1` または `@bot come` |
 | `@bot stop` | 現在の移動を停止 | `@bot stop` |
 | `@bot goto <x> <y> <z>` | 指定座標へ移動 | `@bot goto 100 64 -200` |
 | `@bot sethome` | 現在地を拠点として設定 | `@bot sethome` |
