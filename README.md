@@ -181,6 +181,46 @@ docker-compose up --build
 docker-compose up bot00
 ```
 
+## 🚀 実装されている機能
+
+### 移動・ナビゲーション機能
+
+| コマンド | 説明 | 使用例 |
+|---------|------|--------|
+| `@bot come <player>` | 指定プレイヤーを追従 | `@bot come player1` |
+| `@bot stop` | 現在の移動を停止 | `@bot stop` |
+| `@bot goto <x> <y> <z>` | 指定座標へ移動 | `@bot goto 100 64 -200` |
+| `@bot sethome` | 現在地を拠点として設定 | `@bot sethome` |
+| `@bot home` | 設定した拠点に帰還 | `@bot home` |
+
+### ワールド操作・作業機能
+
+| コマンド | 説明 | 使用例 |
+|---------|------|--------|
+| `@bot dig [x] [y] [z]` | ブロックを掘る | `@bot dig 100 64 -200` |
+| `@bot place <item> [x] [y] [z]` | ブロックを設置 | `@bot place stone` |
+| `@bot attack <target>` | 指定エンティティを攻撃 | `@bot attack zombie` |
+| `@bot kill <player>` | 指定プレイヤーを倒すまで攻撃 | `@bot kill player1` |
+| `@bot setrespawn` | 近くのベッドでリスポーン地点設定 | `@bot setrespawn` |
+
+### インベントリ・アイテム管理機能
+
+| コマンド | 説明 | 使用例 |
+|---------|------|--------|
+| `@bot inventory` | インベントリを表示 | `@bot inventory` |
+| `@bot give <player> <item> [count]` | アイテムを渡す | `@bot give player1 stone 10` |
+| `@bot drop <item> [count]` | アイテムを捨てる | `@bot drop stone 5` |
+| `@bot equip <item>` | アイテムを装備 | `@bot equip diamond_sword` |
+
+### 状態管理
+
+| 状態 | 説明 | 遷移条件 |
+|------|------|----------|
+| `IdleState` | 待機状態 | コマンド待ち、エラー発生時 |
+| `FollowingState` | 追従状態 | `come` コマンド実行時 |
+| `MovingState` | 移動状態 | `goto`, `home` コマンド実行時 |
+| `AttackingState` | 攻撃状態 | `attack`, `kill` コマンド実行時 |
+
 ## 📋 実装済みコマンド
 
 | コマンド | 使用法                           | 説明                         |
