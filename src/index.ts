@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { Bot, BotOptions } from "./core/Bot";
 import { CommandHandler } from "./core/CommandHandler";
 import { StopCommand } from "./commands/StopCommand";
+import { IdleCommand } from "./commands/IdleCommand";
 import { ComeCommand } from "./commands/ComeCommand";
 import { GotoCommand } from "./commands/GotoCommand";
 import { SetHomeCommand } from "./commands/SetHomeCommand";
@@ -45,6 +46,7 @@ async function main(): Promise<void> {
 
     // 基本コマンドを登録
     commandHandler.registerCommand("stop", new StopCommand());
+    commandHandler.registerCommand("idle", new IdleCommand());
     
     // 移動・ナビゲーション機能コマンドを登録
     commandHandler.registerCommand("come", new ComeCommand());
