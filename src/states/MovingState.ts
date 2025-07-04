@@ -8,6 +8,7 @@ import { Vec3 } from 'vec3';
  * 指定された座標まで障害物を避けながら移動する状態
  */
 export class MovingState implements IBotState {
+  private readonly bot: Bot;
   private targetPosition: Vec3;
   private isActive: boolean = false;
   private onComplete?: () => void;
@@ -15,10 +16,12 @@ export class MovingState implements IBotState {
   private checkInterval?: NodeJS.Timeout;
 
   constructor(
+    bot: Bot,
     targetPosition: Vec3, 
     onComplete?: () => void, 
     onError?: (error: Error) => void
   ) {
+    this.bot = bot;
     this.targetPosition = targetPosition;
     this.onComplete = onComplete;
     this.onError = onError;
@@ -26,22 +29,20 @@ export class MovingState implements IBotState {
 
   /**
    * 移動状態に入る際の処理
-   * @param bot - ボットインスタンス
    */
-  public enter(bot: Bot): void {
-    console.log(`[${bot.getName()}] Entering Moving State - Target: (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
+  public enter(): void {
+    console.log(`[${this.bot.getName()}] Entering Moving State - Target: (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
     this.isActive = true;
     
-    bot.sendMessage(`座標 (${Math.floor(this.targetPosition.x)}, ${Math.floor(this.targetPosition.y)}, ${Math.floor(this.targetPosition.z)}) への移動を開始します。`);
-    this.startMoving(bot);
+    this.bot.sendMessage(`座標 (${Math.floor(this.targetPosition.x)}, ${Math.floor(this.targetPosition.y)}, ${Math.floor(this.targetPosition.z)}) への移動を開始します。`);
+    this.startMoving();
   }
 
   /**
    * 移動状態から出る際の処理
-   * @param bot - ボットインスタンス
    */
-  public exit(bot: Bot): void {
-    console.log(`[${bot.getName()}] Exiting Moving State`);
+  public exit(): void {
+    console.log(`[${this.bot.getName()}] Exiting Moving State`);
     this.isActive = false;
     
     if (this.checkInterval) {
@@ -49,25 +50,24 @@ export class MovingState implements IBotState {
       this.checkInterval = undefined;
     }
     
-    if (bot.mc.pathfinder) {
-      bot.mc.pathfinder.stop();
+    if (this.bot.mc.pathfinder) {
+      this.bot.mc.pathfinder.stop();
     }
   }
 
   /**
    * 移動状態における定期実行処理
-   * @param bot - ボットインスタンス
    */
-  public execute(bot: Bot): void {
+  public execute(): void {
     if (!this.isActive) return;
 
     // 目標地点に到達したかチェック
-    const currentPos = bot.mc.entity.position;
+    const currentPos = this.bot.mc.entity.position;
     const distance = currentPos.distanceTo(this.targetPosition);
     
     if (distance < 2) {
-      console.log(`[${bot.getName()}] Reached target position`);
-      bot.sendMessage(`目標地点に到達しました。`);
+      console.log(`[${this.bot.getName()}] Reached target position`);
+      this.bot.sendMessage(`目標地点に到達しました。`);
       
       // 移動完了のコールバックを実行
       if (this.onComplete) {
@@ -75,16 +75,14 @@ export class MovingState implements IBotState {
       }
       
       // IdleStateに戻る
-      const { IdleState } = require('./IdleState');
-      bot.changeState(IdleState.getInstance());
+      this.bot.changeStateToIdle();
     }
   }
 
   /**
    * 移動を開始する
-   * @param bot - ボットインスタンス
    */
-  private startMoving(bot: Bot): void {
+  private startMoving(): void {
     try {
       const goal = new goals.GoalBlock(
         Math.floor(this.targetPosition.x),
@@ -92,7 +90,7 @@ export class MovingState implements IBotState {
         Math.floor(this.targetPosition.z)
       );
       
-      bot.mc.pathfinder.setGoal(goal);
+      this.bot.mc.pathfinder.setGoal(goal);
       
       // パスファインディング完了の監視
       const checkGoalReached = () => {
@@ -104,9 +102,9 @@ export class MovingState implements IBotState {
           return;
         }
         
-        const distance = bot.mc.entity.position.distanceTo(this.targetPosition);
+        const distance = this.bot.mc.entity.position.distanceTo(this.targetPosition);
         if (distance < 2) {
-          console.log(`[${bot.getName()}] Target reached`);
+          console.log(`[${this.bot.getName()}] Target reached`);
           this.isActive = false;
           if (this.checkInterval) {
             clearInterval(this.checkInterval);
@@ -116,18 +114,17 @@ export class MovingState implements IBotState {
             this.onComplete();
           }
           // IdleStateに戻る
-          const { IdleState } = require('./IdleState');
-          bot.changeState(IdleState.getInstance());
+          this.bot.changeStateToIdle();
         }
       };
       
       // 定期的に目標到達をチェック
       this.checkInterval = setInterval(checkGoalReached, 1000);
       
-      console.log(`[${bot.getName()}] Moving to (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
+      console.log(`[${this.bot.getName()}] Moving to (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
     } catch (error) {
-      console.error(`[${bot.getName()}] Error starting movement:`, error);
-      bot.sendMessage(`移動開始中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`[${this.bot.getName()}] Error starting movement:`, error);
+      this.bot.sendMessage(`移動開始中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
       
       if (this.onError) {
         this.onError(error instanceof Error ? error : new Error('Unknown movement error'));

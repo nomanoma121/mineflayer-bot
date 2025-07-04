@@ -82,7 +82,7 @@ export class AttackCommand implements ICommand {
       bot.sendMessage(`${targetDisplayName} を攻撃します！（距離: ${distance.toFixed(1)}）`);
       
       // 攻撃状態に変更
-      const attackingState = new AttackingState(target, () => {
+      const attackingState = new AttackingState(bot, target, () => {
         bot.sendMessage(`${targetDisplayName} への攻撃を終了しました。`);
       });
       

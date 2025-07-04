@@ -28,7 +28,7 @@ export class HomeCommand implements ICommand {
       bot.sendMessage(`拠点に帰還します: (${homePosition.x}, ${homePosition.y}, ${homePosition.z})`);
       
       // MovingStateを使用して移動処理を実行
-      const movingState = new MovingState(homePosition, () => {
+      const movingState = new MovingState(bot, homePosition, () => {
         bot.sendMessage('拠点に帰還しました！');
       });
       

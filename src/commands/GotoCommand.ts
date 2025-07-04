@@ -1,7 +1,7 @@
-import { ICommand } from './ICommand';
-import { Bot } from '../core/Bot';
-import { MovingState } from '../states/MovingState';
-import { Vec3 } from 'vec3';
+import { ICommand } from "./ICommand";
+import { Bot } from "../core/Bot";
+import { MovingState } from "../states/MovingState";
+import { Vec3 } from "vec3";
 
 /**
  * 座標指定移動コマンドクラス
@@ -14,7 +14,11 @@ export class GotoCommand implements ICommand {
    * @param username - コマンドを実行したプレイヤー名
    * @param args - コマンドの引数 [x, y, z]
    */
-  public async execute(bot: Bot, username: string, args: string[]): Promise<void> {
+  public async execute(
+    bot: Bot,
+    username: string,
+    args: string[]
+  ): Promise<void> {
     try {
       // 引数の検証
       if (args.length < 3) {
@@ -28,26 +32,33 @@ export class GotoCommand implements ICommand {
 
       // 数値の検証
       if (isNaN(x) || isNaN(y) || isNaN(z)) {
-        bot.sendMessage('座標は数値で指定してください。例: @bot01 goto 100 64 -200');
+        bot.sendMessage(
+          "座標は数値で指定してください。例: @bot01 goto 100 64 -200"
+        );
         return;
       }
 
       // Y座標の妥当性チェック（Minecraftの世界の範囲内）
       if (y < -64 || y > 320) {
-        bot.sendMessage('Y座標は-64から320の範囲で指定してください。');
+        bot.sendMessage("Y座標は-64から320の範囲で指定してください。");
         return;
       }
 
-      console.log(`[${bot.getName()}] Moving to coordinates: (${x}, ${y}, ${z})`);
-      
+      console.log(
+        `[${bot.getName()}] Moving to coordinates: (${x}, ${y}, ${z})`
+      );
+
       const targetPosition = new Vec3(x, y, z);
-      
+
       // MovingStateに遷移
       const movingState = new MovingState(
+        bot,
         targetPosition,
         () => {
           // 移動完了時のコールバック
-          console.log(`[${bot.getName()}] Successfully reached target position`);
+          console.log(
+            `[${bot.getName()}] Successfully reached target position`
+          );
         },
         (error) => {
           // エラー時のコールバック
@@ -55,12 +66,15 @@ export class GotoCommand implements ICommand {
           bot.sendMessage(`移動に失敗しました: ${error.message}`);
         }
       );
-      
+
       bot.changeState(movingState);
-      
     } catch (error) {
       console.error(`[${bot.getName()}] Error in goto command:`, error);
-      bot.sendMessage(`移動コマンドの実行中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      bot.sendMessage(
+        `移動コマンドの実行中にエラーが発生しました: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -69,7 +83,7 @@ export class GotoCommand implements ICommand {
    * @returns コマンド名
    */
   public getName(): string {
-    return 'goto';
+    return "goto";
   }
 
   /**
@@ -77,7 +91,7 @@ export class GotoCommand implements ICommand {
    * @returns コマンドの説明
    */
   public getDescription(): string {
-    return '指定された座標まで障害物を避けながら移動します';
+    return "指定された座標まで障害物を避けながら移動します";
   }
 
   /**
@@ -85,6 +99,6 @@ export class GotoCommand implements ICommand {
    * @returns コマンドの使用法
    */
   public getUsage(): string {
-    return '@<botname> goto <x> <y> <z>';
+    return "@<botname> goto <x> <y> <z>";
   }
 }
