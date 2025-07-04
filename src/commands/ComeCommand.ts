@@ -34,7 +34,7 @@ export class ComeCommand implements ICommand {
       bot.sendMessage(`${targetPlayerName}さんの追従を開始します。`);
       
       // FollowingStateに遷移
-      const followingState = new FollowingState(targetPlayerName, followDistance);
+      const followingState = new FollowingState(bot, targetPlayerName, followDistance);
       bot.changeState(followingState);
       
     } catch (error) {

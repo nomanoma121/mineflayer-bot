@@ -7,56 +7,84 @@ import { goals } from 'mineflayer-pathfinder';
  * 指定されたプレイヤーを一定距離で追従し続ける状態
  */
 export class FollowingState implements IBotState {
+  private readonly bot: Bot;
   private readonly targetPlayerName: string;
   private readonly distance: number;
+  private targetLostTime: number = 0;
+  private readonly maxTargetLostTime: number = 5000; // 5秒間見失ったら停止
 
-  constructor(targetPlayerName: string, distance: number = 2) {
+  constructor(bot: Bot, targetPlayerName: string, distance: number = 2) {
+    this.bot = bot;
     this.targetPlayerName = targetPlayerName;
     this.distance = distance;
   }
 
   /**
    * 追従状態に入る際の処理
-   * @param bot - ボットインスタンス
    */
-  public enter(bot: Bot): void {
-    console.log(`[${bot.getName()}] Entering Following State - Target: ${this.targetPlayerName}`);
+  public enter(): void {
+    console.log(`[${this.bot.getName()}] Entering Following State - Target: ${this.targetPlayerName}`);
     
-    const target = bot.mc.players[this.targetPlayerName]?.entity;
-    if (!target) {
-      bot.sendMessage(`ターゲット「${this.targetPlayerName}」が見つかりません。`);
-      bot.changeStateToIdle();
+    // プレイヤーがサーバーに存在するかチェック
+    if (!this.bot.mc.players[this.targetPlayerName]) {
+      this.bot.sendMessage(`プレイヤー「${this.targetPlayerName}」が見つかりません。`);
+      this.bot.changeStateToIdle();
       return;
     }
 
-    bot.sendMessage(`${this.targetPlayerName}さんの追従を開始します。`);
-    const goal = new goals.GoalFollow(target, this.distance);
-    bot.mc.pathfinder.setGoal(goal, true);
+    this.bot.sendMessage(`${this.targetPlayerName}さんの追従を開始します。`);
+    this.startFollowing();
   }
 
   /**
    * 追従状態から出る際の処理
-   * @param bot - ボットインスタンス
    */
-  public exit(bot: Bot): void {
-    console.log(`[${bot.getName()}] Exiting Following State`);
+  public exit(): void {
+    console.log(`[${this.bot.getName()}] Exiting Following State`);
     
     // 状態を抜ける時に、現在の移動目標をクリアする
-    if (bot.mc.pathfinder) {
-      bot.mc.pathfinder.stop();
+    if (this.bot.mc.pathfinder) {
+      this.bot.mc.pathfinder.stop();
     }
   }
 
   /**
    * 追従状態における定期実行処理
-   * @param bot - ボットインスタンス
    */
-  public execute(bot: Bot): void {
-    // ターゲットがサーバーからいなくなったら、追従を止めて待機状態に戻る
-    const target = bot.mc.players[this.targetPlayerName]?.entity;
+  public execute(): void {
+    // プレイヤーがサーバーから完全に退出したかチェック
+    if (!this.bot.mc.players[this.targetPlayerName]) {
+      this.bot.sendMessage(`${this.targetPlayerName}さんがサーバーから退出しました。追従を停止します。`);
+      this.bot.changeStateToIdle();
+      return;
+    }
+
+    // エンティティが一時的に見えない場合の処理
+    const target = this.bot.mc.players[this.targetPlayerName]?.entity;
     if (!target) {
-      bot.sendMessage(`${this.targetPlayerName}さんを見失いました。追従を停止します。`);
-      bot.changeStateToIdle();
+      this.targetLostTime += 100; // executeは100ms毎に呼ばれる
+      if (this.targetLostTime > this.maxTargetLostTime) {
+        this.bot.sendMessage(`${this.targetPlayerName}さんを長時間見失いました。追従を停止します。`);
+        this.bot.changeStateToIdle();
+      }
+      return;
+    }
+
+    // ターゲットが見つかった場合、タイマーをリセット
+    this.targetLostTime = 0;
+    
+    // 追従を継続
+    this.startFollowing();
+  }
+
+  /**
+   * 追従開始処理
+   */
+  private startFollowing(): void {
+    const target = this.bot.mc.players[this.targetPlayerName]?.entity;
+    if (target) {
+      const goal = new goals.GoalFollow(target, this.distance);
+      this.bot.mc.pathfinder.setGoal(goal, true);
     }
   }
 

@@ -75,7 +75,7 @@ async function main(): Promise<void> {
       console.log(
         `Bot ${options.username} spawned. Setting initial state to Idle.`
       );
-      bot.changeState(IdleState.getInstance());
+      bot.changeState(IdleState.getInstance(bot));
       bot.sendMessage("ボットが起動しました。コマンドをお待ちしています。");
     });
 

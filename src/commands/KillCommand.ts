@@ -82,36 +82,11 @@ export class KillCommand implements ICommand {
       bot.sendMessage(`${targetDisplayName} を倒します！（距離: ${distance.toFixed(1)}）`);
       
       // 攻撃状態に変更（倒すまで継続）
-      const attackingState = new AttackingState(target, () => {
+      const attackingState = new AttackingState(bot, target, () => {
         bot.sendMessage(`${targetDisplayName} を倒しました！`);
       });
       
       bot.changeState(attackingState);
-      
-      // ターゲットの死亡を監視
-      const checkTargetHealth = setInterval(() => {
-        if (!target || !target.isValid) {
-          clearInterval(checkTargetHealth);
-          bot.sendMessage(`${targetDisplayName} を倒しました！`);
-          return;
-        }
-        
-        // ターゲットが遠くに行った場合は追跡を停止
-        const currentDistance = bot.mc.entity.position.distanceTo(target.position);
-        if (currentDistance > 50) {
-          clearInterval(checkTargetHealth);
-          bot.sendMessage(`${targetDisplayName} を見失いました。追跡を停止します。`);
-          return;
-        }
-      }, 1000); // 1秒間隔でチェック
-      
-      // 30秒後にタイムアウト
-      setTimeout(() => {
-        clearInterval(checkTargetHealth);
-        if (target && target.isValid) {
-          bot.sendMessage(`${targetDisplayName} の討伐がタイムアウトしました。`);
-        }
-      }, 30000);
       
     } catch (error) {
       console.error(`[${bot.getName()}] Error in kill command:`, error);

@@ -34,7 +34,7 @@ export class StopCommand implements ICommand {
       // TODO: 将来的に追加される他のタスクの停止処理をここに追加
 
       // 待機状態に遷移
-      bot.changeState(IdleState.getInstance());
+      bot.changeStateToIdle();
 
       // 成功メッセージを送信
       bot.sendMessage(
@@ -47,7 +47,7 @@ export class StopCommand implements ICommand {
       );
 
       // エラーが発生してもIdleStateに遷移
-      bot.changeState(IdleState.getInstance());
+      bot.changeStateToIdle();
     }
   }
 

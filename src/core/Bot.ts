@@ -23,6 +23,7 @@ export class Bot {
   public readonly mc: MineflayerBot;
   private currentState: IBotState | null = null;
   private readonly options: BotOptions;
+  private mainLoopStarted: boolean = false;
 
   constructor(options: BotOptions) {
     this.options = options;
@@ -72,14 +73,19 @@ export class Bot {
       this.mc.pathfinder.setMovements(defaultMove);
       
       // 初期状態を「待機」に設定
-      this.changeState(IdleState.getInstance());
+      this.changeState(IdleState.getInstance(this));
+      console.log(`Bot ${this.options.username} spawned. Setting initial state to Idle.`);
       
-      // 0.1秒ごとに現在の状態のexecuteメソッドを実行するメインループを開始
-      setInterval(() => {
-        if (this.currentState) {
-          this.currentState.execute(this);
-        }
-      }, 100);
+      // メインループが既に開始されていない場合のみ開始
+      if (!this.mainLoopStarted) {
+        // 0.1秒ごとに現在の状態のexecuteメソッドを実行するメインループを開始
+        setInterval(() => {
+          if (this.currentState) {
+            this.currentState.execute();
+          }
+        }, 100);
+        this.mainLoopStarted = true;
+      }
     });
   }
 
@@ -101,13 +107,13 @@ export class Bot {
       // 現在の状態を終了
       if (this.currentState) {
         console.log(`Exiting state: ${this.currentState.getName()}`);
-        this.currentState.exit(this);
+        this.currentState.exit();
       }
 
       // 新しい状態に遷移
       this.currentState = newState;
       console.log(`Entering state: ${this.currentState.getName()}`);
-      this.currentState.enter(this);
+      this.currentState.enter();
     } catch (error) {
       console.error("Error during state transition:", error);
       this.sendMessage("状態の変更中にエラーが発生しました。");
@@ -118,7 +124,7 @@ export class Bot {
    * ボットを待機状態に遷移させるヘルパーメソッド
    */
   public changeStateToIdle(): void {
-    this.changeState(IdleState.getInstance());
+    this.changeState(IdleState.getInstance(this));
   }
 
   /**
@@ -178,7 +184,7 @@ export class Bot {
    */
   public update(): void {
     if (this.currentState) {
-      this.currentState.execute(this);
+      this.currentState.execute();
     }
   }
 }
