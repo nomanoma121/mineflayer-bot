@@ -1,7 +1,24 @@
+import { config } from "dotenv";
 import { Bot, BotOptions } from "./core/Bot";
 import { CommandHandler } from "./core/CommandHandler";
 import { StopCommand } from "./commands/StopCommand";
+import { ComeCommand } from "./commands/ComeCommand";
+import { GotoCommand } from "./commands/GotoCommand";
+import { SetHomeCommand } from "./commands/SetHomeCommand";
+import { HomeCommand } from "./commands/HomeCommand";
+import { InventoryCommand } from "./commands/InventoryCommand";
+import { DigCommand } from "./commands/DigCommand";
+import { PlaceCommand } from "./commands/PlaceCommand";
+import { AttackCommand } from "./commands/AttackCommand";
+import { KillCommand } from "./commands/KillCommand";
+import { SetRespawnCommand } from "./commands/SetRespawnCommand";
+import { GiveCommand } from "./commands/GiveCommand";
+import { DropCommand } from "./commands/DropCommand";
+import { EquipCommand } from "./commands/EquipCommand";
 import { IdleState } from "./states/IdleState";
+
+// .envファイルから環境変数を読み込み
+config();
 
 /**
  * アプリケーションのエントリーポイント
@@ -28,6 +45,25 @@ async function main(): Promise<void> {
 
     // 基本コマンドを登録
     commandHandler.registerCommand("stop", new StopCommand());
+    
+    // 移動・ナビゲーション機能コマンドを登録
+    commandHandler.registerCommand("come", new ComeCommand());
+    commandHandler.registerCommand("goto", new GotoCommand());
+    commandHandler.registerCommand("sethome", new SetHomeCommand());
+    commandHandler.registerCommand("home", new HomeCommand());
+    
+    // ワールド操作・作業機能コマンドを登録
+    commandHandler.registerCommand("dig", new DigCommand());
+    commandHandler.registerCommand("place", new PlaceCommand());
+    commandHandler.registerCommand("attack", new AttackCommand());
+    commandHandler.registerCommand("kill", new KillCommand());
+    commandHandler.registerCommand("setrespawn", new SetRespawnCommand());
+    
+    // インベントリ・アイテム管理機能コマンドを登録
+    commandHandler.registerCommand("inventory", new InventoryCommand());
+    commandHandler.registerCommand("give", new GiveCommand());
+    commandHandler.registerCommand("drop", new DropCommand());
+    commandHandler.registerCommand("equip", new EquipCommand());
 
     // チャットイベントリスナーを設定
     bot.mc.on("chat", async (username: string, message: string) => {
