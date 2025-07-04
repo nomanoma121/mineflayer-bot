@@ -70,6 +70,11 @@ export class Bot {
       // パスファインダーの設定
       const mcData = require('minecraft-data')(this.mc.version);
       const defaultMove = new Movements(this.mc);
+      
+      // 移動速度を向上させる設定
+      defaultMove.allowFreeMotion = true; // 自由な動きを許可
+      defaultMove.allowSprinting = true; // スプリント許可
+      
       this.mc.pathfinder.setMovements(defaultMove);
       
       // 初期状態を「待機」に設定

@@ -12,6 +12,7 @@ export class FollowingState implements IBotState {
   private readonly distance: number;
   private targetLostTime: number = 0;
   private readonly maxTargetLostTime: number = 5000; // 5秒間見失ったら停止
+  private isFollowingActive: boolean = false;
 
   constructor(bot: Bot, targetPlayerName: string, distance: number = 2) {
     this.bot = bot;
@@ -34,6 +35,7 @@ export class FollowingState implements IBotState {
 
     this.bot.sendMessage(`${this.targetPlayerName}さんの追従を開始します。`);
     this.startFollowing();
+    this.isFollowingActive = true;
   }
 
   /**
@@ -41,6 +43,7 @@ export class FollowingState implements IBotState {
    */
   public exit(): void {
     console.log(`[${this.bot.getName()}] Exiting Following State`);
+    this.isFollowingActive = false;
     
     // 状態を抜ける時に、現在の移動目標をクリアする
     if (this.bot.mc.pathfinder) {
@@ -52,6 +55,8 @@ export class FollowingState implements IBotState {
    * 追従状態における定期実行処理
    */
   public execute(): void {
+    if (!this.isFollowingActive) return;
+    
     // プレイヤーがサーバーから完全に退出したかチェック
     if (!this.bot.mc.players[this.targetPlayerName]) {
       this.bot.sendMessage(`${this.targetPlayerName}さんがサーバーから退出しました。追従を停止します。`);
@@ -73,8 +78,10 @@ export class FollowingState implements IBotState {
     // ターゲットが見つかった場合、タイマーをリセット
     this.targetLostTime = 0;
     
-    // 追従を継続
-    this.startFollowing();
+    // パスファインダーが動いていない場合のみ再設定
+    if (!this.bot.mc.pathfinder.isMoving()) {
+      this.startFollowing();
+    }
   }
 
   /**
