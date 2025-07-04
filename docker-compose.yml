@@ -1,28 +1,66 @@
-version: '3'
+# 繰り返し使う設定のテンプレート
+x-bot-template: &bot-template
+  build: .
+  restart: unless-stopped
+  environment:
+    # ▼▼▼ あなたの環境に合わせて書き換えてください ▼▼▼
+    MC_HOST: 'lobby'
+    MC_PORT: 25577
+    MC_AUTH: 'offline'
+    MC_VERSION: '1.20.1'
+    # ▲▲▲ ここまで ▲▲▲
 
+# 起動するサービス（ボット）を定義
 services:
-  bot:
-    # 現在のディレクトリにあるDockerfileを使ってコンテナをビルド
-    build: .
-    # コンテナが停止した際に自動で再起動する設定
-    restart: unless-stopped
-    # ボットの設定を「環境変数」としてコンテナに渡す
+  bot00:
+    <<: *bot-template
     environment:
-      # --- ▼▼▼ ここから下をあなたの環境に合わせて編集 ▼▼▼ ---
+      MC_USERNAME: bot00
 
-      # サーバーのIPアドレス（同じPCなら'localhost', 'host.docker.internal'など）
-      - MC_HOST=large
-      # サーバーのポート番号
-      - MC_PORT=25565
-      # ボットに付けたい好きな名前
-      - MC_USERNAME=bot
-      # オフラインモードなので 'offline' のまま
-      - MC_AUTH=offline
-      # 接続するサーバーのMinecraftバージョン
-      - MC_VERSION=1.20.1
+  bot01:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot01
 
-    networks:
-      - home-network
+  bot02:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot02
+
+  bot03:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot03
+
+  bot04:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot04
+
+  bot05:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot05
+
+  bot06:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot06
+
+  bot07:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot07
+
+  bot08:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot08
+
+  bot09:
+    <<: *bot-template
+    environment:
+      MC_USERNAME: bot09
 
 networks:
   home-network:
