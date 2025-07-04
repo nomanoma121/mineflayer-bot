@@ -12,6 +12,7 @@ export class MovingState implements IBotState {
   private isActive: boolean = false;
   private onComplete?: () => void;
   private onError?: (error: Error) => void;
+  private checkInterval?: NodeJS.Timeout;
 
   constructor(
     targetPosition: Vec3, 
@@ -42,6 +43,11 @@ export class MovingState implements IBotState {
   public exit(bot: Bot): void {
     console.log(`[${bot.getName()}] Exiting Moving State`);
     this.isActive = false;
+    
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = undefined;
+    }
     
     if (bot.mc.pathfinder) {
       bot.mc.pathfinder.stop();
@@ -88,32 +94,35 @@ export class MovingState implements IBotState {
       
       bot.mc.pathfinder.setGoal(goal);
       
-      // パスファインディングのイベントリスナーを設定
-      const onGoalReached = () => {
-        console.log(`[${bot.getName()}] Pathfinding goal reached`);
-        bot.mc.pathfinder.off('goal_reached', onGoalReached);
-        bot.mc.pathfinder.off('path_stop', onPathStop);
-      };
-      
-      const onPathStop = (reason: any) => {
-        console.log(`[${bot.getName()}] Pathfinding stopped: ${reason}`);
-        bot.mc.pathfinder.off('goal_reached', onGoalReached);
-        bot.mc.pathfinder.off('path_stop', onPathStop);
-        
-        if (reason !== 'goal_reached' && this.isActive) {
-          bot.sendMessage(`移動が中断されました: ${reason}`);
-          if (this.onError) {
-            this.onError(new Error(`Pathfinding stopped: ${reason}`));
+      // パスファインディング完了の監視
+      const checkGoalReached = () => {
+        if (!this.isActive) {
+          if (this.checkInterval) {
+            clearInterval(this.checkInterval);
+            this.checkInterval = undefined;
           }
-          
+          return;
+        }
+        
+        const distance = bot.mc.entity.position.distanceTo(this.targetPosition);
+        if (distance < 2) {
+          console.log(`[${bot.getName()}] Target reached`);
+          this.isActive = false;
+          if (this.checkInterval) {
+            clearInterval(this.checkInterval);
+            this.checkInterval = undefined;
+          }
+          if (this.onComplete) {
+            this.onComplete();
+          }
           // IdleStateに戻る
           const { IdleState } = require('./IdleState');
           bot.changeState(IdleState.getInstance());
         }
       };
       
-      bot.mc.pathfinder.on('goal_reached', onGoalReached);
-      bot.mc.pathfinder.on('path_stop', onPathStop);
+      // 定期的に目標到達をチェック
+      this.checkInterval = setInterval(checkGoalReached, 1000);
       
       console.log(`[${bot.getName()}] Moving to (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
     } catch (error) {

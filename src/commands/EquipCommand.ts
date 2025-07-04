@@ -69,7 +69,7 @@ export class EquipCommand implements ICommand {
    * @param item - 装備するアイテム
    * @returns 装備先スロット名 | null
    */
-  private getEquipmentSlot(item: any): string | null {
+  private getEquipmentSlot(item: any): 'hand' | 'head' | 'torso' | 'legs' | 'feet' | 'off-hand' | null {
     const itemName = item.name.toLowerCase();
     
     // 武器・ツール類

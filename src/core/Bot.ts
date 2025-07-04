@@ -66,8 +66,7 @@ export class Bot {
       console.log(`Bot ${this.options.username} spawned in the world.`);
 
       // パスファインダーの設定
-      const mcData = require("minecraft-data")(this.mc.version);
-      const defaultMove = new Movements(this.mc, mcData);
+      const defaultMove = new Movements(this.mc);
       this.mc.pathfinder.setMovements(defaultMove);
     });
   }
