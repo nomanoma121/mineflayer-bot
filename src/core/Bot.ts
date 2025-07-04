@@ -1,6 +1,7 @@
 import { Bot as MineflayerBot, createBot } from "mineflayer";
 import { pathfinder, Movements } from "mineflayer-pathfinder";
 import { IBotState } from "../states/IBotState";
+import { IdleState } from "../states/IdleState";
 
 /**
  * ボットの設定オプション
@@ -66,8 +67,19 @@ export class Bot {
       console.log(`Bot ${this.options.username} spawned in the world.`);
 
       // パスファインダーの設定
+      const mcData = require('minecraft-data')(this.mc.version);
       const defaultMove = new Movements(this.mc);
       this.mc.pathfinder.setMovements(defaultMove);
+      
+      // 初期状態を「待機」に設定
+      this.changeState(IdleState.getInstance());
+      
+      // 0.1秒ごとに現在の状態のexecuteメソッドを実行するメインループを開始
+      setInterval(() => {
+        if (this.currentState) {
+          this.currentState.execute(this);
+        }
+      }, 100);
     });
   }
 
@@ -100,6 +112,13 @@ export class Bot {
       console.error("Error during state transition:", error);
       this.sendMessage("状態の変更中にエラーが発生しました。");
     }
+  }
+
+  /**
+   * ボットを待機状態に遷移させるヘルパーメソッド
+   */
+  public changeStateToIdle(): void {
+    this.changeState(IdleState.getInstance());
   }
 
   /**
