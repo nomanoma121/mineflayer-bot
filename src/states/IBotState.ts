@@ -1,0 +1,31 @@
+import { Bot } from "../core/Bot";
+
+/**
+ * ボットの状態を表すインターフェース
+ * ステートパターンの実装により、ボットの動作を状態ごとに管理
+ */
+export interface IBotState {
+  /**
+   * 状態に入る際に呼ばれる初期化メソッド
+   * @param bot - ボットインスタンス
+   */
+  enter(bot: Bot): void;
+
+  /**
+   * 状態から出る際に呼ばれる終了処理メソッド
+   * @param bot - ボットインスタンス
+   */
+  exit(bot: Bot): void;
+
+  /**
+   * 状態における定期的な処理を実行するメソッド
+   * @param bot - ボットインスタンス
+   */
+  execute(bot: Bot): void;
+
+  /**
+   * 状態の名前を返すメソッド
+   * デバッグやログ出力に使用
+   */
+  getName(): string;
+}

@@ -4,10 +4,10 @@ x-bot-template: &bot-template
   restart: unless-stopped
   environment:
     # ▼▼▼ あなたの環境に合わせて書き換えてください ▼▼▼
-    MC_HOST: 'bot-velocity'
+    MC_HOST: "bot-velocity"
     MC_PORT: 25577
-    MC_AUTH: 'offline'
-    MC_VERSION: '1.20.1'
+    MC_AUTH: "offline"
+    MC_VERSION: "1.20.1"
     # ▲▲▲ ここまで ▲▲▲
 
 # 起動するサービス（ボット）を定義
@@ -15,20 +15,20 @@ services:
   bot00:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot00
     networks:
       - home-network
   bot01:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot01
     networks:
       - home-network
@@ -36,10 +36,10 @@ services:
   bot02:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot02
     networks:
       - home-network
@@ -47,10 +47,10 @@ services:
   bot03:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot03
     networks:
       - home-network
@@ -58,10 +58,10 @@ services:
   bot04:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot04
     networks:
       - home-network
@@ -69,10 +69,10 @@ services:
   bot05:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot05
     networks:
       - home-network
@@ -80,10 +80,10 @@ services:
   bot06:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot06
     networks:
       - home-network
@@ -91,10 +91,10 @@ services:
   bot07:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot07
     networks:
       - home-network
@@ -102,10 +102,10 @@ services:
   bot08:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot08
     networks:
       - home-network
@@ -113,10 +113,10 @@ services:
   bot09:
     <<: *bot-template
     environment:
-      MC_HOST: 'bot-velocity'
+      MC_HOST: "bot-velocity"
       MC_PORT: 25577
-      MC_AUTH: 'offline'
-      MC_VERSION: '1.20.1'
+      MC_AUTH: "offline"
+      MC_VERSION: "1.20.1"
       MC_USERNAME: bot09
     networks:
       - home-network
