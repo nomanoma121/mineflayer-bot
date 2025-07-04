@@ -4,7 +4,7 @@ x-bot-template: &bot-template
   restart: unless-stopped
   environment:
     # ▼▼▼ あなたの環境に合わせて書き換えてください ▼▼▼
-    MC_HOST: 'lobby'
+    MC_HOST: 'bot-velocity'
     MC_PORT: 25577
     MC_AUTH: 'offline'
     MC_VERSION: '1.20.1'
