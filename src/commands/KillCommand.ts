@@ -1,6 +1,8 @@
 import { ICommand } from './ICommand';
 import { Bot } from '../core/Bot';
 import { AttackingState } from '../states/AttackingState';
+import { EntityUtils } from '../utils/EntityUtils';
+import { CommandUtils } from '../utils/CommandUtils';
 
 /**
  * 殺害コマンドクラス
@@ -15,40 +17,16 @@ export class KillCommand implements ICommand {
    */
   public async execute(bot: Bot, username: string, args: string[]): Promise<void> {
     try {
-      console.log(`[${bot.getName()}] Kill command executed by ${username}`);
+      CommandUtils.logCommandExecution(bot, 'kill', username, args);
       
-      if (args.length === 0) {
-        bot.sendMessage('使用法: @botname kill <エンティティ名またはプレイヤー名>');
+      if (!CommandUtils.validateArgumentCount(args, 1, this.getUsage(), bot)) {
         return;
       }
       
       const targetName = args[0];
       
-      // 近くのエンティティを検索
-      const nearbyEntities = Object.values(bot.mc.entities).filter(entity => {
-        if (!entity || !entity.position) return false;
-        
-        // 距離チェック（30ブロック以内）
-        const distance = bot.mc.entity.position.distanceTo(entity.position);
-        if (distance > 30) return false;
-        
-        // 名前チェック
-        if (entity.name && entity.name.toLowerCase().includes(targetName.toLowerCase())) {
-          return true;
-        }
-        
-        // プレイヤー名チェック
-        if (entity.username && entity.username.toLowerCase().includes(targetName.toLowerCase())) {
-          return true;
-        }
-        
-        // エンティティタイプチェック
-        if (entity.type && entity.type.toLowerCase().includes(targetName.toLowerCase())) {
-          return true;
-        }
-        
-        return false;
-      });
+      // 近くのエンティティを検索（killコマンドは範囲を広めに設定）
+      const nearbyEntities = EntityUtils.findNearbyEntitiesByName(bot, targetName, 30);
       
       if (nearbyEntities.length === 0) {
         bot.sendMessage(`「${targetName}」というエンティティが見つかりません。`);
@@ -56,14 +34,7 @@ export class KillCommand implements ICommand {
       }
       
       // 最も近いエンティティを選択
-      const target = nearbyEntities.reduce((closest, current) => {
-        if (!closest) return current;
-        
-        const closestDistance = bot.mc.entity.position.distanceTo(closest.position);
-        const currentDistance = bot.mc.entity.position.distanceTo(current.position);
-        
-        return currentDistance < closestDistance ? current : closest;
-      });
+      const target = EntityUtils.findClosestEntity(bot, nearbyEntities);
       
       if (!target) {
         bot.sendMessage(`攻撃対象が見つかりません。`);
@@ -71,13 +42,13 @@ export class KillCommand implements ICommand {
       }
       
       // 自分自身を攻撃しようとしている場合は拒否
-      if (target.username === bot.getName()) {
+      if (!EntityUtils.canAttackTarget(bot, target)) {
         bot.sendMessage('自分自身を攻撃することはできません。');
         return;
       }
       
-      const distance = bot.mc.entity.position.distanceTo(target.position);
-      const targetDisplayName = target.name || target.username || target.type || 'unknown';
+      const distance = EntityUtils.getDistanceToEntity(bot, target);
+      const targetDisplayName = EntityUtils.getEntityDisplayName(target);
       
       bot.sendMessage(`${targetDisplayName} を倒します！（距離: ${distance.toFixed(1)}）`);
       
@@ -91,8 +62,7 @@ export class KillCommand implements ICommand {
       bot.changeState(attackingState);
       
     } catch (error) {
-      console.error(`[${bot.getName()}] Error in kill command:`, error);
-      bot.sendMessage(`殺害中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      CommandUtils.handleCommandError(bot, 'kill', error);
     }
   }
 

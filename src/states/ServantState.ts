@@ -3,6 +3,7 @@ import { Bot } from "../core/Bot";
 import { goals } from "mineflayer-pathfinder";
 import { Entity } from "prismarine-entity";
 import { AttackingState } from "./AttackingState";
+import { EntityUtils } from "../utils/EntityUtils";
 
 /**
  * サーバント状態クラス
@@ -225,43 +226,6 @@ export class ServantState implements IBotState {
    * エンティティが敵対モブかどうかを判定
    */
   private isHostileMob(entity: Entity): boolean {
-    if (!entity.type) {
-      return false;
-    }
-    
-    const hostileTypes = [
-      'zombie',
-      'skeleton',
-      'creeper',
-      'spider',
-      'enderman',
-      'witch',
-      'slime',
-      'magma_cube',
-      'blaze',
-      'ghast',
-      'wither_skeleton',
-      'husk',
-      'stray',
-      'phantom',
-      'drowned',
-      'pillager',
-      'vindicator',
-      'evoker',
-      'ravager',
-      'vex',
-      'silverfish',
-      'endermite',
-      'guardian',
-      'elder_guardian',
-      'shulker',
-      'hoglin',
-      'zoglin',
-      'piglin_brute',
-      'warden'
-    ];
-    
-    const entityType = entity.type.toLowerCase();
-    return hostileTypes.some(type => entityType.includes(type));
+    return EntityUtils.isHostileMob(entity);
   }
 }

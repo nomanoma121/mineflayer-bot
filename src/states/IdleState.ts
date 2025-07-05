@@ -7,7 +7,7 @@ import { Bot } from "../core/Bot";
  * ステートパターンの具体的な実装
  */
 export class IdleState implements IBotState {
-  private static instance: IdleState | null = null;
+  private static instances: Map<string, IdleState> = new Map();
   private readonly bot: Bot;
 
   private constructor(bot: Bot) {
@@ -20,10 +20,11 @@ export class IdleState implements IBotState {
    * @returns IdleStateのインスタンス
    */
   public static getInstance(bot: Bot): IdleState {
-    if (!IdleState.instance) {
-      IdleState.instance = new IdleState(bot);
+    const botName = bot.getName();
+    if (!IdleState.instances.has(botName)) {
+      IdleState.instances.set(botName, new IdleState(bot));
     }
-    return IdleState.instance;
+    return IdleState.instances.get(botName)!;
   }
 
   /**
