@@ -3,11 +3,13 @@ import { Bot } from "../core/Bot";
 import { goals } from "mineflayer-pathfinder";
 import { Entity } from "prismarine-entity";
 import { AttackingState } from "./AttackingState";
-import { EntityUtils } from "../utils/EntityUtils";
 
 /**
  * サーバント状態クラス
  * 指定されたマスターを追従し、脅威を検出してAttackingStateに委譲する
+ *
+ * 敵対Mob判定にはMineflayerのentity.kindプロパティを使用し、
+ * bot.mc.nearestEntity()を活用して効率的な索敵を行う
  */
 export class ServantState implements IBotState {
   private bot: Bot;
@@ -29,20 +31,26 @@ export class ServantState implements IBotState {
    * サーバント状態に入る際の初期化処理
    */
   public enter(): void {
-    console.log(`[${this.bot.getName()}] Entering Servant state. Master: ${this.masterName}`);
-    
+    console.log(
+      `[${this.bot.getName()}] Entering Servant state. Master: ${
+        this.masterName
+      }`
+    );
+
     // マスターの追従を開始
     this.startFollowingMaster();
-    
+
     // ダメージ監視用のイベントリスナーを登録
-    this.bot.mc.on('entityHurt', this.onEntityHurtBound);
-    
+    this.bot.mc.on("entityHurt", this.onEntityHurtBound);
+
     // 脅威チェック間隔を設定
     this.threatCheckInterval = setInterval(() => {
       this.checkForThreats();
     }, this.hostileCheckInterval);
-    
-    console.log(`[${this.bot.getName()}] Started following master: ${this.masterName}`);
+
+    console.log(
+      `[${this.bot.getName()}] Started following master: ${this.masterName}`
+    );
   }
 
   /**
@@ -50,24 +58,24 @@ export class ServantState implements IBotState {
    */
   public exit(): void {
     console.log(`[${this.bot.getName()}] Exiting Servant state`);
-    
+
     // 【最重要】entityHurtイベントリスナーを解除
-    this.bot.mc.removeListener('entityHurt', this.onEntityHurtBound);
-    
+    this.bot.mc.removeListener("entityHurt", this.onEntityHurtBound);
+
     // 脅威チェック間隔をクリア
     if (this.threatCheckInterval) {
       clearInterval(this.threatCheckInterval);
       this.threatCheckInterval = null;
     }
-    
+
     // pathfinderの移動を停止
     if (this.bot.mc.pathfinder) {
       this.bot.mc.pathfinder.stop();
     }
-    
+
     // 手動制御状態もクリア
-    this.bot.mc.setControlState('forward', false);
-    this.bot.mc.setControlState('sprint', false);
+    this.bot.mc.setControlState("forward", false);
+    this.bot.mc.setControlState("sprint", false);
   }
 
   /**
@@ -92,16 +100,24 @@ export class ServantState implements IBotState {
   private startFollowingMaster(): void {
     const master = this.bot.mc.players[this.masterName];
     if (master && master.entity) {
-      const distance = this.bot.mc.entity.position.distanceTo(master.entity.position);
-      console.log(`[${this.bot.getName()}] Starting to follow master ${this.masterName} at distance ${distance.toFixed(1)}`);
-      
+      const distance = this.bot.mc.entity.position.distanceTo(
+        master.entity.position
+      );
+      console.log(
+        `[${this.bot.getName()}] Starting to follow master ${
+          this.masterName
+        } at distance ${distance.toFixed(1)}`
+      );
+
       const goal = new goals.GoalFollow(master.entity, 2);
       this.bot.mc.pathfinder.setGoal(goal, true);
-      
+
       // pathfinderの状態を確認
       setTimeout(() => {
         const isMoving = this.bot.mc.pathfinder.isMoving();
-        console.log(`[${this.bot.getName()}] Pathfinder is moving: ${isMoving}`);
+        console.log(
+          `[${this.bot.getName()}] Pathfinder is moving: ${isMoving}`
+        );
       }, 100);
     }
   }
@@ -112,10 +128,12 @@ export class ServantState implements IBotState {
   private maintainFollowing(): void {
     const master = this.bot.mc.players[this.masterName];
     if (!master || !master.entity) {
-      console.log(`[${this.bot.getName()}] Master ${this.masterName} is not available`);
+      console.log(
+        `[${this.bot.getName()}] Master ${this.masterName} is not available`
+      );
       return;
     }
-    
+
     // pathfinderが動いていない場合は追従を再開
     if (!this.bot.mc.pathfinder.isMoving()) {
       this.startFollowingMaster();
@@ -127,16 +145,27 @@ export class ServantState implements IBotState {
    */
   private checkForThreats(): void {
     console.log(`[${this.bot.getName()}] Checking for threats...`);
-    
-    // 近くの敵対モブを検索
+
+    // 近くの敵対モブを検索（最適化されたnearestEntityを使用）
     const hostileMob = this.findNearestHostileMob();
     if (hostileMob) {
-      const distance = this.bot.mc.entity.position.distanceTo(hostileMob.position);
-      const mobName = hostileMob.name || hostileMob.type || 'unknown';
-      console.log(`[${this.bot.getName()}] Found hostile mob: ${mobName} at distance ${distance.toFixed(1)} blocks`);
-      
+      const distance = this.bot.mc.entity.position.distanceTo(
+        hostileMob.position
+      );
+      const mobName = hostileMob.name || hostileMob.type || "unknown";
+      const mobKind = hostileMob.kind || "unknown kind";
+      console.log(
+        `[${this.bot.getName()}] Found hostile mob: ${mobName} (${mobKind}) at distance ${distance.toFixed(
+          1
+        )} blocks`
+      );
+
       // AttackingStateに委譲
       this.delegateToAttackingState(hostileMob);
+    } else {
+      console.log(
+        `[${this.bot.getName()}] No threats detected in current scan`
+      );
     }
   }
 
@@ -150,8 +179,14 @@ export class ServantState implements IBotState {
     const isMasterHurt = entity.username === this.masterName;
 
     if (isBotHurt || isMasterHurt) {
-      console.log(`[${this.bot.getName()}] ${isBotHurt ? 'Bot' : 'Master'} was attacked by ${attacker.username || attacker.name || 'unknown entity'}`);
-      
+      console.log(
+        `[${this.bot.getName()}] ${
+          isBotHurt ? "Bot" : "Master"
+        } was attacked by ${
+          attacker.username || attacker.name || "unknown entity"
+        }`
+      );
+
       // 攻撃者をAttackingStateに委譲
       this.delegateToAttackingState(attacker);
     }
@@ -161,9 +196,12 @@ export class ServantState implements IBotState {
    * 戦闘をAttackingStateに委譲
    */
   private delegateToAttackingState(target: Entity): void {
-    const targetName = target.username || target.name || target.type || 'unknown entity';
-    console.log(`[${this.bot.getName()}] Delegating combat with ${targetName} to AttackingState`);
-    
+    const targetName =
+      target.username || target.name || target.type || "unknown entity";
+    console.log(
+      `[${this.bot.getName()}] Delegating combat with ${targetName} to AttackingState`
+    );
+
     // 現在の状態（this）を親状態として設定
     const attackingState = new AttackingState(this.bot, target, this);
     this.bot.changeState(attackingState);
@@ -174,42 +212,46 @@ export class ServantState implements IBotState {
    */
   private findNearestHostileMob(): Entity | null {
     // 夜間や危険度に応じて検出範囲を調整
-    const detectionRange = this.isNightTime() ? this.nightHuntingRange : this.hostileDetectionRange;
-    
-    console.log(`[${this.bot.getName()}] Searching for hostile mobs in range: ${detectionRange} blocks`);
-    
-    const allEntities = Object.values(this.bot.mc.entities);
-    console.log(`[${this.bot.getName()}] Total entities found: ${allEntities.length}`);
-    
-    const nearbyEntities = allEntities.filter(entity => {
-      if (!entity || !entity.position) return false;
-      
+    const detectionRange = this.isNightTime()
+      ? this.nightHuntingRange
+      : this.hostileDetectionRange;
+
+    console.log(
+      `[${this.bot.getName()}] Searching for hostile mobs in range: ${detectionRange} blocks`
+    );
+
+    // nearestEntityを使用して最適化された検索
+    const hostileMob = this.bot.mc.nearestEntity((entity) => {
+      if (!entity || !entity.position || !entity.isValid) return false;
+
       // 距離チェック
       const distance = this.bot.mc.entity.position.distanceTo(entity.position);
       if (distance > detectionRange) return false;
-      
+
       // 敵対モブかどうかチェック
       const isHostile = this.isHostileMob(entity);
       if (isHostile) {
-        console.log(`[${this.bot.getName()}] Found hostile entity: ${entity.type} at distance ${distance.toFixed(1)}`);
+        console.log(
+          `[${this.bot.getName()}] Found hostile entity: ${
+            entity.type || entity.name
+          } at distance ${distance.toFixed(1)}`
+        );
       }
-      
+
       return isHostile;
     });
-    
-    console.log(`[${this.bot.getName()}] Hostile entities found: ${nearbyEntities.length}`);
-    
-    if (nearbyEntities.length === 0) return null;
-    
-    // 最も近いモブを選択
-    return nearbyEntities.reduce((closest, current) => {
-      if (!closest) return current;
-      
-      const closestDistance = this.bot.mc.entity.position.distanceTo(closest.position);
-      const currentDistance = this.bot.mc.entity.position.distanceTo(current.position);
-      
-      return currentDistance < closestDistance ? current : closest;
-    });
+
+    if (hostileMob) {
+      console.log(
+        `[${this.bot.getName()}] Selected hostile mob: ${
+          hostileMob.type || hostileMob.name
+        }`
+      );
+    } else {
+      console.log(`[${this.bot.getName()}] No hostile mobs found in range`);
+    }
+
+    return hostileMob || null;
   }
 
   /**
@@ -218,14 +260,15 @@ export class ServantState implements IBotState {
   private isNightTime(): boolean {
     const timeOfDay = this.bot.mc.time.timeOfDay;
     const isNight = timeOfDay >= 13000 && timeOfDay <= 23000;
-    
+
     return isNight;
   }
 
   /**
    * エンティティが敵対モブかどうかを判定
+   * Mineflayerのkindプロパティを使用してシンプルかつ確実に判定
    */
   private isHostileMob(entity: Entity): boolean {
-    return EntityUtils.isHostileMob(entity);
+    return entity.kind === "Hostile mobs";
   }
 }
