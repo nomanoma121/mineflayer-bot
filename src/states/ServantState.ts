@@ -20,7 +20,7 @@ export class ServantState implements IBotState {
   private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
   private readonly hostileDetectionRange: number = 10; // 敵対モブ検出範囲（ブロック数）
   private lastHostileCheck: number = 0;
-  private readonly hostileCheckInterval: number = 2000; // 2秒間隔で敵対モブをチェック（負荷軽減）
+  private readonly hostileCheckInterval: number = 1000; // 1秒間隔で敵対モブをチェック（負荷軽減）
   private readonly nightHuntingRange: number = 15; // 夜間の狩猟範囲（より広範囲）
 
   constructor(bot: Bot, masterName: string) {
