@@ -20,7 +20,7 @@ export class ServantState implements IBotState {
   private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
   private readonly hostileDetectionRange: number = 10; // 敵対モブ検出範囲（ブロック数）
   private lastHostileCheck: number = 0;
-  private readonly hostileCheckInterval: number = 1000; // 1秒間隔で敵対モブをチェック（負荷軽減）
+  private readonly hostileCheckInterval: number = 500; // 0.5秒間隔で敵対モブをチェック（デバッグ用に頻繁に）
   private readonly nightHuntingRange: number = 15; // 夜間の狩猟範囲（より広範囲）
 
   constructor(bot: Bot, masterName: string) {
@@ -308,12 +308,18 @@ export class ServantState implements IBotState {
    * 敵対モブをチェックして攻撃対象を決定
    */
   private checkForHostileMobs(): void {
+    // 既に戦闘中の場合はスキップ
+    if (this.isEngaging) return;
+    
     const now = Date.now();
     if (now - this.lastHostileCheck < this.hostileCheckInterval) {
       return; // チェック間隔内
     }
     
     this.lastHostileCheck = now;
+    
+    // デバッグ: 敵対モブチェック開始をログに出力
+    console.log(`[${this.bot.getName()}] Checking for hostile mobs...`);
     
     // 近くの敵対モブを検索
     const hostileMob = this.findNearestHostileMob();
@@ -328,6 +334,8 @@ export class ServantState implements IBotState {
       }
       
       this.startEngaging(hostileMob);
+    } else {
+      console.log(`[${this.bot.getName()}] No hostile mobs found in range`);
     }
   }
 
@@ -338,16 +346,31 @@ export class ServantState implements IBotState {
     // 夜間や危険度に応じて検出範囲を調整
     const detectionRange = this.isNightTime() ? this.nightHuntingRange : this.hostileDetectionRange;
     
-    const nearbyEntities = Object.values(this.bot.mc.entities).filter(entity => {
+    console.log(`[${this.bot.getName()}] Searching for hostile mobs in range: ${detectionRange} blocks`);
+    
+    const allEntities = Object.values(this.bot.mc.entities);
+    console.log(`[${this.bot.getName()}] Total entities found: ${allEntities.length}`);
+    
+    const nearbyEntities = allEntities.filter(entity => {
       if (!entity || !entity.position) return false;
       
       // 距離チェック
       const distance = this.bot.mc.entity.position.distanceTo(entity.position);
       if (distance > detectionRange) return false;
       
+      // デバッグ: 範囲内のエンティティをログに出力
+      console.log(`[${this.bot.getName()}] Entity in range: ${entity.type || 'unknown'} at distance ${distance.toFixed(1)}`);
+      
       // 敵対モブかどうかチェック
-      return this.isHostileMob(entity);
+      const isHostile = this.isHostileMob(entity);
+      if (isHostile) {
+        console.log(`[${this.bot.getName()}] Found hostile entity: ${entity.type}`);
+      }
+      
+      return isHostile;
     });
+    
+    console.log(`[${this.bot.getName()}] Hostile entities found: ${nearbyEntities.length}`);
     
     if (nearbyEntities.length === 0) return null;
     
@@ -367,15 +390,22 @@ export class ServantState implements IBotState {
    */
   private isNightTime(): boolean {
     const timeOfDay = this.bot.mc.time.timeOfDay;
-    // Minecraftの時間で夜間は13000-23000
-    return timeOfDay >= 13000 && timeOfDay <= 23000;
+    const isNight = timeOfDay >= 13000 && timeOfDay <= 23000;
+    
+    // デバッグ: 時間情報をログに出力
+    console.log(`[${this.bot.getName()}] Current time: ${timeOfDay}, Is night: ${isNight}`);
+    
+    return isNight;
   }
 
   /**
    * エンティティが敵対モブかどうかを判定
    */
   private isHostileMob(entity: Entity): boolean {
-    if (!entity.type) return false;
+    if (!entity.type) {
+      console.log(`[${this.bot.getName()}] Entity has no type property`);
+      return false;
+    }
     
     const hostileTypes = [
       'zombie',
@@ -410,6 +440,12 @@ export class ServantState implements IBotState {
     ];
     
     const entityType = entity.type.toLowerCase();
-    return hostileTypes.some(type => entityType.includes(type));
+    const isHostile = hostileTypes.some(type => entityType.includes(type));
+    
+    if (isHostile) {
+      console.log(`[${this.bot.getName()}] Detected hostile mob: ${entityType}`);
+    }
+    
+    return isHostile;
   }
 }
