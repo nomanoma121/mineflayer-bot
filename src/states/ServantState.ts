@@ -6,6 +6,7 @@ import { Entity } from "prismarine-entity";
 /**
  * サーバント状態クラス
  * 指定されたマスターを追従し、マスターまたはボット自身が攻撃された場合に自動で反撃する
+ * また、近くにいる敵対モブを自動で攻撃する
  */
 export class ServantState implements IBotState {
   private bot: Bot;
@@ -17,6 +18,10 @@ export class ServantState implements IBotState {
   private readonly positionUpdateThreshold: number = 3; // 3ブロック以上移動したら目標を更新
   private lastAttackTime: number = 0;
   private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
+  private readonly hostileDetectionRange: number = 10; // 敵対モブ検出範囲（ブロック数）
+  private lastHostileCheck: number = 0;
+  private readonly hostileCheckInterval: number = 1000; // 1秒間隔で敵対モブをチェック
+  private readonly nightHuntingRange: number = 15; // 夜間の狩猟範囲（より広範囲）
 
   constructor(bot: Bot, masterName: string) {
     this.bot = bot;
@@ -111,6 +116,9 @@ export class ServantState implements IBotState {
   private maintainFollowing(): void {
     if (this.isEngaging) return;
     
+    // 定期的に敵対モブをチェック
+    this.checkForHostileMobs();
+    
     const master = this.bot.mc.players[this.masterName];
     if (master && master.entity) {
       const distance = this.bot.mc.entity.position.distanceTo(master.entity.position);
@@ -146,7 +154,8 @@ export class ServantState implements IBotState {
     this.isEngaging = true;
     this.currentTarget = target;
     
-    console.log(`[${this.bot.getName()}] Starting combat with ${target.username || target.name || 'unknown entity'}`);
+    const targetName = target.username || target.name || target.type || 'unknown entity';
+    console.log(`[${this.bot.getName()}] Starting combat with ${targetName}`);
     
     // 初期ターゲット位置を記録
     this.updateLastTargetPosition();
@@ -283,5 +292,114 @@ export class ServantState implements IBotState {
         }
       }
     }
+  }
+
+  /**
+   * 敵対モブをチェックして攻撃対象を決定
+   */
+  private checkForHostileMobs(): void {
+    const now = Date.now();
+    if (now - this.lastHostileCheck < this.hostileCheckInterval) {
+      return; // チェック間隔内
+    }
+    
+    this.lastHostileCheck = now;
+    
+    // 近くの敵対モブを検索
+    const hostileMob = this.findNearestHostileMob();
+    if (hostileMob) {
+      const distance = this.bot.mc.entity.position.distanceTo(hostileMob.position);
+      const mobName = hostileMob.name || hostileMob.type || 'unknown';
+      console.log(`[${this.bot.getName()}] Found hostile mob: ${mobName} at distance ${distance.toFixed(1)} blocks`);
+      
+      // 夜間の場合は特別にログを出力
+      if (this.isNightTime()) {
+        console.log(`[${this.bot.getName()}] Night hunting mode: Engaging hostile mob`);
+      }
+      
+      this.startEngaging(hostileMob);
+    }
+  }
+
+  /**
+   * 最も近い敵対モブを見つける
+   */
+  private findNearestHostileMob(): Entity | null {
+    // 夜間や危険度に応じて検出範囲を調整
+    const detectionRange = this.isNightTime() ? this.nightHuntingRange : this.hostileDetectionRange;
+    
+    const nearbyEntities = Object.values(this.bot.mc.entities).filter(entity => {
+      if (!entity || !entity.position) return false;
+      
+      // 距離チェック
+      const distance = this.bot.mc.entity.position.distanceTo(entity.position);
+      if (distance > detectionRange) return false;
+      
+      // 敵対モブかどうかチェック
+      return this.isHostileMob(entity);
+    });
+    
+    if (nearbyEntities.length === 0) return null;
+    
+    // 最も近いモブを選択
+    return nearbyEntities.reduce((closest, current) => {
+      if (!closest) return current;
+      
+      const closestDistance = this.bot.mc.entity.position.distanceTo(closest.position);
+      const currentDistance = this.bot.mc.entity.position.distanceTo(current.position);
+      
+      return currentDistance < closestDistance ? current : closest;
+    });
+  }
+
+  /**
+   * 夜間かどうかを判定
+   */
+  private isNightTime(): boolean {
+    const timeOfDay = this.bot.mc.time.timeOfDay;
+    // Minecraftの時間で夜間は13000-23000
+    return timeOfDay >= 13000 && timeOfDay <= 23000;
+  }
+
+  /**
+   * エンティティが敵対モブかどうかを判定
+   */
+  private isHostileMob(entity: Entity): boolean {
+    if (!entity.type) return false;
+    
+    const hostileTypes = [
+      'zombie',
+      'skeleton',
+      'creeper',
+      'spider',
+      'enderman',
+      'witch',
+      'slime',
+      'magma_cube',
+      'blaze',
+      'ghast',
+      'wither_skeleton',
+      'husk',
+      'stray',
+      'phantom',
+      'drowned',
+      'pillager',
+      'vindicator',
+      'evoker',
+      'ravager',
+      'vex',
+      'silverfish',
+      'endermite',
+      'guardian',
+      'elder_guardian',
+      'shulker',
+      'hoglin',
+      'zoglin',
+      'piglin_brute',
+      'warden'
+    ];
+    
+    const entityType = entity.type.toLowerCase();
+    return hostileTypes.some(type => entityType.includes(type));
   }
 }
