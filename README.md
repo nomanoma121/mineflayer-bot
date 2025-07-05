@@ -188,6 +188,7 @@ docker-compose up bot00
 | コマンド                | 説明                                 | 使用例                                 |
 | ----------------------- | ------------------------------------ | -------------------------------------- |
 | `@bot come [player]`    | 指定プレイヤーを追従（省略時は自分） | `@bot come player1` または `@bot come` |
+| `@bot servant [player]` | 指定プレイヤーのサーバントとなり護衛 | `@bot servant player1` または `@bot servant` |
 | `@bot stop`             | 現在の移動を停止                     | `@bot stop`                            |
 | `@bot idle`             | 待機状態に移行                       | `@bot idle`                            |
 | `@bot goto <x> <y> <z>` | 指定座標へ移動                       | `@bot goto 100 64 -200`                |
@@ -224,12 +225,13 @@ docker-compose up bot00
 
 ### 状態管理
 
-| 状態             | 説明     | 遷移条件                        |
-| ---------------- | -------- | ------------------------------- |
-| `IdleState`      | 待機状態 | コマンド待ち、エラー発生時      |
-| `FollowingState` | 追従状態 | `come` コマンド実行時           |
-| `MovingState`    | 移動状態 | `goto`, `home` コマンド実行時   |
-| `AttackingState` | 攻撃状態 | `attack`, `kill` コマンド実行時 |
+| 状態             | 説明                               | 遷移条件                        |
+| ---------------- | ---------------------------------- | ------------------------------- |
+| `IdleState`      | 待機状態                           | コマンド待ち、エラー発生時      |
+| `FollowingState` | 追従状態                           | `come` コマンド実行時           |
+| `ServantState`   | サーバント状態（追従+護衛）        | `servant` コマンド実行時        |
+| `MovingState`    | 移動状態                           | `goto`, `home` コマンド実行時   |
+| `AttackingState` | 攻撃状態                           | `attack`, `kill` コマンド実行時 |
 
 ## 📋 実装済みコマンド
 
@@ -237,6 +239,7 @@ docker-compose up bot00
 | -------- | -------------------------------------------------- | ---------------------------- |
 | stop     | `@bot01 stop` または `@all stop`                   | 全ての行動を停止し待機状態に |
 | idle     | `@bot01 idle` または `@all idle`                   | 強制的に待機状態に移行       |
+| servant  | `@bot01 servant [player]` または `@all servant`    | 指定プレイヤーのサーバントに |
 
 ## 🎮 使用方法
 

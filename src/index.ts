@@ -16,6 +16,7 @@ import { SetRespawnCommand } from "./commands/SetRespawnCommand";
 import { GiveCommand } from "./commands/GiveCommand";
 import { DropCommand } from "./commands/DropCommand";
 import { EquipCommand } from "./commands/EquipCommand";
+import { ServantCommand } from "./commands/ServantCommand";
 import { IdleState } from "./states/IdleState";
 
 // .envファイルから環境変数を読み込み
@@ -47,6 +48,7 @@ async function main(): Promise<void> {
     // 基本コマンドを登録
     commandHandler.registerCommand("stop", new StopCommand());
     commandHandler.registerCommand("idle", new IdleCommand());
+    commandHandler.registerCommand("servant", new ServantCommand());
     
     // 移動・ナビゲーション機能コマンドを登録
     commandHandler.registerCommand("come", new ComeCommand());
