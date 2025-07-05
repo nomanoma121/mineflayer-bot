@@ -20,7 +20,7 @@ export class ServantState implements IBotState {
   private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
   private readonly hostileDetectionRange: number = 10; // 敵対モブ検出範囲（ブロック数）
   private lastHostileCheck: number = 0;
-  private readonly hostileCheckInterval: number = 1000; // 1秒間隔で敵対モブをチェック
+  private readonly hostileCheckInterval: number = 2000; // 2秒間隔で敵対モブをチェック（負荷軽減）
   private readonly nightHuntingRange: number = 15; // 夜間の狩猟範囲（より広範囲）
 
   constructor(bot: Bot, masterName: string) {
@@ -105,8 +105,17 @@ export class ServantState implements IBotState {
   private startFollowingMaster(): void {
     const master = this.bot.mc.players[this.masterName];
     if (master && master.entity) {
+      const distance = this.bot.mc.entity.position.distanceTo(master.entity.position);
+      console.log(`[${this.bot.getName()}] Starting to follow master ${this.masterName} at distance ${distance.toFixed(1)}`);
+      
       const goal = new goals.GoalFollow(master.entity, 2);
       this.bot.mc.pathfinder.setGoal(goal, true);
+      
+      // pathfinderの状態を確認
+      setTimeout(() => {
+        const isMoving = this.bot.mc.pathfinder.isMoving();
+        console.log(`[${this.bot.getName()}] Pathfinder is moving: ${isMoving}`);
+      }, 100);
     }
   }
 
@@ -116,18 +125,19 @@ export class ServantState implements IBotState {
   private maintainFollowing(): void {
     if (this.isEngaging) return;
     
-    // 定期的に敵対モブをチェック
-    this.checkForHostileMobs();
-    
     const master = this.bot.mc.players[this.masterName];
-    if (master && master.entity) {
-      const distance = this.bot.mc.entity.position.distanceTo(master.entity.position);
-      
-      // マスターが遠くにいる場合、追従を再開
-      if (distance > 5) {
-        this.startFollowingMaster();
-      }
+    if (!master || !master.entity) {
+      console.log(`[${this.bot.getName()}] Master ${this.masterName} is not available`);
+      return;
     }
+    
+    // pathfinderが動いていない場合は追従を再開（FollowingStateと同じロジック）
+    if (!this.bot.mc.pathfinder.isMoving()) {
+      this.startFollowingMaster();
+    }
+    
+    // 敵対モブチェックは別途実行（追従の邪魔をしないように）
+    this.checkForHostileMobs();
   }
 
   /**
