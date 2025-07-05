@@ -17,6 +17,11 @@ import { GiveCommand } from "./commands/GiveCommand";
 import { DropCommand } from "./commands/DropCommand";
 import { EquipCommand } from "./commands/EquipCommand";
 import { ServantCommand } from "./commands/ServantCommand";
+import { WanderCommand } from "./commands/WanderCommand";
+import { LumberjackCommand } from "./commands/LumberjackCommand";
+import { ExplorerCommand } from "./commands/ExplorerCommand";
+import { FarmerCommand } from "./commands/FarmerCommand";
+import { MinerCommand } from "./commands/MinerCommand";
 import { IdleState } from "./states/IdleState";
 
 // .envファイルから環境変数を読み込み
@@ -55,6 +60,13 @@ async function main(): Promise<void> {
     commandHandler.registerCommand("goto", new GotoCommand());
     commandHandler.registerCommand("sethome", new SetHomeCommand());
     commandHandler.registerCommand("home", new HomeCommand());
+    
+    // 新しい高度なモードコマンドを登録
+    commandHandler.registerCommand("wander", new WanderCommand());
+    commandHandler.registerCommand("lumberjack", new LumberjackCommand());
+    commandHandler.registerCommand("explorer", new ExplorerCommand());
+    commandHandler.registerCommand("farmer", new FarmerCommand());
+    commandHandler.registerCommand("miner", new MinerCommand());
     
     // ワールド操作・作業機能コマンドを登録
     commandHandler.registerCommand("dig", new DigCommand());
