@@ -16,10 +16,12 @@ export class AttackingState implements IBotState {
   private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
   private lastTargetPosition: { x: number; y: number; z: number } | null = null;
   private readonly positionUpdateThreshold: number = 3; // 3ブロック以上移動したら目標を更新
+  private parentState: IBotState | null = null;
 
-  constructor(bot: Bot, target: Entity, onComplete?: () => void) {
+  constructor(bot: Bot, target: Entity, parentState?: IBotState, onComplete?: () => void) {
     this.bot = bot;
     this.target = target;
+    this.parentState = parentState || null;
     this.onComplete = onComplete;
   }
 
@@ -40,13 +42,19 @@ export class AttackingState implements IBotState {
    * 攻撃状態実行中の処理
    */
   public execute(): void {
-    // ターゲットが存在しない場合はアイドル状態に戻る
+    // ターゲットが存在しない場合は適切な状態に戻る
     if (!this.target || !this.target.isValid) {
       this.stopAttacking();
       if (this.onComplete) {
         this.onComplete();
       }
-      this.bot.changeStateToIdle();
+      
+      // 親状態が設定されている場合は親状態に戻る、そうでなければIdleStateに戻る
+      if (this.parentState) {
+        this.bot.changeState(this.parentState);
+      } else {
+        this.bot.changeStateToIdle();
+      }
       return;
     }
 

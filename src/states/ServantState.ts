@@ -2,25 +2,19 @@ import { IBotState } from "./IBotState";
 import { Bot } from "../core/Bot";
 import { goals } from "mineflayer-pathfinder";
 import { Entity } from "prismarine-entity";
+import { AttackingState } from "./AttackingState";
 
 /**
  * サーバント状態クラス
- * 指定されたマスターを追従し、マスターまたはボット自身が攻撃された場合に自動で反撃する
- * また、近くにいる敵対モブを自動で攻撃する
+ * 指定されたマスターを追従し、脅威を検出してAttackingStateに委譲する
  */
 export class ServantState implements IBotState {
   private bot: Bot;
   private masterName: string;
-  private isEngaging: boolean = false;
-  private currentTarget: Entity | null = null;
   private onEntityHurtBound: (entity: Entity, attacker: Entity | null) => void;
-  private lastTargetPosition: { x: number; y: number; z: number } | null = null;
-  private readonly positionUpdateThreshold: number = 3; // 3ブロック以上移動したら目標を更新
-  private lastAttackTime: number = 0;
-  private readonly attackCooldown: number = 600; // 0.6秒間隔で攻撃
+  private threatCheckInterval: NodeJS.Timeout | null = null;
   private readonly hostileDetectionRange: number = 10; // 敵対モブ検出範囲（ブロック数）
-  private lastHostileCheck: number = 0;
-  private readonly hostileCheckInterval: number = 500; // 0.5秒間隔で敵対モブをチェック（デバッグ用に頻繁に）
+  private readonly hostileCheckInterval: number = 500; // 0.5秒間隔で敵対モブをチェック
   private readonly nightHuntingRange: number = 15; // 夜間の狩猟範囲（より広範囲）
 
   constructor(bot: Bot, masterName: string) {
@@ -36,15 +30,16 @@ export class ServantState implements IBotState {
   public enter(): void {
     console.log(`[${this.bot.getName()}] Entering Servant state. Master: ${this.masterName}`);
     
-    // 戦闘フラグを初期化
-    this.isEngaging = false;
-    this.currentTarget = null;
-    
     // マスターの追従を開始
     this.startFollowingMaster();
     
     // ダメージ監視用のイベントリスナーを登録
     this.bot.mc.on('entityHurt', this.onEntityHurtBound);
+    
+    // 脅威チェック間隔を設定
+    this.threatCheckInterval = setInterval(() => {
+      this.checkForThreats();
+    }, this.hostileCheckInterval);
     
     console.log(`[${this.bot.getName()}] Started following master: ${this.masterName}`);
   }
@@ -58,6 +53,12 @@ export class ServantState implements IBotState {
     // 【最重要】entityHurtイベントリスナーを解除
     this.bot.mc.removeListener('entityHurt', this.onEntityHurtBound);
     
+    // 脅威チェック間隔をクリア
+    if (this.threatCheckInterval) {
+      clearInterval(this.threatCheckInterval);
+      this.threatCheckInterval = null;
+    }
+    
     // pathfinderの移動を停止
     if (this.bot.mc.pathfinder) {
       this.bot.mc.pathfinder.stop();
@@ -66,30 +67,15 @@ export class ServantState implements IBotState {
     // 手動制御状態もクリア
     this.bot.mc.setControlState('forward', false);
     this.bot.mc.setControlState('sprint', false);
-    
-    // 状態をリセット
-    this.isEngaging = false;
-    this.currentTarget = null;
-    this.lastTargetPosition = null;
   }
 
   /**
    * サーバント状態の定期実行処理
    */
   public execute(): void {
-    if (this.isEngaging && this.currentTarget) {
-      // 戦闘中の場合、ターゲットの状態をチェック
-      if (this.shouldStopEngaging()) {
-        this.stopEngaging();
-        this.startFollowingMaster();
-      } else {
-        // ターゲットを攻撃
-        this.attackTarget();
-      }
-    } else {
-      // 非戦闘時はマスターの追従を継続
-      this.maintainFollowing();
-    }
+    // 基本的にはマスターの追従のみ実行
+    // 脅威チェックは間隔で実行
+    this.maintainFollowing();
   }
 
   /**
@@ -123,203 +109,23 @@ export class ServantState implements IBotState {
    * 追従の維持（マスターが移動した場合の対応）
    */
   private maintainFollowing(): void {
-    if (this.isEngaging) return;
-    
     const master = this.bot.mc.players[this.masterName];
     if (!master || !master.entity) {
       console.log(`[${this.bot.getName()}] Master ${this.masterName} is not available`);
       return;
     }
     
-    // pathfinderが動いていない場合は追従を再開（FollowingStateと同じロジック）
+    // pathfinderが動いていない場合は追従を再開
     if (!this.bot.mc.pathfinder.isMoving()) {
       this.startFollowingMaster();
     }
-    
-    // 敵対モブチェックは別途実行（追従の邪魔をしないように）
-    this.checkForHostileMobs();
   }
 
   /**
-   * エンティティダメージイベントハンドラー
+   * 脅威をチェックして戦闘を開始
    */
-  private onEntityHurt(entity: Entity, attacker: Entity | null): void {
-    if (!attacker || this.isEngaging) return;
-
-    const isBotHurt = entity.id === this.bot.mc.entity.id;
-    const isMasterHurt = entity.username === this.masterName;
-
-    if (isBotHurt || isMasterHurt) {
-      console.log(`[${this.bot.getName()}] ${isBotHurt ? 'Bot' : 'Master'} was attacked by ${attacker.username || attacker.name || 'unknown entity'}`);
-      
-      // 攻撃者を反撃対象に設定
-      this.startEngaging(attacker);
-    }
-  }
-
-  /**
-   * 戦闘開始
-   */
-  private startEngaging(target: Entity): void {
-    this.isEngaging = true;
-    this.currentTarget = target;
-    
-    const targetName = target.username || target.name || target.type || 'unknown entity';
-    console.log(`[${this.bot.getName()}] Starting combat with ${targetName}`);
-    
-    // 初期ターゲット位置を記録
-    this.updateLastTargetPosition();
-    
-    // 攻撃対象への移動を開始
-    const goal = new goals.GoalNear(target.position.x, target.position.y, target.position.z, 2);
-    this.bot.mc.pathfinder.setGoal(goal, true);
-  }
-
-  /**
-   * 戦闘終了の判定
-   */
-  private shouldStopEngaging(): boolean {
-    if (!this.currentTarget) return true;
-    
-    // ターゲットが死亡している場合
-    if (this.currentTarget.isValid === false) {
-      console.log(`[${this.bot.getName()}] Target is no longer valid (dead)`);
-      return true;
-    }
-    
-    // ターゲットが遠くに離れた場合（50ブロック以上）
-    const distance = this.bot.mc.entity.position.distanceTo(this.currentTarget.position);
-    if (distance > 50) {
-      console.log(`[${this.bot.getName()}] Target is too far away (${distance.toFixed(2)} blocks)`);
-      return true;
-    }
-    
-    return false;
-  }
-
-  /**
-   * 戦闘終了処理
-   */
-  private stopEngaging(): void {
-    console.log(`[${this.bot.getName()}] Stopping combat, returning to follow master`);
-    
-    this.isEngaging = false;
-    this.currentTarget = null;
-    this.lastTargetPosition = null;
-    
-    // pathfinderを停止
-    if (this.bot.mc.pathfinder) {
-      this.bot.mc.pathfinder.stop();
-    }
-  }
-
-  /**
-   * ターゲットを攻撃
-   */
-  private attackTarget(): void {
-    if (!this.currentTarget) return;
-    
-    const distance = this.bot.mc.entity.position.distanceTo(this.currentTarget.position);
-    
-    if (distance > 4) {
-      // 距離が遠い場合はpathfinderを使って近づく
-      // ターゲットの位置が大きく変わった場合は目標を更新
-      const shouldUpdateGoal = !this.bot.mc.pathfinder.isMoving() || this.hasTargetMovedSignificantly();
-      
-      if (shouldUpdateGoal) {
-        const goal = new goals.GoalNear(
-          this.currentTarget.position.x,
-          this.currentTarget.position.y,
-          this.currentTarget.position.z,
-          2 // 2ブロック以内に近づく
-        );
-        this.bot.mc.pathfinder.setGoal(goal, true);
-        this.updateLastTargetPosition();
-      }
-    } else {
-      // 攻撃範囲内の場合は移動を停止して攻撃
-      if (this.bot.mc.pathfinder.isMoving()) {
-        this.bot.mc.pathfinder.stop();
-      }
-      
-      // 攻撃実行
-      this.performAttack();
-    }
-  }
-
-  /**
-   * ターゲットが大きく移動したかを判定
-   */
-  private hasTargetMovedSignificantly(): boolean {
-    if (!this.lastTargetPosition || !this.currentTarget?.position) {
-      return true;
-    }
-    
-    const distance = Math.sqrt(
-      Math.pow(this.currentTarget.position.x - this.lastTargetPosition.x, 2) +
-      Math.pow(this.currentTarget.position.y - this.lastTargetPosition.y, 2) +
-      Math.pow(this.currentTarget.position.z - this.lastTargetPosition.z, 2)
-    );
-    
-    return distance > this.positionUpdateThreshold;
-  }
-
-  /**
-   * 最後のターゲット位置を更新
-   */
-  private updateLastTargetPosition(): void {
-    if (this.currentTarget?.position) {
-      this.lastTargetPosition = {
-        x: this.currentTarget.position.x,
-        y: this.currentTarget.position.y,
-        z: this.currentTarget.position.z
-      };
-    }
-  }
-
-  /**
-   * 攻撃を実行
-   */
-  private performAttack(): void {
-    const now = Date.now();
-    if (now - this.lastAttackTime < this.attackCooldown) {
-      return; // クールダウン中
-    }
-
-    if (this.currentTarget && this.currentTarget.isValid) {
-      const distance = this.bot.mc.entity.position.distanceTo(this.currentTarget.position);
-      if (distance <= 4) {
-        try {
-          // ターゲットを見つめる
-          this.bot.mc.lookAt(this.currentTarget.position.offset(0, this.currentTarget.height, 0));
-          
-          // 攻撃を実行
-          this.bot.mc.attack(this.currentTarget);
-          this.lastAttackTime = now;
-          console.log(`[${this.bot.getName()}] Attacking ${this.currentTarget.username || this.currentTarget.name || 'unknown'}`);
-        } catch (error) {
-          console.error(`[${this.bot.getName()}] Error attacking target:`, error);
-        }
-      }
-    }
-  }
-
-  /**
-   * 敵対モブをチェックして攻撃対象を決定
-   */
-  private checkForHostileMobs(): void {
-    // 既に戦闘中の場合はスキップ
-    if (this.isEngaging) return;
-    
-    const now = Date.now();
-    if (now - this.lastHostileCheck < this.hostileCheckInterval) {
-      return; // チェック間隔内
-    }
-    
-    this.lastHostileCheck = now;
-    
-    // デバッグ: 敵対モブチェック開始をログに出力
-    console.log(`[${this.bot.getName()}] Checking for hostile mobs...`);
+  private checkForThreats(): void {
+    console.log(`[${this.bot.getName()}] Checking for threats...`);
     
     // 近くの敵対モブを検索
     const hostileMob = this.findNearestHostileMob();
@@ -328,15 +134,38 @@ export class ServantState implements IBotState {
       const mobName = hostileMob.name || hostileMob.type || 'unknown';
       console.log(`[${this.bot.getName()}] Found hostile mob: ${mobName} at distance ${distance.toFixed(1)} blocks`);
       
-      // 夜間の場合は特別にログを出力
-      if (this.isNightTime()) {
-        console.log(`[${this.bot.getName()}] Night hunting mode: Engaging hostile mob`);
-      }
-      
-      this.startEngaging(hostileMob);
-    } else {
-      console.log(`[${this.bot.getName()}] No hostile mobs found in range`);
+      // AttackingStateに委譲
+      this.delegateToAttackingState(hostileMob);
     }
+  }
+
+  /**
+   * エンティティダメージイベントハンドラー
+   */
+  private onEntityHurt(entity: Entity, attacker: Entity | null): void {
+    if (!attacker) return;
+
+    const isBotHurt = entity.id === this.bot.mc.entity.id;
+    const isMasterHurt = entity.username === this.masterName;
+
+    if (isBotHurt || isMasterHurt) {
+      console.log(`[${this.bot.getName()}] ${isBotHurt ? 'Bot' : 'Master'} was attacked by ${attacker.username || attacker.name || 'unknown entity'}`);
+      
+      // 攻撃者をAttackingStateに委譲
+      this.delegateToAttackingState(attacker);
+    }
+  }
+
+  /**
+   * 戦闘をAttackingStateに委譲
+   */
+  private delegateToAttackingState(target: Entity): void {
+    const targetName = target.username || target.name || target.type || 'unknown entity';
+    console.log(`[${this.bot.getName()}] Delegating combat with ${targetName} to AttackingState`);
+    
+    // 現在の状態（this）を親状態として設定
+    const attackingState = new AttackingState(this.bot, target, this);
+    this.bot.changeState(attackingState);
   }
 
   /**
@@ -358,13 +187,10 @@ export class ServantState implements IBotState {
       const distance = this.bot.mc.entity.position.distanceTo(entity.position);
       if (distance > detectionRange) return false;
       
-      // デバッグ: 範囲内のエンティティをログに出力
-      console.log(`[${this.bot.getName()}] Entity in range: ${entity.type || 'unknown'} at distance ${distance.toFixed(1)}`);
-      
       // 敵対モブかどうかチェック
       const isHostile = this.isHostileMob(entity);
       if (isHostile) {
-        console.log(`[${this.bot.getName()}] Found hostile entity: ${entity.type}`);
+        console.log(`[${this.bot.getName()}] Found hostile entity: ${entity.type} at distance ${distance.toFixed(1)}`);
       }
       
       return isHostile;
@@ -392,9 +218,6 @@ export class ServantState implements IBotState {
     const timeOfDay = this.bot.mc.time.timeOfDay;
     const isNight = timeOfDay >= 13000 && timeOfDay <= 23000;
     
-    // デバッグ: 時間情報をログに出力
-    console.log(`[${this.bot.getName()}] Current time: ${timeOfDay}, Is night: ${isNight}`);
-    
     return isNight;
   }
 
@@ -403,7 +226,6 @@ export class ServantState implements IBotState {
    */
   private isHostileMob(entity: Entity): boolean {
     if (!entity.type) {
-      console.log(`[${this.bot.getName()}] Entity has no type property`);
       return false;
     }
     
@@ -440,12 +262,6 @@ export class ServantState implements IBotState {
     ];
     
     const entityType = entity.type.toLowerCase();
-    const isHostile = hostileTypes.some(type => entityType.includes(type));
-    
-    if (isHostile) {
-      console.log(`[${this.bot.getName()}] Detected hostile mob: ${entityType}`);
-    }
-    
-    return isHostile;
+    return hostileTypes.some(type => entityType.includes(type));
   }
 }

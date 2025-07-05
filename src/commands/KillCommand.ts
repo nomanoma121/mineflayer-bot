@@ -82,7 +82,9 @@ export class KillCommand implements ICommand {
       bot.sendMessage(`${targetDisplayName} を倒します！（距離: ${distance.toFixed(1)}）`);
       
       // 攻撃状態に変更（倒すまで継続）
-      const attackingState = new AttackingState(bot, target, () => {
+      // 現在の状態を保存しておいて、戦闘終了後に戻る
+      const currentState = bot.getCurrentState();
+      const attackingState = new AttackingState(bot, target, currentState || undefined, () => {
         bot.sendMessage(`${targetDisplayName} を倒しました！`);
       });
       
