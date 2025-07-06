@@ -1,4 +1,5 @@
 import { Bot } from "../core/Bot";
+import { Item } from "prismarine-item";
 
 /**
  * ボットの状態を表すインターフェース
@@ -25,4 +26,10 @@ export interface IBotState {
    * デバッグやログ出力に使用
    */
   getName(): string;
+
+  /**
+   * この状態でボットが優先的に装備すべきアイテムを返す（オプショナル）
+   * @returns 装備すべきItemオブジェクト、または何もなければnull
+   */
+  getRecommendedEquipment?(): Item | null;
 }

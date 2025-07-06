@@ -84,6 +84,37 @@ export class LumberjackingState implements IBotState {
   }
 
   /**
+   * 木こり状態では、インベントリ内で最も効率的な斧を推奨する
+   * @returns 推奨装備のアイテム
+   */
+  public getRecommendedEquipment(): any | null {
+    const axes = this.bot.mc.inventory.items().filter(item => {
+      const itemName = item.name.toLowerCase();
+      return itemName.includes('axe');
+    });
+
+    if (axes.length === 0) {
+      return null;
+    }
+
+    // 斧を効率順で並べ替え（優先度順）
+    const axePriority = [
+      'netherite_axe', 'diamond_axe', 'iron_axe', 'stone_axe', 'golden_axe', 'wooden_axe'
+    ];
+
+    // 最も優先度の高い斧を探す
+    for (const priorityAxe of axePriority) {
+      const axe = axes.find(a => a.name.toLowerCase().includes(priorityAxe));
+      if (axe) {
+        return axe;
+      }
+    }
+
+    // 優先度にないものは最初に見つかった斧を返す
+    return axes[0];
+  }
+
+  /**
    * 木を探す
    */
   private searchForTree(): void {

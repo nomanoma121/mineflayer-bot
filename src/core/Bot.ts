@@ -24,6 +24,8 @@ export class Bot {
   private currentState: IBotState | null = null;
   private readonly options: BotOptions;
   private mainLoopStarted: boolean = false;
+  private isEating: boolean = false;
+  private hungerNotificationSent: boolean = false;
 
   constructor(options: BotOptions) {
     this.options = options;
@@ -88,6 +90,8 @@ export class Bot {
           if (this.currentState) {
             this.currentState.execute();
           }
+          // 自動食事チェック
+          this.checkAndEat();
         }, 100);
         this.mainLoopStarted = true;
       }
@@ -191,5 +195,112 @@ export class Bot {
     if (this.currentState) {
       this.currentState.execute();
     }
+  }
+
+  /**
+   * ボットの空腹状態をチェックし、必要に応じて自動で食事を行う
+   */
+  private async checkAndEat(): Promise<void> {
+    try {
+      // 実行条件: 食事中でない、かつ空腹度が17以下
+      if (this.isEating || this.mc.food > 17) {
+        // 空腹度が改善されたら通知フラグをリセット
+        if (this.mc.food > 17) {
+          this.hungerNotificationSent = false;
+        }
+        return;
+      }
+
+      // インベントリから食べ物を検索（foodPointsが0より大きいもの）
+      const food = this.mc.inventory.items().find(item => {
+        return this.isFoodItem(item);
+      });
+
+      if (!food) {
+        // 食べ物がない場合、一度だけ通知
+        if (!this.hungerNotificationSent) {
+          this.sendMessage("お腹が減りましたが、食べ物がありません！");
+          this.hungerNotificationSent = true;
+        }
+        return;
+      }
+
+      // 食事処理開始
+      this.isEating = true;
+      console.log(`[${this.getName()}] 空腹度: ${this.mc.food}/20 - ${food.displayName}を食べます`);
+
+      // 食事前の装備を記憶
+      const previouslyEquipped = this.mc.heldItem;
+
+      try {
+        // 食べ物を手に持つ
+        await this.mc.equip(food, 'hand');
+        
+        // 食事を実行
+        await this.mc.consume();
+        
+        console.log(`[${this.getName()}] ${food.displayName}を食べました。空腹度: ${this.mc.food}/20`);
+        
+      } catch (error) {
+        console.error(`[${this.getName()}] 食事中にエラーが発生しました:`, error);
+      } finally {
+        // 装備の復元
+        await this.restoreEquipment(previouslyEquipped);
+        
+        // 食事状態をリセット
+        this.isEating = false;
+      }
+    } catch (error) {
+      console.error(`[${this.getName()}] checkAndEat()でエラーが発生しました:`, error);
+      this.isEating = false;
+    }
+  }
+
+  /**
+   * 食事後の装備復元を行う
+   * @param previouslyEquipped - 食事前に装備していたアイテム
+   */
+  private async restoreEquipment(previouslyEquipped: any): Promise<void> {
+    try {
+      // 現在のStateに推奨装備メソッドが実装されているか確認
+      if (this.currentState && this.currentState.getRecommendedEquipment) {
+        const recommendedItem = this.currentState.getRecommendedEquipment();
+        if (recommendedItem) {
+          await this.mc.equip(recommendedItem, 'hand');
+          console.log(`[${this.getName()}] 推奨装備 ${recommendedItem.displayName} を装備しました`);
+          return;
+        }
+      }
+
+      // 推奨装備がない場合、食事前の装備を復元
+      if (previouslyEquipped) {
+        await this.mc.equip(previouslyEquipped, 'hand');
+        console.log(`[${this.getName()}] 食事前の装備 ${previouslyEquipped.displayName} を復元しました`);
+      }
+    } catch (error) {
+      console.error(`[${this.getName()}] 装備復元中にエラーが発生しました:`, error);
+    }
+  }
+
+  /**
+   * アイテムが食べ物かどうかを判定
+   * @param item - 判定するアイテム
+   * @returns 食べ物かどうか
+   */
+  private isFoodItem(item: any): boolean {
+    const foodItems = [
+      'apple', 'bread', 'porkchop', 'beef', 'chicken', 'mutton', 'rabbit',
+      'cod', 'salmon', 'tropical_fish', 'pufferfish',
+      'cooked_porkchop', 'cooked_beef', 'cooked_chicken', 'cooked_mutton', 'cooked_rabbit',
+      'cooked_cod', 'cooked_salmon',
+      'carrot', 'potato', 'baked_potato', 'poisonous_potato',
+      'beetroot', 'beetroot_soup', 'mushroom_stew', 'rabbit_stew',
+      'rotten_flesh', 'spider_eye', 'cookie', 'melon_slice', 'sweet_berries',
+      'honey_bottle', 'cake', 'pumpkin_pie', 'golden_apple', 'enchanted_golden_apple',
+      'golden_carrot', 'chorus_fruit', 'dried_kelp', 'suspicious_stew'
+    ];
+
+    const itemName = item.name.toLowerCase();
+    return foodItems.some(food => itemName.includes(food));
   }
 }

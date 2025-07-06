@@ -1,7 +1,7 @@
-import { IBotState } from './IBotState';
-import { Bot } from '../core/Bot';
-import { Entity } from 'prismarine-entity';
-import { goals } from 'mineflayer-pathfinder';
+import { IBotState } from "./IBotState";
+import { Bot } from "../core/Bot";
+import { Entity } from "prismarine-entity";
+import { goals } from "mineflayer-pathfinder";
 
 /**
  * 攻撃状態クラス
@@ -18,7 +18,12 @@ export class AttackingState implements IBotState {
   private readonly positionUpdateThreshold: number = 3; // 3ブロック以上移動したら目標を更新
   private parentState: IBotState | null = null;
 
-  constructor(bot: Bot, target: Entity, parentState?: IBotState, onComplete?: () => void) {
+  constructor(
+    bot: Bot,
+    target: Entity,
+    parentState?: IBotState,
+    onComplete?: () => void
+  ) {
     this.bot = bot;
     this.target = target;
     this.parentState = parentState || null;
@@ -29,11 +34,15 @@ export class AttackingState implements IBotState {
    * 攻撃状態開始時の処理
    */
   public enter(): void {
-    console.log(`[${this.bot.getName()}] Entering attacking state, target: ${this.target.name || 'unknown'}`);
-    
+    console.log(
+      `[${this.bot.getName()}] Entering attacking state, target: ${
+        this.target.name || "unknown"
+      }`
+    );
+
     // 初期ターゲット位置を記録
     this.updateLastTargetPosition();
-    
+
     // 攻撃を開始
     this.startAttacking();
   }
@@ -48,7 +57,7 @@ export class AttackingState implements IBotState {
       if (this.onComplete) {
         this.onComplete();
       }
-      
+
       // 親状態が設定されている場合は親状態に戻る、そうでなければIdleStateに戻る
       if (this.parentState) {
         this.bot.changeState(this.parentState);
@@ -59,13 +68,17 @@ export class AttackingState implements IBotState {
     }
 
     // ターゲットまでの距離をチェック
-    const distance = this.bot.mc.entity.position.distanceTo(this.target.position);
-    
+    const distance = this.bot.mc.entity.position.distanceTo(
+      this.target.position
+    );
+
     if (distance > 4) {
       // 距離が遠い場合はpathfinderを使って近づく
       // ターゲットの位置が大きく変わった場合は目標を更新
-      const shouldUpdateGoal = !this.bot.mc.pathfinder.isMoving() || this.hasTargetMovedSignificantly();
-      
+      const shouldUpdateGoal =
+        !this.bot.mc.pathfinder.isMoving() ||
+        this.hasTargetMovedSignificantly();
+
       if (shouldUpdateGoal) {
         const goal = new goals.GoalNear(
           this.target.position.x,
@@ -81,7 +94,7 @@ export class AttackingState implements IBotState {
       if (this.bot.mc.pathfinder.isMoving()) {
         this.bot.mc.pathfinder.stop();
       }
-      
+
       // 攻撃実行
       this.performAttack();
     }
@@ -94,13 +107,13 @@ export class AttackingState implements IBotState {
     if (!this.lastTargetPosition || !this.target.position) {
       return true;
     }
-    
+
     const distance = Math.sqrt(
       Math.pow(this.target.position.x - this.lastTargetPosition.x, 2) +
-      Math.pow(this.target.position.y - this.lastTargetPosition.y, 2) +
-      Math.pow(this.target.position.z - this.lastTargetPosition.z, 2)
+        Math.pow(this.target.position.y - this.lastTargetPosition.y, 2) +
+        Math.pow(this.target.position.z - this.lastTargetPosition.z, 2)
     );
-    
+
     return distance > this.positionUpdateThreshold;
   }
 
@@ -112,7 +125,7 @@ export class AttackingState implements IBotState {
       this.lastTargetPosition = {
         x: this.target.position.x,
         y: this.target.position.y,
-        z: this.target.position.z
+        z: this.target.position.z,
       };
     }
   }
@@ -122,17 +135,17 @@ export class AttackingState implements IBotState {
    */
   public exit(): void {
     console.log(`[${this.bot.getName()}] Exiting attacking state`);
-    
+
     this.stopAttacking();
-    
+
     // pathfinderの移動を停止
     if (this.bot.mc.pathfinder) {
       this.bot.mc.pathfinder.stop();
     }
-    
+
     // 手動制御状態もクリア
-    this.bot.mc.setControlState('forward', false);
-    this.bot.mc.setControlState('sprint', false);
+    this.bot.mc.setControlState("forward", false);
+    this.bot.mc.setControlState("sprint", false);
   }
 
   /**
@@ -140,7 +153,63 @@ export class AttackingState implements IBotState {
    * @returns 状態名
    */
   public getName(): string {
-    return 'Attacking';
+    return "Attacking";
+  }
+
+  /**
+   * 戦闘状態では、インベントリ内で最も攻撃力の高い武器を推奨する
+   * @returns 推奨装備のアイテム
+   */
+  public getRecommendedEquipment(): any | null {
+    const weapons = this.bot.mc.inventory.items().filter((item) => {
+      const itemName = item.name.toLowerCase();
+      return (
+        itemName.includes("sword") ||
+        itemName.includes("axe") ||
+        itemName.includes("pickaxe") ||
+        itemName.includes("shovel") ||
+        itemName.includes("hoe")
+      );
+    });
+
+    if (weapons.length === 0) {
+      return null;
+    }
+
+    // 武器を攻撃力順で並べ替え（優先度順）
+    const weaponPriority = [
+      "netherite_sword",
+      "diamond_sword",
+      "iron_sword",
+      "stone_sword",
+      "golden_sword",
+      "wooden_sword",
+      "netherite_axe",
+      "diamond_axe",
+      "iron_axe",
+      "stone_axe",
+      "golden_axe",
+      "wooden_axe",
+      "netherite_pickaxe",
+      "diamond_pickaxe",
+      "iron_pickaxe",
+      "stone_pickaxe",
+      "golden_pickaxe",
+      "wooden_pickaxe",
+    ];
+
+    // 最も優先度の高い武器を探す
+    for (const priorityWeapon of weaponPriority) {
+      const weapon = weapons.find((w) =>
+        w.name.toLowerCase().includes(priorityWeapon)
+      );
+      if (weapon) {
+        return weapon;
+      }
+    }
+
+    // 優先度にないものは最初に見つかった武器を返す
+    return weapons[0];
   }
 
   /**
@@ -163,15 +232,21 @@ export class AttackingState implements IBotState {
     }
 
     if (this.target && this.target.isValid) {
-      const distance = this.bot.mc.entity.position.distanceTo(this.target.position);
+      const distance = this.bot.mc.entity.position.distanceTo(
+        this.target.position
+      );
       if (distance <= 4) {
         // ターゲットを見つめる
-        this.bot.mc.lookAt(this.target.position.offset(0, this.target.height, 0));
-        
+        this.bot.mc.lookAt(
+          this.target.position.offset(0, this.target.height, 0)
+        );
+
         // 攻撃を実行
         this.bot.mc.attack(this.target);
         this.lastAttackTime = now;
-        console.log(`[${this.bot.getName()}] Attacking ${this.target.name || 'unknown'}`);
+        console.log(
+          `[${this.bot.getName()}] Attacking ${this.target.name || "unknown"}`
+        );
       }
     }
   }

@@ -98,6 +98,41 @@ export class MiningState implements IBotState {
   }
 
   /**
+   * 採掘状態では、インベントリ内で最も効率的なピッケルを推奨する
+   * @returns 推奨装備のアイテム
+   */
+  public getRecommendedEquipment(): any | null {
+    const tools = this.bot.mc.inventory.items().filter(item => {
+      const itemName = item.name.toLowerCase();
+      return itemName.includes('pickaxe') || 
+             itemName.includes('shovel') ||
+             itemName.includes('axe');
+    });
+
+    if (tools.length === 0) {
+      return null;
+    }
+
+    // 採掘道具を効率順で並べ替え（優先度順）
+    const toolPriority = [
+      'netherite_pickaxe', 'diamond_pickaxe', 'iron_pickaxe', 'stone_pickaxe', 'golden_pickaxe', 'wooden_pickaxe',
+      'netherite_shovel', 'diamond_shovel', 'iron_shovel', 'stone_shovel', 'golden_shovel', 'wooden_shovel',
+      'netherite_axe', 'diamond_axe', 'iron_axe', 'stone_axe', 'golden_axe', 'wooden_axe'
+    ];
+
+    // 最も優先度の高い道具を探す
+    for (const priorityTool of toolPriority) {
+      const tool = tools.find(t => t.name.toLowerCase().includes(priorityTool));
+      if (tool) {
+        return tool;
+      }
+    }
+
+    // 優先度にないものは最初に見つかった道具を返す
+    return tools[0];
+  }
+
+  /**
    * 採掘パターンを生成
    */
   private generateMiningPattern(): void {

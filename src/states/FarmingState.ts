@@ -90,6 +90,37 @@ export class FarmingState implements IBotState {
   }
 
   /**
+   * 農業状態では、インベントリ内で最も効率的な鍬を推奨する
+   * @returns 推奨装備のアイテム
+   */
+  public getRecommendedEquipment(): any | null {
+    const hoes = this.bot.mc.inventory.items().filter(item => {
+      const itemName = item.name.toLowerCase();
+      return itemName.includes('hoe');
+    });
+
+    if (hoes.length === 0) {
+      return null;
+    }
+
+    // 鍬を効率順で並べ替え（優先度順）
+    const hoePriority = [
+      'netherite_hoe', 'diamond_hoe', 'iron_hoe', 'stone_hoe', 'golden_hoe', 'wooden_hoe'
+    ];
+
+    // 最も優先度の高い鍬を探す
+    for (const priorityHoe of hoePriority) {
+      const hoe = hoes.find(h => h.name.toLowerCase().includes(priorityHoe));
+      if (hoe) {
+        return hoe;
+      }
+    }
+
+    // 優先度にないものは最初に見つかった鍬を返す
+    return hoes[0];
+  }
+
+  /**
    * 成熟した作物をスキャン
    */
   private scanForMatureCrops(): void {
