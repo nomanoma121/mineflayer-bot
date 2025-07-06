@@ -51,7 +51,9 @@ export class FarmerCommand implements ICommand {
       console.log(`[${bot.getName()}] Changing state from ${currentStateName} to Farming`);
       
       // 農業状態に遷移
-      bot.changeState(new FarmingState(bot, corner1, corner2));
+      bot.changeState(new FarmingState(bot, corner1, corner2)).catch(error => {
+        console.error(`[${bot.getName()}] Error changing to farming state:`, error);
+      });
       
       // 成功メッセージを送信
       bot.sendMessage(`${username}様の指示により、指定された畑での農業作業を開始します。`);

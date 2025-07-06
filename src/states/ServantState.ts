@@ -30,7 +30,7 @@ export class ServantState implements IBotState {
   /**
    * サーバント状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(
       `[${this.bot.getName()}] Entering Servant state. Master: ${
         this.masterName
@@ -204,7 +204,9 @@ export class ServantState implements IBotState {
 
     // 現在の状態（this）を親状態として設定
     const attackingState = new AttackingState(this.bot, target, this);
-    this.bot.changeState(attackingState);
+    this.bot.changeState(attackingState).catch(error => {
+      console.error(`[${this.bot.getName()}] Error changing to attacking state:`, error);
+    });
   }
 
   /**

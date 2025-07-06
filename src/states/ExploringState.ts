@@ -24,7 +24,7 @@ export class ExploringState implements IBotState {
   /**
    * 探検状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Exploring state`);
     
     this.startPosition = this.bot.mc.entity.position.clone();
@@ -102,7 +102,9 @@ export class ExploringState implements IBotState {
       if (this.explorationRadius >= this.maxRadius) {
         console.log(`[${this.bot.getName()}] Reached maximum exploration radius, stopping`);
         this.bot.sendMessage("最大探索範囲に到達しました。探検を終了します。");
-        this.bot.changeStateToIdle();
+        this.bot.changeStateToIdle().catch(error => {
+          console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+        });
         return;
       }
       

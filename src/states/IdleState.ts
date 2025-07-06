@@ -30,7 +30,7 @@ export class IdleState implements IBotState {
   /**
    * 待機状態に入る際の処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Idle State.`);
 
     // 移動や攻撃などの現在の行動を停止

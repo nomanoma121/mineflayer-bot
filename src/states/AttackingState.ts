@@ -33,18 +33,56 @@ export class AttackingState implements IBotState {
   /**
    * 攻撃状態開始時の処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(
       `[${this.bot.getName()}] Entering attacking state, target: ${
         this.target.name || "unknown"
       }`
     );
 
+    // 武器を装備
+    await this.equipWeapon();
+    
     // 初期ターゲット位置を記録
     this.updateLastTargetPosition();
 
     // 攻撃を開始
     this.startAttacking();
+  }
+
+  /**
+   * 最適な武器を装備する（単一責任）
+   */
+  private async equipWeapon(): Promise<void> {
+    try {
+      // 推奨武器を取得
+      const recommendedWeapon = this.getRecommendedEquipment();
+      
+      if (recommendedWeapon) {
+        console.log(
+          `[${this.bot.getName()}] Equipping weapon: ${recommendedWeapon.name} for combat`
+        );
+        
+        // 武器を装備
+        await this.bot.mc.equip(recommendedWeapon, "hand");
+        
+        console.log(
+          `[${this.bot.getName()}] Successfully equipped ${recommendedWeapon.name} for combat`
+        );
+      } else {
+        console.log(
+          `[${this.bot.getName()}] No weapon found in inventory, proceeding with bare hands`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[${this.bot.getName()}] Error equipping weapon:`,
+        error
+      );
+      console.log(
+        `[${this.bot.getName()}] Proceeding with current equipment`
+      );
+    }
   }
 
   /**
@@ -60,9 +98,13 @@ export class AttackingState implements IBotState {
 
       // 親状態が設定されている場合は親状態に戻る、そうでなければIdleStateに戻る
       if (this.parentState) {
-        this.bot.changeState(this.parentState);
+        this.bot.changeState(this.parentState).catch(error => {
+          console.error(`[${this.bot.getName()}] Error changing to parent state:`, error);
+        });
       } else {
-        this.bot.changeStateToIdle();
+        this.bot.changeStateToIdle().catch(error => {
+          console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+        });
       }
       return;
     }

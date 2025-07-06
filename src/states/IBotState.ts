@@ -9,7 +9,7 @@ export interface IBotState {
   /**
    * 状態に入る際に呼ばれる初期化メソッド
    */
-  enter(): void;
+  enter(): Promise<void>;
 
   /**
    * 状態から出る際に呼ばれる終了処理メソッド

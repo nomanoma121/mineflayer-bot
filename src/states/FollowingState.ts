@@ -23,13 +23,13 @@ export class FollowingState implements IBotState {
   /**
    * 追従状態に入る際の処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Following State - Target: ${this.targetPlayerName}`);
     
     // プレイヤーがサーバーに存在するかチェック
     if (!this.bot.mc.players[this.targetPlayerName]) {
       this.bot.sendMessage(`プレイヤー「${this.targetPlayerName}」が見つかりません。`);
-      this.bot.changeStateToIdle();
+      await this.bot.changeStateToIdle();
       return;
     }
 
@@ -60,7 +60,9 @@ export class FollowingState implements IBotState {
     // プレイヤーがサーバーから完全に退出したかチェック
     if (!this.bot.mc.players[this.targetPlayerName]) {
       this.bot.sendMessage(`${this.targetPlayerName}さんがサーバーから退出しました。追従を停止します。`);
-      this.bot.changeStateToIdle();
+      this.bot.changeStateToIdle().catch(error => {
+        console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+      });
       return;
     }
 
@@ -70,7 +72,9 @@ export class FollowingState implements IBotState {
       this.targetLostTime += 100; // executeは100ms毎に呼ばれる
       if (this.targetLostTime > this.maxTargetLostTime) {
         this.bot.sendMessage(`${this.targetPlayerName}さんを長時間見失いました。追従を停止します。`);
-        this.bot.changeStateToIdle();
+        this.bot.changeStateToIdle().catch(error => {
+          console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+        });
       }
       return;
     }

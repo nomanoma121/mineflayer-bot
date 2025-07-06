@@ -23,7 +23,7 @@ export class WanderingState implements IBotState {
   /**
    * 放浪状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Wandering state. Range: ${this.range} blocks`);
     
     // 現在の位置を中心点として保存

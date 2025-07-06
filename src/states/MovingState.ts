@@ -30,7 +30,7 @@ export class MovingState implements IBotState {
   /**
    * 移動状態に入る際の処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Moving State - Target: (${this.targetPosition.x}, ${this.targetPosition.y}, ${this.targetPosition.z})`);
     this.isActive = true;
     
@@ -74,8 +74,10 @@ export class MovingState implements IBotState {
         this.onComplete();
       }
       
-      // IdleStateに戻る
-      this.bot.changeStateToIdle();
+      // IdleStateに戻る（fire-and-forget）
+      this.bot.changeStateToIdle().catch(error => {
+        console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+      });
     }
   }
 
@@ -113,8 +115,10 @@ export class MovingState implements IBotState {
           if (this.onComplete) {
             this.onComplete();
           }
-          // IdleStateに戻る
-          this.bot.changeStateToIdle();
+          // IdleStateに戻る（fire-and-forget）
+          this.bot.changeStateToIdle().catch(error => {
+            console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+          });
         }
       };
       

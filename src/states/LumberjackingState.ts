@@ -27,7 +27,7 @@ export class LumberjackingState implements IBotState {
   /**
    * 木こり状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Lumberjacking state. Tree type: ${this.treeType}, Range: ${this.range}`);
     
     this.searchCenter = this.bot.mc.entity.position.clone();
@@ -56,7 +56,9 @@ export class LumberjackingState implements IBotState {
     if (this.isInventoryFull()) {
       console.log(`[${this.bot.getName()}] Inventory is full, stopping lumberjacking`);
       this.bot.sendMessage("インベントリが満杯になったため、木こり作業を終了します。");
-      this.bot.changeStateToIdle();
+      this.bot.changeStateToIdle().catch(error => {
+        console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+      });
       return;
     }
 

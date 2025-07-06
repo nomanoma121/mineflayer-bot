@@ -36,7 +36,9 @@ export class WanderCommand implements ICommand {
       console.log(`[${bot.getName()}] Changing state from ${currentStateName} to Wandering`);
       
       // 放浪状態に遷移
-      bot.changeState(new WanderingState(bot, range));
+      bot.changeState(new WanderingState(bot, range)).catch(error => {
+        console.error(`[${bot.getName()}] Error changing to wandering state:`, error);
+      });
       
       // 成功メッセージを送信
       bot.sendMessage(`${username}様の指示により、${range}ブロック範囲で放浪を開始します。`);

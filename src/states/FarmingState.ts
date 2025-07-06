@@ -42,7 +42,7 @@ export class FarmingState implements IBotState {
   /**
    * 農業状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Farming state`);
     console.log(`[${this.bot.getName()}] Farm area: (${this.farmArea.min.x},${this.farmArea.min.y},${this.farmArea.min.z}) to (${this.farmArea.max.x},${this.farmArea.max.y},${this.farmArea.max.z})`);
     

@@ -43,7 +43,7 @@ export class MiningState implements IBotState {
   /**
    * 採掘状態に入る際の初期化処理
    */
-  public enter(): void {
+  public async enter(): Promise<void> {
     console.log(`[${this.bot.getName()}] Entering Mining state`);
     console.log(`[${this.bot.getName()}] Mining area: (${this.miningArea.min.x},${this.miningArea.min.y},${this.miningArea.min.z}) to (${this.miningArea.max.x},${this.miningArea.max.y},${this.miningArea.max.z})`);
     
@@ -157,7 +157,9 @@ export class MiningState implements IBotState {
     if (this.currentPatternIndex >= this.miningPattern.length) {
       console.log(`[${this.bot.getName()}] Mining completed!`);
       this.bot.sendMessage("採掘作業が完了しました。");
-      this.bot.changeStateToIdle();
+      this.bot.changeStateToIdle().catch(error => {
+        console.error(`[${this.bot.getName()}] Error changing to idle state:`, error);
+      });
       return;
     }
     

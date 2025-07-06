@@ -48,7 +48,9 @@ export class LumberjackCommand implements ICommand {
       console.log(`[${bot.getName()}] Changing state from ${currentStateName} to Lumberjacking`);
       
       // 木こり状態に遷移
-      bot.changeState(new LumberjackingState(bot, treeType, range));
+      bot.changeState(new LumberjackingState(bot, treeType, range)).catch(error => {
+        console.error(`[${bot.getName()}] Error changing to lumberjacking state:`, error);
+      });
       
       // 成功メッセージを送信
       bot.sendMessage(`${username}様の指示により、${treeType}の木こり作業を開始します。範囲: ${range}ブロック`);

@@ -72,7 +72,7 @@ export class Bot {
       console.log(`Bot ${this.options.username} was kicked: ${reason}`);
     });
 
-    this.mc.on("spawn", () => {
+    this.mc.on("spawn", async () => {
       console.log(`Bot ${this.options.username} spawned in the world.`);
 
       // パスファインダーの設定
@@ -85,7 +85,7 @@ export class Bot {
       this.mc.pathfinder.setMovements(defaultMove);
       
       // 初期状態を「待機」に設定
-      this.changeState(IdleState.getInstance(this));
+      await this.changeState(IdleState.getInstance(this));
       console.log(`Bot ${this.options.username} spawned. Setting initial state to Idle.`);
       
       // メインループが既に開始されていない場合のみ開始
@@ -116,7 +116,7 @@ export class Bot {
    * ステートパターンの実装により、状態の遷移を安全に管理
    * @param newState - 新しい状態
    */
-  public changeState(newState: IBotState): void {
+  public async changeState(newState: IBotState): Promise<void> {
     try {
       // 現在の状態を終了
       if (this.currentState) {
@@ -127,7 +127,7 @@ export class Bot {
       // 新しい状態に遷移
       this.currentState = newState;
       console.log(`Entering state: ${this.currentState.getName()}`);
-      this.currentState.enter();
+      await this.currentState.enter();
     } catch (error) {
       console.error("Error during state transition:", error);
       this.sendMessage("状態の変更中にエラーが発生しました。");
@@ -137,8 +137,8 @@ export class Bot {
   /**
    * ボットを待機状態に遷移させるヘルパーメソッド
    */
-  public changeStateToIdle(): void {
-    this.changeState(IdleState.getInstance(this));
+  public async changeStateToIdle(): Promise<void> {
+    await this.changeState(IdleState.getInstance(this));
   }
 
   /**
