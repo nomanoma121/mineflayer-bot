@@ -2,6 +2,8 @@ import { Bot as MineflayerBot, createBot } from "mineflayer";
 import { pathfinder, Movements } from "mineflayer-pathfinder";
 import { IBotState } from "../states/IBotState";
 import { IdleState } from "../states/IdleState";
+import mcData from "minecraft-data";
+import { Item } from "prismarine-item";
 
 /**
  * ボットの設定オプション
@@ -26,6 +28,7 @@ export class Bot {
   private mainLoopStarted: boolean = false;
   private isEating: boolean = false;
   private hungerNotificationSent: boolean = false;
+  private mcData: mcData.IndexedData;
 
   constructor(options: BotOptions) {
     this.options = options;
@@ -38,6 +41,9 @@ export class Bot {
       auth: options.auth,
       version: options.version,
     });
+
+    // minecraft-dataを初期化
+    this.mcData = mcData(this.mc.version);
 
     // pathfinderプラグインをロード
     this.mc.loadPlugin(pathfinder);
@@ -70,7 +76,6 @@ export class Bot {
       console.log(`Bot ${this.options.username} spawned in the world.`);
 
       // パスファインダーの設定
-      const mcData = require('minecraft-data')(this.mc.version);
       const defaultMove = new Movements(this.mc);
       
       // 移動速度を向上させる設定
@@ -211,9 +216,9 @@ export class Bot {
         return;
       }
 
-      // インベントリから食べ物を検索（foodPointsが0より大きいもの）
+      // インベントリから食べ物を検索（minecraft-dataを使用）
       const food = this.mc.inventory.items().find(item => {
-        return this.isFoodItem(item);
+        return this.mcData.foods[item.type] !== undefined;
       });
 
       if (!food) {
@@ -227,7 +232,8 @@ export class Bot {
 
       // 食事処理開始
       this.isEating = true;
-      console.log(`[${this.getName()}] 空腹度: ${this.mc.food}/20 - ${food.displayName}を食べます`);
+      const foodData = this.mcData.foods[food.type];
+      console.log(`[${this.getName()}] 空腹度: ${this.mc.food}/20 - ${food.displayName}を食べます（回復量: ${foodData.foodPoints}）`);
 
       // 食事前の装備を記憶
       const previouslyEquipped = this.mc.heldItem;
@@ -260,7 +266,7 @@ export class Bot {
    * 食事後の装備復元を行う
    * @param previouslyEquipped - 食事前に装備していたアイテム
    */
-  private async restoreEquipment(previouslyEquipped: any): Promise<void> {
+  private async restoreEquipment(previouslyEquipped: Item | null): Promise<void> {
     try {
       // 現在のStateに推奨装備メソッドが実装されているか確認
       if (this.currentState && this.currentState.getRecommendedEquipment) {
@@ -280,27 +286,5 @@ export class Bot {
     } catch (error) {
       console.error(`[${this.getName()}] 装備復元中にエラーが発生しました:`, error);
     }
-  }
-
-  /**
-   * アイテムが食べ物かどうかを判定
-   * @param item - 判定するアイテム
-   * @returns 食べ物かどうか
-   */
-  private isFoodItem(item: any): boolean {
-    const foodItems = [
-      'apple', 'bread', 'porkchop', 'beef', 'chicken', 'mutton', 'rabbit',
-      'cod', 'salmon', 'tropical_fish', 'pufferfish',
-      'cooked_porkchop', 'cooked_beef', 'cooked_chicken', 'cooked_mutton', 'cooked_rabbit',
-      'cooked_cod', 'cooked_salmon',
-      'carrot', 'potato', 'baked_potato', 'poisonous_potato',
-      'beetroot', 'beetroot_soup', 'mushroom_stew', 'rabbit_stew',
-      'rotten_flesh', 'spider_eye', 'cookie', 'melon_slice', 'sweet_berries',
-      'honey_bottle', 'cake', 'pumpkin_pie', 'golden_apple', 'enchanted_golden_apple',
-      'golden_carrot', 'chorus_fruit', 'dried_kelp', 'suspicious_stew'
-    ];
-
-    const itemName = item.name.toLowerCase();
-    return foodItems.some(food => itemName.includes(food));
   }
 }
