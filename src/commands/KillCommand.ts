@@ -59,7 +59,7 @@ export class KillCommand implements ICommand {
         bot.sendMessage(`${targetDisplayName} を倒しました！`);
       });
       
-      bot.changeState(attackingState);
+      await bot.changeState(attackingState);
       
     } catch (error) {
       CommandUtils.handleCommandError(bot, 'kill', error);

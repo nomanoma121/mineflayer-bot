@@ -58,7 +58,7 @@ export class AttackCommand implements ICommand {
         bot.sendMessage(`${targetDisplayName} への攻撃を終了しました。`);
       });
       
-      bot.changeState(attackingState);
+      await bot.changeState(attackingState);
       
     } catch (error) {
       CommandUtils.handleCommandError(bot, 'attack', error);

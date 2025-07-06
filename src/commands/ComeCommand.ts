@@ -35,9 +35,7 @@ export class ComeCommand implements ICommand {
       
       // FollowingStateに遷移
       const followingState = new FollowingState(bot, targetPlayerName, followDistance);
-      bot.changeState(followingState).catch(error => {
-        console.error(`[${bot.getName()}] Error changing to following state:`, error);
-      });
+      await bot.changeState(followingState);
       
     } catch (error) {
       console.error(`[${bot.getName()}] Error in come command:`, error);

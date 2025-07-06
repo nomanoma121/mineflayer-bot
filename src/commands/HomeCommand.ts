@@ -32,7 +32,7 @@ export class HomeCommand implements ICommand {
         bot.sendMessage('拠点に帰還しました！');
       });
       
-      bot.changeState(movingState);
+      await bot.changeState(movingState);
       
     } catch (error) {
       console.error(`[${bot.getName()}] Error in home command:`, error);

@@ -67,7 +67,7 @@ export class GotoCommand implements ICommand {
         }
       );
 
-      bot.changeState(movingState);
+      await bot.changeState(movingState);
     } catch (error) {
       console.error(`[${bot.getName()}] Error in goto command:`, error);
       bot.sendMessage(

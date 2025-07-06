@@ -50,9 +50,7 @@ export class ServantCommand implements ICommand {
       console.log(`[${bot.getName()}] Changing state from ${currentStateName} to Servant`);
       
       // サーバント状態に遷移
-      bot.changeState(new ServantState(bot, masterName)).catch(error => {
-        console.error(`[${bot.getName()}] Error changing to servant state:`, error);
-      });
+      await bot.changeState(new ServantState(bot, masterName));
       
       // 成功メッセージを送信
       if (masterName === username) {

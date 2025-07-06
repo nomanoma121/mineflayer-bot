@@ -32,7 +32,7 @@ export class IdleCommand implements ICommand {
       }
 
       // 待機状態に遷移
-      bot.changeStateToIdle();
+      await bot.changeStateToIdle();
 
       // 成功メッセージを送信
       bot.sendMessage(
@@ -46,7 +46,7 @@ export class IdleCommand implements ICommand {
       );
 
       // エラーが発生してもIdleStateに遷移を試みる
-      bot.changeStateToIdle();
+      await bot.changeStateToIdle();
     }
   }
 

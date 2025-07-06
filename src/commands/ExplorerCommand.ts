@@ -24,9 +24,7 @@ export class ExplorerCommand implements ICommand {
       console.log(`[${bot.getName()}] Changing state from ${currentStateName} to Exploring`);
       
       // 探検状態に遷移
-      bot.changeState(new ExploringState(bot)).catch(error => {
-        console.error(`[${bot.getName()}] Error changing to exploring state:`, error);
-      });
+      await bot.changeState(new ExploringState(bot));
       
       // 成功メッセージを送信
       bot.sendMessage(`${username}様の指示により、未踏の領域の探検を開始します。`);
