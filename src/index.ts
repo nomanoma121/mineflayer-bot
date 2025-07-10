@@ -22,6 +22,7 @@ import { LumberjackCommand } from "./commands/LumberjackCommand";
 import { ExplorerCommand } from "./commands/ExplorerCommand";
 import { FarmerCommand } from "./commands/FarmerCommand";
 import { MinerCommand } from "./commands/MinerCommand";
+import { AbilityTestCommand } from "./commands/AbilityTestCommand";
 import { IdleState } from "./states/IdleState";
 
 // .envファイルから環境変数を読み込み
@@ -80,6 +81,9 @@ async function main(): Promise<void> {
     commandHandler.registerCommand("give", new GiveCommand());
     commandHandler.registerCommand("drop", new DropCommand());
     commandHandler.registerCommand("equip", new EquipCommand());
+    
+    // アビリティテストコマンドを登録
+    commandHandler.registerCommand("abilitytest", new AbilityTestCommand());
 
     // チャットイベントリスナーを設定
     bot.mc.on("chat", async (username: string, message: string) => {

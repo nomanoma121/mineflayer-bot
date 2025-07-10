@@ -27,7 +27,7 @@ export class IdleCommand implements ICommand {
       
       // 既に待機状態の場合
       if (currentStateName === "Idle") {
-        bot.sendMessage("既に待機状態です。");
+        bot.say.say("既に待機状態です。");
         return;
       }
 
@@ -35,15 +35,11 @@ export class IdleCommand implements ICommand {
       await bot.changeStateToIdle();
 
       // 成功メッセージを送信
-      bot.sendMessage(
-        `${username}さんの指示により、待機状態に移行しました。（前の状態: ${currentStateName}）`
-      );
+      bot.say.reportSuccess(`${username}さんの指示により、待機状態に移行しました。（前の状態: ${currentStateName}）`);
       
     } catch (error) {
       console.error(`[${bot.getName()}] Error in idle command:`, error);
-      bot.sendMessage(
-        "待機状態への移行中にエラーが発生しました。"
-      );
+      bot.say.reportError("待機状態への移行中にエラーが発生しました。");
 
       // エラーが発生してもIdleStateに遷移を試みる
       await bot.changeStateToIdle();

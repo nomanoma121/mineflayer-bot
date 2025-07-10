@@ -4,6 +4,11 @@ import { IBotState } from "../states/IBotState";
 import { IdleState } from "../states/IdleState";
 import mcData from "minecraft-data";
 import { Item } from "prismarine-item";
+import { AbilityManager } from "../abilities/AbilityManager";
+import { VitalsAbility } from "../abilities/VitalsAbility";
+import { SensingAbility } from "../abilities/SensingAbility";
+import { InventoryAbility } from "../abilities/InventoryAbility";
+import { SayAbility } from "../abilities/SayAbility";
 
 /**
  * ボットの設定オプション
@@ -29,6 +34,7 @@ export class Bot {
   private isEating: boolean = false;
   private hungerNotificationSent: boolean = false;
   private mcData: mcData.IndexedData;
+  private abilityManager: AbilityManager;
 
   constructor(options: BotOptions) {
     this.options = options;
@@ -47,6 +53,10 @@ export class Bot {
 
     // pathfinderプラグインをロード
     this.mc.loadPlugin(pathfinder);
+
+    // アビリティマネージャーを初期化
+    this.abilityManager = new AbilityManager();
+    this.abilityManager.initialize(this);
 
     // 基本的なイベントリスナーを設定
     this.setupEventListeners();
@@ -286,5 +296,61 @@ export class Bot {
     } catch (error) {
       console.error(`[${this.getName()}] 装備復元中にエラーが発生しました:`, error);
     }
+  }
+
+  /**
+   * アビリティマネージャーを取得
+   * @returns アビリティマネージャー
+   */
+  public getAbilityManager(): AbilityManager {
+    return this.abilityManager;
+  }
+
+  /**
+   * Vitalsアビリティを取得
+   * @returns Vitalsアビリティ
+   */
+  public get vitals(): VitalsAbility {
+    return this.abilityManager.vitals;
+  }
+
+  /**
+   * Sensingアビリティを取得
+   * @returns Sensingアビリティ
+   */
+  public get sensing(): SensingAbility {
+    return this.abilityManager.sensing;
+  }
+
+  /**
+   * Inventoryアビリティを取得
+   * @returns Inventoryアビリティ
+   */
+  public get inventory(): InventoryAbility {
+    return this.abilityManager.inventory;
+  }
+
+  /**
+   * Sayアビリティを取得
+   * @returns Sayアビリティ
+   */
+  public get say(): SayAbility {
+    return this.abilityManager.say;
+  }
+
+  /**
+   * アビリティシステムの状態を確認
+   * @returns アビリティシステムの診断結果
+   */
+  public diagnoseAbilities(): ReturnType<AbilityManager["diagnose"]> {
+    return this.abilityManager.diagnose();
+  }
+
+  /**
+   * 緊急時対応を実行
+   * @returns 緊急時対応の結果
+   */
+  public async handleEmergency(): Promise<ReturnType<AbilityManager["handleEmergency"]>> {
+    return await this.abilityManager.handleEmergency();
   }
 }
