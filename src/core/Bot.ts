@@ -9,6 +9,8 @@ import { VitalsAbility } from "../abilities/VitalsAbility";
 import { SensingAbility } from "../abilities/SensingAbility";
 import { InventoryAbility } from "../abilities/InventoryAbility";
 import { SayAbility } from "../abilities/SayAbility";
+import { ConfigManager, BotConfig } from "../config/ConfigManager";
+import { Logger } from "../utils/Logger";
 
 /**
  * ボットの設定オプション
@@ -30,14 +32,21 @@ export class Bot {
   public readonly mc: MineflayerBot;
   private currentState: IBotState | null = null;
   private readonly options: BotOptions;
+  private readonly config: BotConfig;
   private mainLoopStarted: boolean = false;
   private isEating: boolean = false;
   private hungerNotificationSent: boolean = false;
   private mcData: mcData.IndexedData;
   private abilityManager: AbilityManager;
+  private logger: typeof Logger;
 
-  constructor(options: BotOptions) {
+  constructor(options: BotOptions, configManager?: ConfigManager) {
     this.options = options;
+    this.config = configManager?.getConfig() || new ConfigManager().getConfig();
+    this.logger = Logger;
+
+    // ロガーの初期化
+    Logger.bot.connected(options.host, options.port, options.username);
 
     // mineflayerインスタンスを作成
     this.mc = createBot({

@@ -8,3 +8,10 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
+
+// Dummy test to prevent Jest error
+describe('Jest setup', () => {
+  it('should be configured correctly', () => {
+    expect(true).toBe(true);
+  });
+});

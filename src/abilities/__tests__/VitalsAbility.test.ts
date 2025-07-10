@@ -135,7 +135,7 @@ describe("VitalsAbility", () => {
     });
 
     it("should handle missing total experience", () => {
-      delete mockMinecraftBot.experience.total;
+      mockMinecraftBot.experience = { level: 0, points: 0 };
       expect(vitalsAbility.getTotalExperience()).toBe(0);
     });
   });

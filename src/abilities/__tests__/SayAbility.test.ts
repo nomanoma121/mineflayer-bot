@@ -220,7 +220,7 @@ describe("SayAbility", () => {
       bot.mc.food = 18;
       bot.getInventory = jest.fn().mockReturnValue([{ name: "item1" }, { name: "item2" }]);
       bot.mc.inventory.emptySlotCount = jest.fn().mockReturnValue(5);
-      bot.mc.time = { timeOfDay: 6000 };
+      bot.mc.time = { timeOfDay: 6000, day: 1, doDaylightCycle: true, bigTime: [0, 6000], time: 6000, age: [0, 1000], ageSync: true };
       bot.mc.isRaining = false;
     });
 

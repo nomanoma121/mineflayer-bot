@@ -31,7 +31,7 @@ export class MinecraftBotMock implements IMinecraftBot {
   public heldItem: Item | null = null;
 
   public inventory = {
-    items: jest.fn(() => []),
+    items: jest.fn(() => [] as Item[]),
     emptySlotCount: jest.fn(() => 36),
     slots: new Array(45).fill(null),
   };
@@ -84,7 +84,8 @@ export class MinecraftBotMock implements IMinecraftBot {
       slot: 0,
     } as Item;
     
-    this.inventory.items = jest.fn(() => [...this.inventory.items(), mockItem]);
+    const currentItems = (this.inventory.items as jest.Mock).getMockImplementation()?.() || [];
+    this.inventory.items = jest.fn(() => [...currentItems, mockItem]);
     return mockItem;
   }
 
@@ -114,7 +115,7 @@ export class MinecraftBotMock implements IMinecraftBot {
     this.entity.position = new Vec3(0, 64, 0);
     this.entities = {};
     this.heldItem = null;
-    this.inventory.items = jest.fn(() => []);
+    this.inventory.items = jest.fn(() => [] as Item[]);
     this.inventory.emptySlotCount = jest.fn(() => 36);
     
     // Reset all mocks
