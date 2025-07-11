@@ -28,6 +28,10 @@ export class MinecraftBotMock implements IMinecraftBot {
   };
 
   public entities: { [id: string]: Entity } = {};
+
+  public world = {
+    raycast: jest.fn().mockReturnValue(null)
+  };
   public heldItem: Item | null = null;
 
   public inventory = {

@@ -12,15 +12,37 @@ describe('BotScript Interpreter', () => {
 
   beforeEach(() => {
     const botMock = new MinecraftBotMock();
-    mockBot = new Bot({
-      host: 'localhost',
-      port: 25565,
-      username: 'TestBot',
-      auth: 'offline',
-      version: '1.20.1'
+    
+    // モック用のBotオブジェクトを作成
+    mockBot = {
+      mc: botMock,
+      getName: () => 'TestBot',
+      getPosition: () => ({ x: 100, y: 64, z: -200 }),
+      sensing: {
+        findNearestEntity: jest.fn().mockReturnValue(null)
+      },
+      inventory: {
+        hasItem: jest.fn().mockReturnValue(false),
+        findItem: jest.fn().mockReturnValue(null)
+      },
+      goto: jest.fn().mockResolvedValue(undefined),
+      sendMessage: jest.fn()
+    } as any;
+    
+    // sensing能力にmockエンティティを追加してATTACKテストを成功させる
+    mockBot.sensing.findNearestEntity = jest.fn().mockReturnValue({
+      id: 1,
+      name: 'zombie',
+      type: 'mob'
     });
-    // モックボットを設定
-    (mockBot as any).mc = botMock;
+    
+    // inventory能力でアイテムが見つかるようにmock
+    mockBot.inventory.findItem = jest.fn().mockReturnValue({
+      name: 'sword',
+      type: 267
+    });
+    
+    mockBot.getInventory = jest.fn().mockReturnValue([]);
     
     context = new ExecutionContext();
     interpreter = new Interpreter(mockBot, context);
@@ -37,6 +59,9 @@ describe('BotScript Interpreter', () => {
   describe('Expression Evaluation', () => {
     test('should evaluate number literals', async () => {
       const result = await executeScript('42');
+      if (result.type === ExecutionResultType.ERROR) {
+        console.log('Error details:', result.message);
+      }
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 

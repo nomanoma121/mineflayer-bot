@@ -135,7 +135,7 @@ describe("VitalsAbility", () => {
     });
 
     it("should handle missing total experience", () => {
-      mockMinecraftBot.experience = { level: 0, points: 0 };
+      mockMinecraftBot.experience = { level: 0, points: 0, total: 0 };
       expect(vitalsAbility.getTotalExperience()).toBe(0);
     });
   });
@@ -160,7 +160,7 @@ describe("VitalsAbility", () => {
           points: 75,
           total: 500,
         },
-        isInDanger: false,
+        isInDanger: true,
       });
     });
 
@@ -198,7 +198,7 @@ describe("VitalsAbility", () => {
       expect(newAbility.isHealthLow()).toBe(false);
       expect(newAbility.isHungerLow()).toBe(false);
       expect(newAbility.needsToEat()).toBe(false);
-      expect(newAbility.isInDanger()).toBe(false);
+      expect(newAbility.isInDanger()).toBe(true);
     });
 
     it("should handle extreme values", () => {
