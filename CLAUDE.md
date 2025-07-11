@@ -1,6 +1,6 @@
 # CLAUDE.md
 必ず日本語で回答してください。
-適切にコミットしたり、、ブランチを切ること
+適切にコミットしたり、ブランチを切ること
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
