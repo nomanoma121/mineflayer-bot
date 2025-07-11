@@ -23,6 +23,7 @@ import { ExplorerCommand } from "./commands/ExplorerCommand";
 import { FarmerCommand } from "./commands/FarmerCommand";
 import { MinerCommand } from "./commands/MinerCommand";
 import { AbilityTestCommand } from "./commands/AbilityTestCommand";
+import { BotScriptCommand } from "./commands/BotScriptCommand";
 import { IdleState } from "./states/IdleState";
 
 // .envファイルから環境変数を読み込み
@@ -84,9 +85,16 @@ async function main(): Promise<void> {
     
     // アビリティテストコマンドを登録
     commandHandler.registerCommand("abilitytest", new AbilityTestCommand());
+    
+    // BotScriptコマンドを登録
+    commandHandler.registerCommand("botscript", new BotScriptCommand());
 
     // チャットイベントリスナーを設定
     bot.mc.on("chat", async (username: string, message: string) => {
+      // BotScriptのチャットメッセージを処理
+      await BotScriptCommand.handleChatMessage(bot, username, message);
+      
+      // 通常のコマンドを処理
       await commandHandler.handleMessage(bot, username, message);
     });
 
