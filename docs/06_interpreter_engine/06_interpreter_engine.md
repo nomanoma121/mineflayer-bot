@@ -626,146 +626,173 @@ private async executeCommandsBatch(commands: CommandNode[]): Promise<void> {
 
 ## 📝 練習問題
 
-### 🟢 初級問題
-**問題**: 以下のBotScriptコードを実行した時、各ステップでの変数の値の変化を追跡してください。
+インタプリタエンジンの実装練習は、以下のディレクトリで実際にコードを書いて学習できます：
 
-```botscript
-DEF $x = 5
-SET $x = $x + 3
-SAY "Value: " + $x
+### 🎯 練習問題ディレクトリ
+
+```
+src/botscript/practice/03_interpreter/
+├── beginner/              # 🟢 初級問題
+│   ├── BasicExecution.ts  # 基本的なAST実行
+│   ├── BasicExecution.test.ts
+│   ├── VariableEnvironment.ts # 変数管理
+│   └── VariableEnvironment.test.ts
+├── intermediate/          # 🟡 中級問題
+│   ├── ControlFlow.ts     # 制御フロー（IF, REPEAT）
+│   ├── ControlFlow.test.ts
+│   ├── ExpressionEvaluation.ts # 式評価
+│   └── ExpressionEvaluation.test.ts
+├── advanced/             # 🔴 上級問題
+│   ├── BotIntegration.ts  # Minecraft ボット連携
+│   ├── BotIntegration.test.ts
+│   ├── ErrorHandling.ts   # 実行時エラー処理
+│   └── ErrorHandling.test.ts
+└── solutions/            # 解答例
 ```
 
-<details>
-<summary>解答例</summary>
+### 🚀 実践的学習方法
 
-**実行ステップ**:
-1. `DEF $x = 5` → `$x = 5`
-2. `SET $x = $x + 3` → `$x = 5 + 3 = 8`
-3. `SAY "Value: " + $x` → `SAY "Value: 8"` → ボットが "Value: 8" と発言
+1. **問題ファイルを開く**: `BasicExecution.ts` など
+2. **TODO部分を実装**: Visitorパターンでの各ノード処理を実装
+3. **テストを実行**: `npm test -- src/botscript/practice/03_interpreter/beginner/BasicExecution.test.ts`
+4. **実行結果を確認**: ASTが正しく実行されるかテストで検証
 
-**テスト方法**:
-```typescript
-test('variable tracking', async () => {
-  const context = new ExecutionContext();
-  const interpreter = new Interpreter(mockBot, context);
-  
-  await interpreter.execute(ast);
-  
-  expect(context.getVariable('$x')).toBe(8);
-  expect(mockBot.say.say).toHaveBeenCalledWith('Value: 8');
-});
-```
-</details>
+### 🟢 初級問題の例
 
-### 🟡 中級問題
-**問題**: 以下のIF文の条件評価を手動で実行し、どの分岐が実行されるかを判定してください。
-
-```botscript
-DEF $health = 15
-DEF $food = 8
-IF $health > 10 AND $food < 10 THEN
-  SAY "Healthy but hungry"
-ELSE
-  SAY "Other condition"
-ENDIF
-```
-
-<details>
-<summary>解答例</summary>
-
-**条件評価プロセス**:
-1. `$health > 10` → `15 > 10` → `true`
-2. `$food < 10` → `8 < 10` → `true`
-3. `true AND true` → `true`
-4. 条件が`true`なので、THEN分岐が実行される
-5. ボットが "Healthy but hungry" と発言
-
-**テスト方法**:
-```typescript
-test('conditional logic evaluation', async () => {
-  const context = new ExecutionContext();
-  const interpreter = new Interpreter(mockBot, context);
-  
-  // 事前に変数を設定
-  context.setVariable('$health', 15);
-  context.setVariable('$food', 8);
-  
-  await interpreter.execute(ast);
-  
-  expect(mockBot.say.say).toHaveBeenCalledWith('Healthy but hungry');
-});
-```
-</details>
-
-### 🔴 上級問題
-**問題**: 以下のREPEAT文の実行中に`stop()`メソッドが呼ばれた場合の動作をテストケースとして実装してください。
-
-```botscript
-REPEAT 1000
-  SAY "Loop " + $loop_index
-  WAIT 0.1
-ENDREPEAT
-SAY "Completed"
-```
-
-<details>
-<summary>解答例</summary>
+**BasicExecution.ts**: 基本的なAST実行エンジン
 
 ```typescript
-test('interpreter stop during repeat loop', async () => {
-  const context = new ExecutionContext();
-  const interpreter = new Interpreter(mockBot, context);
+// 実装要件:
+// 1. Visitorパターンでのノード処理
+// 2. 環境管理での変数操作
+// 3. SAYコマンドの出力収集
+
+public visitVariableDeclaration(node: VariableDeclarationNode): void {
+  // TODO: 変数宣言の実行
+  // ヒント1: 初期化式を評価
+  // ヒント2: 環境に変数を定義
   
-  // 大きなループを含むAST
-  const ast = createRepeatAst(1000);
+  const value = this.execute(node.initializer);
+  this.environment.define(node.name, value);
+}
+```
+
+**テスト例**:
+```typescript
+test('変数宣言と参照', () => {
+  const ast = createProgram([
+    createVariableDeclaration('$x', createNumberLiteral(42)),
+    createSayCommand(createVariable('$x'))
+  ]);
   
-  // 実行を開始
-  const executePromise = interpreter.execute(ast);
+  const result = interpreter.interpret(ast);
   
-  // 少し待ってから停止
-  setTimeout(() => {
-    interpreter.stop();
-  }, 50); // 50ms後に停止
-  
-  // 結果を確認
-  const result = await executePromise;
-  
-  // 停止により中断されたことを確認
-  expect(result.type).toBe(ExecutionResultType.STOPPED);
-  expect(result.message).toContain('stopped');
-  
-  // 最後の"Completed"メッセージが実行されていないことを確認
-  const sayCommands = mockBot.say.say.mock.calls;
-  const lastCall = sayCommands[sayCommands.length - 1];
-  expect(lastCall[0]).not.toBe('Completed');
-  
-  // 部分的に実行されたことを確認（いくつかのループは実行された）
-  expect(sayCommands.length).toBeGreaterThan(0);
-  expect(sayCommands.length).toBeLessThan(1000);
+  expect(result.output).toEqual(['42']);
+  expect(result.variables['$x']).toBe(42);
 });
 ```
 
-**停止時の内部状態確認**:
+### 🟡 中級問題の例
+
+**ControlFlow.ts**: 制御構造の実行
+
 ```typescript
-test('interpreter state during stop', () => {
-  const interpreter = new Interpreter(mockBot, context);
+// 実装要件:
+// 1. IF文の条件評価と分岐
+// 2. REPEAT文のループ制御
+// 3. ネストした制御構造
+
+public visitIfStatement(node: IfStatementNode): void {
+  const condition = this.execute(node.condition);
   
-  expect(interpreter.isExecuting()).toBe(false);
+  // TODO: 条件に応じた分岐実行
+  // ヒント1: 条件をブール値に変換
+  // ヒント2: THEN分岐またはELSE分岐を実行
   
-  const executePromise = interpreter.execute(ast);
-  expect(interpreter.isExecuting()).toBe(true);
-  
-  interpreter.stop();
-  
-  // 停止後も isExecuting は実行完了まで true のまま
-  expect(interpreter.isExecuting()).toBe(true);
-  
-  // 実行完了を待つ
-  await executePromise;
-  expect(interpreter.isExecuting()).toBe(false);
-});
+  if (this.isTruthy(condition)) {
+    this.executeBlock(node.thenBranch);
+  } else if (node.elseBranch) {
+    this.executeBlock(node.elseBranch);
+  }
+}
 ```
-</details>
+
+### 🔴 上級問題の例
+
+**BotIntegration.ts**: 実際のボット連携
+
+```typescript
+// 実装要件:
+// 1. 非同期ボット操作の実行
+// 2. 操作完了の待機
+// 3. エラー処理と回復
+
+public async visitMoveCommand(node: MoveCommandNode): Promise<void> {
+  const direction = this.execute(node.direction);
+  const distance = node.distance ? this.execute(node.distance) : 1;
+  
+  // TODO: 実際のボット移動を実行
+  // ヒント1: ボットの能力を使用
+  // ヒント2: 非同期処理の適切な待機
+  // ヒント3: エラー時の処理
+  
+  try {
+    await this.bot.movement.move(direction, distance);
+  } catch (error) {
+    throw new Error(`Movement failed: ${error.message}`);
+  }
+}
+```
+
+### ✅ 成功判定と実行追跡
+
+各問題のテストが通ると、実行結果が表示されます：
+
+```
+🎉 03_interpreter 初級問題1クリア！基本的なAST実行ができました！
+
+実行結果:
+{
+  output: ['Hello World', '42'],
+  variables: { '$message': 'Hello World', '$count': 42 },
+  errors: []
+}
+```
+
+### 📊 実行フローの理解
+
+練習問題では以下を学習できます：
+
+- **Visitorパターン**: ASTノードの効率的な処理
+- **環境管理**: 変数スコープとライフサイクル
+- **制御フロー**: 条件分岐とループの実装
+- **非同期処理**: ボット操作の待機と同期
+
+### 🔍 デバッグ支援
+
+各練習問題には詳細なデバッグ支援機能が含まれています：
+
+```typescript
+// 実行状態の追跡
+console.log('Environment:', interpreter.getEnvironment().getAll());
+
+// ノード実行の確認
+console.log('Executing:', node.type, node);
+
+// 評価結果の検証
+expect(result.variables['$health']).toBe(100);
+```
+
+### 📚 理論と実践の統合
+
+この解説ドキュメントの理論を基に、実際の練習問題で：
+
+- **Visitorパターン**: 実際の実装経験
+- **環境管理**: 効率的な変数操作の理解
+- **非同期処理**: ボット連携の実装技術
+- **エラーハンドリング**: 堅牢なインタプリタの構築
+
+を身につけることができます。
 
 ## 🏆 自己評価チェックリスト
 

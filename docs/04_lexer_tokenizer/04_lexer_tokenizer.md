@@ -434,125 +434,124 @@ ENDIF
 
 ## 📝 練習問題
 
-### 🟢 初級問題
-**問題**: 以下のBotScriptコードをトークン化したとき、生成されるトークンの種類と数を答えてください。
+字句解析器の実装練習は、以下のディレクトリで実際にコードを書いて学習できます：
 
-```botscript
-SAY "Hello"
+### 🎯 練習問題ディレクトリ
+
+```
+src/botscript/practice/01_lexer/
+├── beginner/              # 🟢 初級問題
+│   ├── BasicTokens.ts     # 基本トークンの認識
+│   ├── BasicTokens.test.ts
+│   ├── NumbersAndStrings.ts # 数値と文字列の処理
+│   └── NumbersAndStrings.test.ts
+├── intermediate/          # 🟡 中級問題
+│   ├── ComplexOperators.ts # 複合演算子の処理
+│   └── EscapeSequences.ts  # エスケープシーケンス
+├── advanced/             # 🔴 上級問題
+│   ├── ErrorRecovery.ts   # エラー回復機能
+│   └── Performance.ts     # パフォーマンス最適化
+└── solutions/            # 解答例
 ```
 
-<details>
-<summary>解答例</summary>
+### 🚀 実践的学習方法
 
-**トークン**:
-1. `SAY` (TokenType.SAY)
-2. `"Hello"` (TokenType.STRING) - 値は"Hello"（ダブルクォート除く）
-3. EOF (TokenType.EOF)
+1. **問題ファイルを開く**: `BasicTokens.ts` など
+2. **TODOコメントを見つける**: 実装すべき箇所が明示されています
+3. **実装する**: 段階的にコードを書いていきます
+4. **テストを実行**: `npm test -- src/botscript/practice/01_lexer/beginner/BasicTokens.test.ts`
+5. **✅ PASS が出るまで修正**: テストが通ると成功です！
 
-**総数**: 3個
+### 🟢 初級問題の例
 
-**テスト方法**:
+**BasicTokens.ts**: 基本的なキーワードと文字列の認識
+
 ```typescript
-const lexer = new Lexer('SAY "Hello"');
-const tokens = lexer.tokenize();
-expect(tokens).toHaveLength(3);
-expect(tokens[0].type).toBe(TokenType.SAY);
-expect(tokens[1].type).toBe(TokenType.STRING);
-expect(tokens[1].value).toBe('Hello');
-```
-</details>
+// 実装要件:
+// 1. "SAY" キーワードをSAYトークンとして認識
+// 2. "MOVE" キーワードをMOVEトークンとして認識  
+// 3. "文字列" を STRING トークンとして認識
+// 4. 最後にEOFトークンを追加
+// 5. 空白文字は無視
 
-### 🟡 中級問題
-**問題**: 以下のエスケープシーケンスを含む文字列が正しくトークン化されることを確認してください。どのような値として解釈されるか答えてください。
-
-```botscript
-SAY "Line 1\nLine 2\tTabbed\"Quote\""
-```
-
-<details>
-<summary>解答例</summary>
-
-**STRINGトークンの値**:
-```
-Line 1
-Line 2	Tabbed"Quote"
-```
-
-- `\n` → 改行文字
-- `\t` → タブ文字  
-- `\"` → ダブルクォート文字
-
-**テスト方法**:
-```typescript
-const lexer = new Lexer('SAY "Line 1\\nLine 2\\tTabbed\\"Quote\\""');
-const tokens = lexer.tokenize();
-expect(tokens[1].value).toBe('Line 1\nLine 2\tTabbed"Quote"');
-```
-</details>
-
-### 🔴 上級問題  
-**問題**: 以下の複雑なBotScriptコードを完全にトークン化し、各演算子が正しく認識されることを確認するテストケースを作成してください。
-
-```botscript
-DEF $result = ($a + $b) * 2
-IF $result >= 100 AND $status != "ready" THEN
-  CALC $result = $result / 2
-ENDIF
-```
-
-<details>
-<summary>解答例</summary>
-
-**期待されるトークン（主要部分）**:
-```typescript
-[
-  { type: 'DEF', value: 'DEF' },
-  { type: 'VARIABLE', value: '$result' },
-  { type: 'ASSIGN', value: '=' },
-  { type: 'LEFT_PAREN', value: '(' },
-  { type: 'VARIABLE', value: '$a' },
-  { type: 'PLUS', value: '+' },
-  { type: 'VARIABLE', value: '$b' },
-  { type: 'RIGHT_PAREN', value: ')' },
-  { type: 'MULTIPLY', value: '*' },
-  { type: 'NUMBER', value: '2' },
-  // ... 他のトークン
-  { type: 'GREATER_EQUAL', value: '>=' },
-  { type: 'AND', value: 'AND' },
-  { type: 'NOT_EQUAL', value: '!=' },
-  // ...
-]
-```
-
-**テストケース**:
-```typescript
-test('complex expression tokenization', () => {
-  const source = `DEF $result = ($a + $b) * 2
-IF $result >= 100 AND $status != "ready" THEN
-  CALC $result = $result / 2
-ENDIF`;
+public tokenize(): BasicToken[] {
+  const tokens: BasicToken[] = [];
   
-  const lexer = new Lexer(source);
+  // TODO: ここに実装してください
+  // ヒント1: while (!this.isAtEnd()) でループ
+  // ヒント2: this.skipWhitespace() で空白をスキップ
+  // ヒント3: this.nextToken() で次のトークンを取得
+  
+  return tokens;
+}
+```
+
+**テスト例**:
+```typescript
+test('SAYコマンドと文字列の組み合わせ', () => {
+  const lexer = new BasicLexer('SAY "Hello"');
   const tokens = lexer.tokenize();
   
-  // 特定の演算子の存在確認
-  const tokenTypes = tokens.map(t => t.type);
-  expect(tokenTypes).toContain(TokenType.GREATER_EQUAL);
-  expect(tokenTypes).toContain(TokenType.AND);
-  expect(tokenTypes).toContain(TokenType.NOT_EQUAL);
-  expect(tokenTypes).toContain(TokenType.LEFT_PAREN);
-  expect(tokenTypes).toContain(TokenType.RIGHT_PAREN);
-  
-  // 行番号の正確性確認
-  const ifToken = tokens.find(t => t.type === TokenType.IF);
-  expect(ifToken?.line).toBe(2);
-  
-  // 文字列値の正確性確認
-  const stringToken = tokens.find(t => t.type === TokenType.STRING);
-  expect(stringToken?.value).toBe('ready');
+  expect(tokens).toHaveLength(3); // SAY + STRING + EOF
+  expect(tokens[0].type).toBe(BasicTokenType.SAY);
+  expect(tokens[1].value).toBe('Hello'); // クォート除去
 });
 ```
-</details>
+
+### 🟡 中級問題の例
+
+**ComplexOperators.ts**: 複合演算子（>=, <=, ==, !=）の処理
+
+```typescript
+// 実装要件:
+// 1. 先読み処理で = と == を区別
+// 2. 複合演算子の正確な認識
+// 3. エラーメッセージの詳細化
+
+case '=':
+  // TODO: this.match('=') で次の文字が = かチェック
+  // == なら EQUALS トークン、= なら ASSIGN トークン
+  if (this.match('=')) {
+    return this.createToken(TokenType.EQUALS, '==');
+  }
+  return this.createToken(TokenType.ASSIGN, '=');
+```
+
+### 🔴 上級問題の例
+
+**ErrorRecovery.ts**: エラー回復機能の実装
+
+```typescript
+// 実装要件:
+// 1. パニックモード回復
+// 2. 詳細なエラー報告
+// 3. 部分的な解析継続
+
+public tokenizeWithErrorRecovery(): { tokens: Token[], errors: string[] } {
+  // TODO: エラーが発生しても継続する仕組みを実装
+}
+```
+
+### ✅ 成功判定
+
+各問題のテストが通ると以下のようなメッセージが表示されます：
+
+```
+🎉 01_lexer 初級問題1クリア！基本的な字句解析ができました！
+🎉 01_lexer 中級問題1クリア！複合演算子の処理ができました！
+🎉 01_lexer 上級問題1クリア！エラー回復機能が実装できました！
+```
+
+### 📚 理論と実践の組み合わせ
+
+この解説ドキュメントで理論を学んだ後、実際に練習問題でコードを書くことで：
+
+- **理論の理解**: なぜそうするのかを理解
+- **実装の経験**: 実際にコードを書く技術
+- **テスト駆動**: 正確性を確認する習慣
+- **段階的習得**: 基礎から応用への確実なステップアップ
+
+が可能になります。ぜひ練習問題にチャレンジしてください！
 
 ## 🏆 自己評価チェックリスト
 

@@ -704,195 +704,197 @@ ENDIF
 
 ## 📝 練習問題
 
-### 🟢 初級問題
-**問題**: 以下の単純なBotScriptコードのASTを手動で構築してください。
+構文解析器の実装練習は、以下のディレクトリで実際にコードを書いて学習できます：
 
-```botscript
-DEF $x = 10
-SAY $x
+### 🎯 練習問題ディレクトリ
+
+```
+src/botscript/practice/02_parser/
+├── beginner/              # 🟢 初級問題
+│   ├── BasicAST.ts        # 基本的なAST構築
+│   ├── BasicAST.test.ts
+│   ├── ExpressionParsing.ts # 式の解析
+│   └── ExpressionParsing.test.ts
+├── intermediate/          # 🟡 中級問題
+│   ├── OperatorPrecedence.ts # 演算子優先順位
+│   ├── ControlStructures.ts  # 制御構造
+│   └── ErrorHandling.ts      # エラーハンドリング
+├── advanced/             # 🔴 上級問題
+│   ├── NestedStructures.ts  # 入れ子構造
+│   ├── ASTOptimization.ts   # AST最適化
+│   └── AdvancedFeatures.ts  # 高度な機能
+└── solutions/            # 解答例
 ```
 
-<details>
-<summary>解答例</summary>
+### 🚀 実践的学習方法
+
+1. **問題ファイルを開く**: `BasicAST.ts` など
+2. **TODO部分を実装**: パーサーの各メソッドを段階的に実装
+3. **テストを実行**: `npm test -- src/botscript/practice/02_parser/beginner/BasicAST.test.ts`
+4. **ASTを確認**: 生成されたASTが期待通りかテストで検証
+
+### 🟢 初級問題の例
+
+**BasicAST.ts**: 基本的なAST節点の構築
 
 ```typescript
+// 実装要件:
+// 1. 変数宣言のAST構築
+// 2. 基本式のAST構築
+// 3. コマンドのAST構築
+
+private variableDeclaration(): VariableDeclarationNode {
+  const name = this.consume(TokenType.VARIABLE, 'Expected variable name');
+  this.consume(TokenType.ASSIGN, 'Expected "=" after variable');
+  
+  const initializer = this.expression();
+  
+  // TODO: VariableDeclarationNodeを作成して返す
+  // ヒント: ASTFactory.createVariableDeclaration() を使用
+  
+  return /* 実装してください */;
+}
+```
+
+**テスト例**:
+```typescript
+test('変数宣言のAST構築', () => {
+  const tokens = tokenize('DEF $x = 10');
+  const parser = new Parser(tokens);
+  const ast = parser.parse();
+  
+  expect(ast.statements).toHaveLength(1);
+  const decl = ast.statements[0] as VariableDeclarationNode;
+  expect(decl.type).toBe('VariableDeclaration');
+  expect(decl.name).toBe('$x');
+  expect((decl.initializer as NumberLiteralNode).value).toBe(10);
+});
+```
+
+### 🟡 中級問題の例
+
+**OperatorPrecedence.ts**: 演算子優先順位の正確な実装
+
+```typescript
+// 実装要件:
+// 1. 演算子優先順位の階層実装
+// 2. 左結合性の処理
+// 3. 括弧による優先順位変更
+
+private term(): ExpressionNode {
+  let expr = this.factor();
+  
+  while (this.match(TokenType.PLUS, TokenType.MINUS)) {
+    const operator = this.previous().value;
+    const right = this.factor();
+    
+    // TODO: BinaryExpressionNodeを作成
+    // ヒント: 左結合性を考慮したAST構築
+    
+    expr = /* 実装してください */;
+  }
+  
+  return expr;
+}
+```
+
+**期待されるAST**: `2 + 3 * 4` → `2 + (3 * 4)`
+```typescript
+{
+  type: 'BinaryExpression',
+  left: { type: 'NumberLiteral', value: 2 },
+  operator: '+',
+  right: {
+    type: 'BinaryExpression',
+    left: { type: 'NumberLiteral', value: 3 },
+    operator: '*',
+    right: { type: 'NumberLiteral', value: 4 }
+  }
+}
+```
+
+### 🔴 上級問題の例
+
+**NestedStructures.ts**: 複雑な入れ子構造の解析
+
+```typescript
+// 実装要件:
+// 1. 入れ子になったIF文の正確な解析
+// 2. REPEATとIFの組み合わせ
+// 3. 深い階層でのスコープ管理
+
+private ifStatement(): IfStatementNode {
+  const condition = this.expression();
+  this.consume(TokenType.THEN, 'Expected THEN');
+  
+  // TODO: THEN分岐の文リストを解析
+  const thenBranch = this.statementBlock([TokenType.ELSE, TokenType.ENDIF]);
+  
+  let elseBranch: StatementNode[] | undefined;
+  if (this.match(TokenType.ELSE)) {
+    // TODO: ELSE分岐の解析
+    elseBranch = /* 実装してください */;
+  }
+  
+  this.consume(TokenType.ENDIF, 'Expected ENDIF');
+  
+  return /* 完全なIfStatementNodeを作成 */;
+}
+```
+
+### ✅ 成功判定とAST可視化
+
+各問題のテストが通ると、生成されたASTが表示されます：
+
+```
+🎉 02_parser 初級問題1クリア！基本的なAST構築ができました！
+
+生成されたAST:
 {
   type: 'Program',
   statements: [
     {
       type: 'VariableDeclaration',
-      name: '$x',
-      initializer: {
-        type: 'NumberLiteral',
-        value: 10
-      }
-    },
-    {
-      type: 'SayCommand',
-      message: {
-        type: 'Variable',
-        name: '$x'
-      }
+      name: '$health',
+      initializer: { type: 'NumberLiteral', value: 100 }
     }
   ]
 }
 ```
 
-**テスト方法**:
-```typescript
-const parser = new Parser(tokens);
-const ast = parser.parse();
-expect(ast.statements).toHaveLength(2);
-expect(ast.statements[0].type).toBe('VariableDeclaration');
-expect(ast.statements[1].type).toBe('SayCommand');
-```
-</details>
+### 📊 AST構造の理解
 
-### 🟡 中級問題
-**問題**: 以下の数式の演算子優先度が正しくASTに反映されることを確認してください。
+練習問題では以下を学習できます：
 
-```botscript
-DEF $result = 2 + 3 * 4
-```
+- **節点の階層関係**: 親子関係の正確な構築
+- **演算子優先順位**: 数学的な優先順位のAST表現
+- **制御構造**: IF文、REPEAT文の入れ子表現
+- **エラー回復**: 構文エラー時の適切な処理
 
-期待される計算順序：`2 + (3 * 4) = 14`
+### 🔍 デバッグ支援
 
-<details>
-<summary>解答例</summary>
-
-**AST構造**（重要部分）:
-```typescript
-{
-  type: 'VariableDeclaration',
-  name: '$result',
-  initializer: {
-    type: 'BinaryExpression',
-    left: {
-      type: 'NumberLiteral',
-      value: 2
-    },
-    operator: '+',
-    right: {
-      type: 'BinaryExpression',  // ← 乗算が右側の子として先に評価される
-      left: {
-        type: 'NumberLiteral',
-        value: 3
-      },
-      operator: '*',
-      right: {
-        type: 'NumberLiteral',
-        value: 4
-      }
-    }
-  }
-}
-```
-
-**テスト方法**:
-```typescript
-const tokens = new Lexer('DEF $result = 2 + 3 * 4').tokenize();
-const parser = new Parser(tokens);
-const ast = parser.parse();
-
-const declaration = ast.statements[0] as VariableDeclarationNode;
-const expr = declaration.initializer as BinaryExpressionNode;
-
-// 加算が最上位
-expect(expr.operator).toBe('+');
-expect((expr.left as NumberLiteralNode).value).toBe(2);
-
-// 乗算が右側の子
-const rightExpr = expr.right as BinaryExpressionNode;
-expect(rightExpr.operator).toBe('*');
-expect((rightExpr.left as NumberLiteralNode).value).toBe(3);
-expect((rightExpr.right as NumberLiteralNode).value).toBe(4);
-```
-</details>
-
-### 🔴 上級問題
-**問題**: 以下の入れ子になったIF文とREPEAT文を含む複雑なコードが正しくASTに変換されることを確認するテストケースを作成してください。
-
-```botscript
-REPEAT 3
-  IF $bot_health < 10 THEN
-    SAY "Health low!"
-    IF $bot_food > 5 THEN
-      SAY "Eating..."
-    ELSE
-      SAY "No food"
-    ENDIF
-  ENDIF
-ENDREPEAT
-```
-
-<details>
-<summary>解答例</summary>
+各練習問題には詳細なテストとデバッグ支援機能が含まれています：
 
 ```typescript
-test('nested control structures parsing', () => {
-  const source = `REPEAT 3
-  IF $bot_health < 10 THEN
-    SAY "Health low!"
-    IF $bot_food > 5 THEN
-      SAY "Eating..."
-    ELSE
-      SAY "No food"
-    ENDIF
-  ENDIF
-ENDREPEAT`;
+// AST構造の可視化
+console.log('Generated AST:', JSON.stringify(ast, null, 2));
 
-  const lexer = new Lexer(source);
-  const tokens = lexer.tokenize();
-  const parser = new Parser(tokens);
-  const ast = parser.parse();
-
-  // REPEAT文の確認
-  expect(ast.statements).toHaveLength(1);
-  const repeatStmt = ast.statements[0] as RepeatStatementNode;
-  expect(repeatStmt.type).toBe('RepeatStatement');
-  expect((repeatStmt.count as NumberLiteralNode).value).toBe(3);
-
-  // REPEATの本体にIF文が含まれていることを確認
-  expect(repeatStmt.body).toHaveLength(1);
-  const outerIf = repeatStmt.body[0] as IfStatementNode;
-  expect(outerIf.type).toBe('IfStatement');
-
-  // 外側のIFの条件確認
-  const condition = outerIf.condition as BinaryExpressionNode;
-  expect(condition.operator).toBe('<');
-  expect((condition.left as VariableNode).name).toBe('$bot_health');
-  expect((condition.right as NumberLiteralNode).value).toBe(10);
-
-  // 外側のIFのTHEN分岐確認
-  expect(outerIf.thenBranch).toHaveLength(2);
-  
-  // 最初のSAY文
-  const firstSay = outerIf.thenBranch[0] as SayCommandNode;
-  expect(firstSay.type).toBe('SayCommand');
-  expect((firstSay.message as StringLiteralNode).value).toBe('Health low!');
-
-  // 入れ子のIF文
-  const innerIf = outerIf.thenBranch[1] as IfStatementNode;
-  expect(innerIf.type).toBe('IfStatement');
-  
-  // 入れ子のIF条件確認
-  const innerCondition = innerIf.condition as BinaryExpressionNode;
-  expect(innerCondition.operator).toBe('>');
-  expect((innerCondition.left as VariableNode).name).toBe('$bot_food');
-  expect((innerCondition.right as NumberLiteralNode).value).toBe(5);
-
-  // 入れ子のTHEN/ELSE分岐確認
-  expect(innerIf.thenBranch).toHaveLength(1);
-  expect(innerIf.elseBranch).toHaveLength(1);
-  
-  const thenSay = innerIf.thenBranch[0] as SayCommandNode;
-  expect((thenSay.message as StringLiteralNode).value).toBe('Eating...');
-  
-  const elseSay = innerIf.elseBranch![0] as SayCommandNode;
-  expect((elseSay.message as StringLiteralNode).value).toBe('No food');
-});
+// 特定の節点の検証
+expect(ast.statements[0].type).toBe('IfStatement');
+const ifStmt = ast.statements[0] as IfStatementNode;
+expect(ifStmt.condition.type).toBe('BinaryExpression');
 ```
-</details>
+
+### 📚 理論と実践の統合
+
+この解説ドキュメントの理論を基に、実際の練習問題で：
+
+- **再帰下降パーサー**: 実際の実装経験
+- **AST設計**: 効率的な節点構造の理解
+- **エラーハンドリング**: 堅牢なパーサーの構築
+- **最適化技術**: パフォーマンスを考慮した実装
+
+を身につけることができます。
 
 ## 🏆 自己評価チェックリスト
 
