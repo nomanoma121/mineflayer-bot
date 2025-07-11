@@ -362,4 +362,17 @@ export class Bot {
   public async handleEmergency(): Promise<ReturnType<AbilityManager["handleEmergency"]>> {
     return await this.abilityManager.handleEmergency();
   }
+
+  /**
+   * 指定した座標に移動する
+   * @param x - X座標
+   * @param y - Y座標
+   * @param z - Z座標
+   */
+  public async goto(x: number, y: number, z: number): Promise<void> {
+    const { goals } = await import('mineflayer-pathfinder');
+    const goal = new goals.GoalBlock(x, y, z);
+    
+    await this.mc.pathfinder.goto(goal);
+  }
 }
