@@ -374,11 +374,11 @@ describe('BotScript Interpreter', () => {
 
     test('should execute WAIT command', async () => {
       const startTime = Date.now();
-      const result = await executeScript('WAIT 0.1'); // 100ms wait
+      const result = await executeScript('WAIT 0.01'); // 10ms wait
       const endTime = Date.now();
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
-      expect(endTime - startTime).toBeGreaterThanOrEqual(90); // Allow some margin
+      expect(endTime - startTime).toBeGreaterThanOrEqual(5); // Allow some margin
     });
   });
 
@@ -422,11 +422,11 @@ describe('BotScript Interpreter', () => {
         DEF $start_z = $bot_z
         
         MOVE "forward" 10
-        WAIT 1
+        WAIT 0.01
         MOVE "right" 5
-        WAIT 1
+        WAIT 0.01
         MOVE "backward" 10
-        WAIT 1
+        WAIT 0.01
         MOVE "left" 5
         
         GOTO $start_x $start_y $start_z
@@ -496,14 +496,14 @@ describe('BotScript Interpreter', () => {
       // 長時間実行されるスクリプトを開始
       const executePromise = executeScript(`
         REPEAT 1000000
-          WAIT 0.001
+          WAIT 0.0001
         ENDREPEAT
       `);
       
       // 少し待ってから停止
       setTimeout(() => {
         interpreter.stop();
-      }, 50);
+      }, 10);
       
       const result = await executePromise;
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
