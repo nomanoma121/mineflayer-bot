@@ -32,6 +32,9 @@ export class MinecraftBotMock implements IMinecraftBot {
   public world = {
     raycast: jest.fn().mockReturnValue(null)
   };
+
+  public attack = jest.fn();
+  public toss = jest.fn().mockResolvedValue(undefined);
   public heldItem: Item | null = null;
 
   public inventory = {

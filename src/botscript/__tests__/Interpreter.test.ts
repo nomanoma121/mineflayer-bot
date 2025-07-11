@@ -18,28 +18,55 @@ describe('BotScript Interpreter', () => {
       mc: botMock,
       getName: () => 'TestBot',
       getPosition: () => ({ x: 100, y: 64, z: -200 }),
+      getInventory: jest.fn().mockReturnValue([]),
       sensing: {
         findNearestEntity: jest.fn().mockReturnValue(null)
       },
       inventory: {
         hasItem: jest.fn().mockReturnValue(false),
-        findItem: jest.fn().mockReturnValue(null)
+        findItem: jest.fn().mockReturnValue(null),
+        dropItem: jest.fn().mockResolvedValue(undefined)
+      },
+      say: {
+        say: jest.fn()
       },
       goto: jest.fn().mockResolvedValue(undefined),
       sendMessage: jest.fn()
     } as any;
     
     // sensing能力にmockエンティティを追加してATTACKテストを成功させる
-    mockBot.sensing.findNearestEntity = jest.fn().mockReturnValue({
-      id: 1,
-      name: 'zombie',
-      type: 'mob'
+    mockBot.sensing.findNearestEntity = jest.fn().mockImplementation((filter) => {
+      const mockEntity = {
+        id: 1,
+        name: 'zombie',
+        type: 'mob',
+        displayName: 'Zombie',
+        username: 'zombie'
+      };
+      
+      // フィルター関数を呼び出してマッチするかチェック
+      if (typeof filter === 'function') {
+        return filter(mockEntity) ? mockEntity : null;
+      }
+      return mockEntity;
     });
     
     // inventory能力でアイテムが見つかるようにmock
-    mockBot.inventory.findItem = jest.fn().mockReturnValue({
-      name: 'sword',
-      type: 267
+    mockBot.inventory.findItem = jest.fn().mockImplementation((itemName) => {
+      // DROPコマンド用のアイテム（stoneなど）
+      if (itemName === 'stone') {
+        return {
+          name: 'stone',
+          type: 1,
+          count: 64
+        };
+      }
+      // EQUIPコマンド用のアイテム（swordなど）
+      return {
+        name: itemName,
+        type: 267,
+        count: 1
+      };
     });
     
     mockBot.getInventory = jest.fn().mockReturnValue([]);
@@ -315,6 +342,9 @@ describe('BotScript Interpreter', () => {
     test('should execute ATTACK command', async () => {
       const result = await executeScript('ATTACK "zombie"');
       
+      if (result.type === ExecutionResultType.ERROR) {
+        console.log('ATTACK Error details:', result.message);
+      }
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
