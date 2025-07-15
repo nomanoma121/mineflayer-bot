@@ -1,308 +1,249 @@
-# 汎用 Mineflayer ボット v2.0
+# Mineflayer Bot with BotScript
 
-TypeScript とデザインパターンを活用した、高度な Minecraft ボットプロジェクトです。
+MinecraftでスクリプトやコマンドでボットをコントロールできるTypeScript製ボットです。
 
-## 🎯 プロジェクトの特徴
+## 🚀 クイックスタート
 
-このプロジェクトは、単なる Minecraft ボットの実装を超えて、**ソフトウェア設計の原則とデザインパターンの実践的な学習教材**として設計されています。
-
-### 📚 実装されているデザインパターン
-
-#### 1. **ステートパターン (State Pattern)**
-
-- **場所**: `src/states/IBotState.ts`, `src/states/IdleState.ts`
-- **目的**: ボットの状態（待機中、移動中、攻撃中など）を独立したクラスとして管理
-- **利点**:
-  - 状態遷移の複雑さを軽減
-  - 新しい状態の追加が容易
-  - 状態ごとの処理を分離し、保守性向上
-
-```typescript
-// 状態の切り替えが安全かつ明確
-bot.changeState(IdleState.getInstance());
-```
-
-#### 2. **コマンドパターン (Command Pattern)**
-
-- **場所**: `src/commands/ICommand.ts`, `src/commands/StopCommand.ts`
-- **目的**: チャット命令をオブジェクトとしてカプセル化
-- **利点**:
-  - コマンドの追加・削除が動的に可能
-  - コマンドの実行履歴や Undo の実装が容易
-  - 複雑なコマンドチェーンの構築が可能
-
-```typescript
-// 新しいコマンドの追加が簡単
-commandHandler.registerCommand("goto", new GotoCommand());
-```
-
-#### 3. **シングルトンパターン (Singleton Pattern)**
-
-- **場所**: `src/states/IdleState.ts`
-- **目的**: 同一状態のインスタンスを一意に保つ
-- **利点**:
-  - メモリ効率の向上
-  - 状態の一貫性保証
-  - グローバルアクセスポイントの提供
-
-#### 4. **ファサードパターン (Facade Pattern)**
-
-- **場所**: `src/core/Bot.ts`
-- **目的**: mineflayer の複雑な API を簡潔なインターフェースで隠蔽
-- **利点**:
-  - 複雑なライブラリの使用を簡素化
-  - 依存関係の局所化
-  - API の変更に対する耐性
-
-## 🏗️ アーキテクチャの見どころ
-
-### 1. **責務の分離 (Separation of Concerns)**
-
-各クラスが単一の責務を持つように設計：
-
-- `Bot`: ボットのライフサイクル管理
-- `CommandHandler`: コマンドの解析と実行
-- `ICommand`: 個別コマンドのロジック
-- `IBotState`: 状態固有の動作
-
-### 2. **依存性注入 (Dependency Injection)**
-
-```typescript
-// コンストラクタで依存関係を明示
-const commandHandler = new CommandHandler(botName);
-commandHandler.registerCommand("stop", new StopCommand());
-```
-
-### 3. **型安全性の徹底**
-
-TypeScript の型システムを最大限活用：
-
-```typescript
-interface BotOptions {
-  host: string;
-  port: number;
-  username: string;
-  auth: "offline" | "microsoft";
-  version: string;
-}
-```
-
-## 🔀 他の設計アプローチとの比較
-
-### **現在の設計 vs 手続き型アプローチ**
-
-| 側面             | 現在の設計 (OOP + パターン) | 手続き型アプローチ        |
-| ---------------- | --------------------------- | ------------------------- |
-| **保守性**       | ✅ 高い（責務分離）         | ❌ 低い（コード分散）     |
-| **拡張性**       | ✅ 容易（新クラス追加）     | ❌ 困難（既存コード変更） |
-| **テスト容易性** | ✅ 高い（モック化可能）     | ❌ 低い（依存関係複雑）   |
-| **学習コスト**   | ⚠️ 高め（パターン理解必要） | ✅ 低い（直感的）         |
-
-### **ファクトリーパターンの検討**
-
-現在は各コマンドを直接インスタンス化していますが、以下のような拡張も可能：
-
-```typescript
-class CommandFactory {
-  static createCommand(type: string): ICommand {
-    switch (type) {
-      case "stop":
-        return new StopCommand();
-      case "goto":
-        return new GotoCommand();
-      // ...
-    }
-  }
-}
-```
-
-### **オブザーバーパターンの可能性**
-
-ボットの状態変化を他のシステムに通知する場合：
-
-```typescript
-interface IBotStateObserver {
-  onStateChanged(oldState: IBotState, newState: IBotState): void;
-}
-```
-
-## 🚀 技術スタック
-
-- **言語**: TypeScript
-- **ランタイム**: Node.js 18+
-- **主要ライブラリ**: mineflayer, mineflayer-pathfinder
-- **コンテナ**: Docker & Docker Compose
-- **ビルドツール**: TypeScript Compiler
-
-## 📁 プロジェクト構造
-
-```
-src/
-├── core/           # コアシステム
-│   ├── Bot.ts      # ボットのメインクラス
-│   └── CommandHandler.ts  # コマンド管理
-├── states/         # 状態パターン実装
-│   ├── IBotState.ts    # 状態インターフェース
-│   └── IdleState.ts    # 待機状態
-├── commands/       # コマンドパターン実装
-│   ├── ICommand.ts     # コマンドインターフェース
-│   └── StopCommand.ts  # 停止コマンド
-└── index.ts        # エントリーポイント
-```
-
-## 🔧 開発環境セットアップ
-
-### 前提条件
-
-- Node.js 18+
-- Docker & Docker Compose
-- TypeScript 基本知識
-
-### ローカル開発
+### 1. インストール
 
 ```bash
-# 依存関係のインストール
+git clone https://github.com/nomanoma121/mineflayer-bot.git
+cd mineflayer-bot
 npm install
-
-# TypeScriptのビルド
-npm run build
-
-# 開発モード（ビルド＋実行）
-npm run dev
 ```
 
-### Docker 環境
+### 2. ビルド
 
 ```bash
-# ボット群を起動
-docker-compose up --build
-
-# 特定のボットのみ起動
-docker-compose up bot00
+npm run build
 ```
 
-## 🚀 実装されている機能
+### 3. ボットの起動
 
-### 移動・ナビゲーション機能
+```bash
+npm start
+```
 
-| コマンド                | 説明                                 | 使用例                                 |
-| ----------------------- | ------------------------------------ | -------------------------------------- |
-| `@bot come [player]`    | 指定プレイヤーを追従（省略時は自分） | `@bot come player1` または `@bot come` |
-| `@bot servant [player]` | 指定プレイヤーのサーバントとなり護衛 | `@bot servant player1` または `@bot servant` |
-| `@bot stop`             | 現在の移動を停止                     | `@bot stop`                            |
-| `@bot idle`             | 待機状態に移行                       | `@bot idle`                            |
-| `@bot goto <x> <y> <z>` | 指定座標へ移動                       | `@bot goto 100 64 -200`                |
-| `@bot sethome`          | 現在地を拠点として設定               | `@bot sethome`                         |
-| `@bot home`             | 設定した拠点に帰還                   | `@bot home`                            |
+デフォルトでは `localhost:25565` に接続します。
 
-### ワールド操作・作業機能
+## 📜 BotScript - チャットでボットを操作
 
-| コマンド                        | 説明                             | 使用例                 |
-| ------------------------------- | -------------------------------- | ---------------------- |
-| `@bot dig [x] [y] [z]`          | ブロックを掘る                   | `@bot dig 100 64 -200` |
-| `@bot place <item> [x] [y] [z]` | ブロックを設置                   | `@bot place stone`     |
-| `@bot attack <target>`          | 指定エンティティを攻撃           | `@bot attack zombie`   |
-| `@bot kill <player>`            | 指定プレイヤーを倒すまで攻撃     | `@bot kill player1`    |
-| `@bot setrespawn`               | 近くのベッドでリスポーン地点設定 | `@bot setrespawn`      |
+BotScriptは、Minecraftのチャット経由でボットに複雑な操作をさせることができるスクリプト言語です。
 
-### インベントリ・アイテム管理機能
+### BotScript機能の有効化
 
-| コマンド                            | 説明               | 使用例                       |
-| ----------------------------------- | ------------------ | ---------------------------- |
-| `@bot inventory`                    | インベントリを表示 | `@bot inventory`             |
-| `@bot give <player> <item> [count]` | アイテムを渡す     | `@bot give player1 stone 10` |
-| `@bot drop <item> [count]`          | アイテムを捨てる   | `@bot drop stone 5`          |
-| `@bot equip <item>`                 | アイテムを装備     | `@bot equip diamond_sword`   |
+1. まずボットを起動
+2. チャットで以下のコマンドを実行：
 
-### パフォーマンス最適化
+```
+@Bot botscript enable
+```
 
-ボットの移動速度とレスポンシブ性を向上させるために、以下の最適化が実装されています：
+### 基本的な使い方
 
-- **スプリント有効化**: `allowSprinting = true`でボットが走って移動
-- **効率的な追従**: パスファインダーが動作中の場合は新しいゴール設定を避ける
-- **ブロック掘削無効化**: 移動時にブロックを掘らず、高速化を優先
-- **自由な動き許可**: `allowFreeMotion = true`で柔軟な移動パターンを実現
+#### 単発コマンド実行
+```
+!script SAY "Hello World"
+```
 
-### 状態管理
+#### 複数行スクリプト
+```
+!mscript
+DEF $count = 1
+REPEAT 3
+  SAY "カウント: $count"
+  DEF $count = $count + 1
+ENDREPEAT
+!end
+```
 
-| 状態             | 説明                               | 遷移条件                        |
-| ---------------- | ---------------------------------- | ------------------------------- |
-| `IdleState`      | 待機状態                           | コマンド待ち、エラー発生時      |
-| `FollowingState` | 追従状態                           | `come` コマンド実行時           |
-| `ServantState`   | サーバント状態（追従+護衛）        | `servant` コマンド実行時        |
-| `MovingState`    | 移動状態                           | `goto`, `home` コマンド実行時   |
-| `AttackingState` | 攻撃状態                           | `attack`, `kill` コマンド実行時 |
+### BotScript言語仕様
 
-## 📋 実装済みコマンド
+#### 基本構文
 
-| コマンド | 使用法                                             | 説明                         |
-| -------- | -------------------------------------------------- | ---------------------------- |
-| stop     | `@bot01 stop` または `@all stop`                   | 全ての行動を停止し待機状態に |
-| idle     | `@bot01 idle` または `@all idle`                   | 強制的に待機状態に移行       |
-| servant  | `@bot01 servant [player]` または `@all servant`    | 指定プレイヤーのサーバントに |
+**変数定義と操作**
+```
+DEF $name = "Bot"        # 文字列
+DEF $count = 10          # 数値
+DEF $flag = true         # ブール値
+```
 
-## 🎮 使用方法
+**制御構文**
+```
+IF $count > 5 THEN
+  SAY "大きい数です"
+ELSE
+  SAY "小さい数です"
+ENDIF
 
-1. Minecraft サーバーを起動
-2. `docker-compose.yml`の接続設定を調整
-3. `docker-compose up`でボット起動
-4. ゲーム内でボットにメンション: 
-   - `@bot01 stop` - 全ての行動を停止
-   - `@bot01 idle` - 待機状態に移行
-   - `@bot01 come` - 自分を追従
+REPEAT 5
+  SAY "繰り返し処理"
+ENDREPEAT
+```
 
-## 🔮 今後の拡張予定
+**コメント**
+```
+# これはコメントです
+DEF $x = 100  # 行末コメント
+```
 
-### フェーズ 1: 基本機能
+#### 利用可能なコマンド
 
-- [ ] プレイヤー追従 (`come` コマンド)
-- [ ] 座標移動 (`goto` コマンド)
-- [ ] 拠点設定・帰還 (`sethome`, `home` コマンド)
+| コマンド | 使用例 | 説明 |
+|---------|--------|------|
+| `SAY` | `SAY "メッセージ"` | チャットでメッセージを送信 |
+| `MOVE` | `MOVE 10 64 20` | 指定座標に移動 |
+| `GOTO` | `GOTO 100 65 -50` | 指定座標に移動（パスファインディング） |
+| `ATTACK` | `ATTACK "zombie"` | 指定エンティティを攻撃 |
+| `DIG` | `DIG 10 64 20` | 指定座標のブロックを破壊 |
+| `PLACE` | `PLACE "stone" 10 64 20` | 指定座標にブロックを設置 |
+| `EQUIP` | `EQUIP "diamond_sword"` | アイテムを装備 |
+| `DROP` | `DROP "dirt" 10` | アイテムをドロップ |
+| `WAIT` | `WAIT 3000` | 指定ミリ秒待機 |
 
-### フェーズ 2: ワールド操作
+#### システム変数（読み取り専用）
 
-- [ ] ブロック破壊・設置
-- [ ] インベントリ管理
-- [ ] 戦闘システム
+```
+bot_x, bot_y, bot_z      # ボットの現在位置
+bot_health               # ボットの体力
+bot_food                 # ボットの満腹度
+bot_inventory_count      # インベントリのアイテム数
+timestamp                # 現在のタイムスタンプ
+```
 
-### フェーズ 3: 高度な機能
+### チャットコマンド
 
-- [ ] 複数ボット連携
-- [ ] スケジューリング
-- [ ] Web 管理インターフェース
+#### BotScript管理
+```
+@Bot botscript enable    # BotScript機能を有効化
+@Bot botscript disable   # BotScript機能を無効化
+@Bot botscript status    # 現在の状態を確認
+@Bot botscript help      # ヘルプを表示
+```
 
-## 📖 学習のポイント
+#### スクリプト実行
+```
+!script <コード>         # 単発実行
+!mscript                 # 複数行スクリプト開始
+!end                     # 複数行スクリプト終了・実行
+!stop                    # 実行中のスクリプトを停止
+!status                  # 実行状態を確認
+```
 
-### 初学者向け
+#### 変数・セッション管理
+```
+!list                    # 現在の変数一覧を表示
+!clear                   # 全変数をクリア
+!save <名前>             # スクリプトを保存
+!load <名前>             # 保存済みスクリプトを読み込み
+```
 
-1. **インターフェース設計**: `IBotState`, `ICommand`の抽象化を理解
-2. **責務分離**: 各クラスが持つ単一の責務を確認
-3. **型安全性**: TypeScript の型システムによる恩恵を体感
+## 🎮 通常のボットコマンド
 
-### 中級者向け
+BotScript以外にも、従来のコマンドも利用できます：
 
-1. **デザインパターン**: 実装された 4 つのパターンの使い分け
-2. **非同期処理**: Promise/async-await の適切な使用
-3. **エラーハンドリング**: 堅牢性を保つための例外処理
+```
+@Bot idle                # 待機状態
+@Bot goto 100 65 -50     # 座標移動
+@Bot attack zombie       # エンティティ攻撃
+@Bot come                # プレイヤーの元に来る
+@Bot wander 30           # 30ブロック範囲で放浪
+@Bot miner 0 60 0 10 70 10  # 範囲採掘
+@Bot inventory           # インベントリ表示
+```
 
-### 上級者向け
+## 🛠️ 開発・テスト
 
-1. **アーキテクチャ評価**: SOLID 原則の適用度合い
-2. **パフォーマンス**: シングルトンパターンによるメモリ効率
-3. **拡張性**: 新機能追加時の既存コードへの影響度
+### 開発モード
+```bash
+npm run dev              # ビルド + 実行
+```
 
-## 🤝 貢献ガイド
+### テスト実行
+```bash
+npm test                 # 全テスト実行
+npm run test:watch       # テスト監視モード
+npm run test:coverage    # カバレッジ付きテスト
+```
 
-1. Issue で機能提案・バグ報告
-2. Fork して feature ブランチで開発
-3. デザインパターンに沿った実装
-4. TypeScript の型安全性を維持
-5. プルリクエストでレビュー依頼
+### CLI使用
+```bash
+npm run cli              # CLIツール起動
+npm run bot:start        # CLI経由でボット起動
+npm run bot:config       # 設定表示
+```
 
-## 📄 ライセンス
+## ⚙️ 設定
 
-ISC License
+### 環境変数（.envファイル）
 
----
+```env
+MINECRAFT_HOST=localhost
+MINECRAFT_PORT=25565
+BOT_USERNAME=Bot
+MINECRAFT_VERSION=1.20.1
+BOT_AUTH=offline
+```
 
-**このプロジェクトは、実用的な Minecraft ボットであると同時に、オブジェクト指向設計とデザインパターンの生きた教材として設計されています。コードを読み、拡張し、改善することで、ソフトウェア設計の深い理解を得ることができます。**
+### 設定例
+
+```typescript
+// デフォルト設定（src/index.ts）
+const options = {
+  host: process.env.MINECRAFT_HOST || 'localhost',
+  port: parseInt(process.env.MINECRAFT_PORT || '25565'),
+  username: process.env.BOT_USERNAME || 'Bot',
+  version: process.env.MINECRAFT_VERSION || '1.20.1',
+  auth: process.env.BOT_AUTH || 'offline'
+};
+```
+
+## 📝 スクリプト例
+
+### 自動建築
+```
+!mscript
+# 5x5の石の床を作る
+DEF $x = 0
+REPEAT 5
+  DEF $z = 0
+  REPEAT 5
+    PLACE "stone" $x 64 $z
+    DEF $z = $z + 1
+  ENDREPEAT
+  DEF $x = $x + 1
+ENDREPEAT
+SAY "建築完了！"
+!end
+```
+
+### 条件分岐での行動
+```
+!mscript
+IF bot_health < 10 THEN
+  SAY "体力が低いです！"
+  EQUIP "food"
+ELSE
+  SAY "体力は十分です"
+  GOTO 100 65 100
+ENDIF
+!end
+```
+
+### ループでの採掘
+```
+!mscript
+DEF $y = 64
+REPEAT 10
+  DIG 100 $y -50
+  WAIT 1000
+  DEF $y = $y - 1
+ENDREPEAT
+SAY "採掘完了！"
+!end
+```
+
+## 🐛 トラブルシューティング
+
+### よくある問題
+
