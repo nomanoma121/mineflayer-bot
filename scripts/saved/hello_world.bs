@@ -12,4 +12,5 @@ SAY "BotScriptへようこそ！"
 
 REPEAT 10 
   SAY "これは繰り返しメッセージです"
+  WAIT 1
 ENDREPEAT
