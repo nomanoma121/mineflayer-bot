@@ -566,23 +566,38 @@ export class ChatInterface {
           const scriptData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
           const scriptName = path.basename(file, '.json');
           this.savedScripts.set(scriptName, scriptData);
-        } else if (file.endsWith('.botscript')) {
-          // .botscript形式のスクリプト（人間が読みやすい）
+        } else if (file.endsWith('.bs') || file.endsWith('.botscript')) {
+          // .bs/.botscript形式のスクリプト（人間が読みやすい）
           const filePath = path.join(this.scriptsDirectory, file);
           const content = fs.readFileSync(filePath, 'utf8');
-          const scriptName = path.basename(file, '.botscript');
+          const scriptName = path.basename(file).replace(/\.(bs|botscript)$/, '');
           
           // ファイルからメタデータを抽出
           const lines = content.split('\n');
-          const description = lines.find(line => line.startsWith('//'))?.substring(2).trim() || '';
-          const actualContent = lines.filter(line => !line.startsWith('//')).join('\n').trim();
+          let author = 'unknown';
+          let description = '';
+          let actualContent = '';
+          
+          const contentLines: string[] = [];
+          for (const line of lines) {
+            if (line.startsWith('# Author:')) {
+              author = line.substring(9).trim();
+            } else if (line.startsWith('# Description:')) {
+              description = line.substring(14).trim();
+            } else if (!line.startsWith('#') || line.trim() === '') {
+              // コメント行以外、または空行をコンテンツに追加
+              contentLines.push(line);
+            }
+          }
+          
+          actualContent = contentLines.join('\n').trim();
           
           this.savedScripts.set(scriptName, {
             name: scriptName,
             content: actualContent,
-            author: 'file',
+            author: author,
             created: Date.now(),
-            description
+            description: description
           });
         }
       }

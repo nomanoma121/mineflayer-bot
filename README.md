@@ -132,6 +132,20 @@ timestamp                # 現在のタイムスタンプ
 !clear                   # 全変数をクリア
 !save <名前>             # スクリプトを保存
 !load <名前>             # 保存済みスクリプトを読み込み
+!load                    # 保存済みスクリプト一覧を表示
+```
+
+#### スクリプトファイル
+BotScriptは`.bs`ファイル形式でも保存・実行できます：
+
+```bash
+# scripts/saved/フォルダに.bsファイルを配置
+echo '# My Script
+SAY "Hello from file!"
+WAIT 1000' > scripts/saved/my_script.bs
+
+# ゲーム内で実行
+!load my_script
 ```
 
 #### BotScript管理（オプション）
