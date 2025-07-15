@@ -30,14 +30,7 @@ npm start
 
 BotScriptは、Minecraftのチャット経由でボットに複雑な操作をさせることができるスクリプト言語です。
 
-### BotScript機能の有効化
-
-1. まずボットを起動
-2. チャットで以下のコマンドを実行：
-
-```
-@Bot botscript enable
-```
+**注意：BotScript機能はデフォルトで有効です。**
 
 ### 基本的な使い方
 
@@ -55,6 +48,17 @@ REPEAT 3
   DEF $count = $count + 1
 ENDREPEAT
 !end
+```
+
+### BotScript管理（オプション）
+
+必要に応じて機能の有効/無効を切り替えられます：
+
+```
+@Bot botscript enable     # BotScript機能を有効化（デフォルトで有効）
+@Bot botscript disable    # BotScript機能を無効化
+@Bot botscript status     # 現在の状態を確認
+@Bot botscript help       # ヘルプを表示
 ```
 
 ### BotScript言語仕様
@@ -113,14 +117,6 @@ timestamp                # 現在のタイムスタンプ
 
 ### チャットコマンド
 
-#### BotScript管理
-```
-@Bot botscript enable    # BotScript機能を有効化
-@Bot botscript disable   # BotScript機能を無効化
-@Bot botscript status    # 現在の状態を確認
-@Bot botscript help      # ヘルプを表示
-```
-
 #### スクリプト実行
 ```
 !script <コード>         # 単発実行
@@ -136,6 +132,14 @@ timestamp                # 現在のタイムスタンプ
 !clear                   # 全変数をクリア
 !save <名前>             # スクリプトを保存
 !load <名前>             # 保存済みスクリプトを読み込み
+```
+
+#### BotScript管理（オプション）
+```
+@Bot botscript enable    # BotScript機能を有効化（デフォルトで有効）
+@Bot botscript disable   # BotScript機能を無効化
+@Bot botscript status    # 現在の状態を確認
+@Bot botscript help      # ヘルプを表示
 ```
 
 ## 🎮 通常のボットコマンド

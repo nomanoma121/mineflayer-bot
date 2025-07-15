@@ -122,7 +122,7 @@ export class ChatInterface {
 
       // 権限チェック
       if (!this.hasPermission(username, command)) {
-        this.bot.say.say(`${username}さん、そのコマンドを実行する権限がありません。`);
+        this.bot.sendMessage(`${username}さん、そのコマンドを実行する権限がありません。`);
         return;
       }
 
@@ -136,7 +136,7 @@ export class ChatInterface {
         category: 'botscript'
       });
       
-      this.bot.say.say(`${username}さん、エラーが発生しました: ${(error as Error).message}`);
+      this.bot.sendMessage(`${username}さん、エラーが発生しました: ${(error as Error).message}`);
     }
   }
 
@@ -193,7 +193,7 @@ export class ChatInterface {
    */
   private async executeScript(username: string, scriptContent: string): Promise<void> {
     if (!scriptContent.trim()) {
-      this.bot.say.say(`${username}さん、実行するスクリプトが空です。`);
+      this.bot.sendMessage(`${username}さん、実行するスクリプトが空です。`);
       return;
     }
 
@@ -204,17 +204,17 @@ export class ChatInterface {
       const parser = new Parser(tokens);
       const ast = parser.parse();
 
-      this.bot.say.say(`${username}さんのスクリプトを実行しています...`);
+      this.bot.sendMessage(`${username}さんのスクリプトを実行しています...`);
 
       // スクリプトを実行
       const result = await this.interpreter.execute(ast);
 
       if (result.type === ExecutionResultType.SUCCESS) {
         const stats = this.context.getStats();
-        this.bot.say.say(`${username}さん、スクリプトが正常に完了しました。` +
+        this.bot.sendMessage(`${username}さん、スクリプトが正常に完了しました。` +
           `（文: ${stats.statementsExecuted}、コマンド: ${stats.commandsExecuted}、時間: ${this.context.getExecutionTime()}ms）`);
       } else {
-        this.bot.say.say(`${username}さん、スクリプトでエラーが発生しました: ${result.message}`);
+        this.bot.sendMessage(`${username}さん、スクリプトでエラーが発生しました: ${result.message}`);
       }
 
       Logger.structured.info('Script executed', {
@@ -227,7 +227,7 @@ export class ChatInterface {
 
     } catch (error) {
       const errorMessage = (error as Error).message;
-      this.bot.say.say(`${username}さん、スクリプトの解析に失敗しました: ${errorMessage}`);
+      this.bot.sendMessage(`${username}さん、スクリプトの解析に失敗しました: ${errorMessage}`);
       
       Logger.structured.error('Script parsing error', error as Error, {
         username,
@@ -242,7 +242,7 @@ export class ChatInterface {
    */
   private startMultilineSession(username: string, description?: string): void {
     if (this.multilineSessions.has(username)) {
-      this.bot.say.say(`${username}さん、既に複数行モードです。!endで終了してください。`);
+      this.bot.sendMessage(`${username}さん、既に複数行モードです。!endで終了してください。`);
       return;
     }
 
@@ -252,7 +252,7 @@ export class ChatInterface {
       startTime: Date.now()
     });
 
-    this.bot.say.say(`${username}さん、複数行スクリプトモードを開始しました。` +
+    this.bot.sendMessage(`${username}さん、複数行スクリプトモードを開始しました。` +
       `スクリプトを入力し、!endで実行してください。${description ? ` (${description})` : ''}`);
   }
 
@@ -267,12 +267,12 @@ export class ChatInterface {
       this.multilineSessions.delete(username);
 
       if (session.lines.length === 0) {
-        this.bot.say.say(`${username}さん、スクリプトが空のため実行をキャンセルしました。`);
+        this.bot.sendMessage(`${username}さん、スクリプトが空のため実行をキャンセルしました。`);
         return;
       }
 
       const scriptContent = session.lines.join('\n');
-      this.bot.say.say(`${username}さん、複数行スクリプトを実行します...`);
+      this.bot.sendMessage(`${username}さん、複数行スクリプトを実行します...`);
       
       await this.executeScript(username, scriptContent);
       return;
@@ -281,7 +281,7 @@ export class ChatInterface {
     // キャンセルコマンド
     if (message.trim() === '!cancel') {
       this.multilineSessions.delete(username);
-      this.bot.say.say(`${username}さん、複数行スクリプトをキャンセルしました。`);
+      this.bot.sendMessage(`${username}さん、複数行スクリプトをキャンセルしました。`);
       return;
     }
 
@@ -291,13 +291,13 @@ export class ChatInterface {
     // セッションタイムアウトチェック（5分）
     if (Date.now() - session.startTime > 5 * 60 * 1000) {
       this.multilineSessions.delete(username);
-      this.bot.say.say(`${username}さん、複数行セッションがタイムアウトしました。`);
+      this.bot.sendMessage(`${username}さん、複数行セッションがタイムアウトしました。`);
       return;
     }
 
     // 進捗表示（10行ごと）
     if (session.lines.length % 10 === 0) {
-      this.bot.say.say(`${username}さん、${session.lines.length}行入力されました。!endで実行、!cancelでキャンセル。`);
+      this.bot.sendMessage(`${username}さん、${session.lines.length}行入力されました。!endで実行、!cancelでキャンセル。`);
     }
   }
 
@@ -308,7 +308,7 @@ export class ChatInterface {
     const variables = this.context.getAllVariables();
     
     if (variables.length === 0) {
-      this.bot.say.say(`${username}さん、定義されている変数はありません。`);
+      this.bot.sendMessage(`${username}さん、定義されている変数はありません。`);
       return;
     }
 
@@ -317,13 +317,13 @@ export class ChatInterface {
 
     if (userVars.length > 0) {
       const varList = userVars.slice(0, 5).map(v => `$${v.name}=${v.value}`).join(', ');
-      this.bot.say.say(`${username}さん、ユーザー変数: ${varList}${userVars.length > 5 ? ` (他${userVars.length - 5}個)` : ''}`);
+      this.bot.sendMessage(`${username}さん、ユーザー変数: ${varList}${userVars.length > 5 ? ` (他${userVars.length - 5}個)` : ''}`);
     }
 
     const healthInfo = systemVars.find(v => v.name === 'bot_health');
     const foodInfo = systemVars.find(v => v.name === 'bot_food');
     if (healthInfo && foodInfo) {
-      this.bot.say.say(`システム情報: 体力=${healthInfo.value}, 満腹度=${foodInfo.value}`);
+      this.bot.sendMessage(`システム情報: 体力=${healthInfo.value}, 満腹度=${foodInfo.value}`);
     }
   }
 
@@ -332,12 +332,12 @@ export class ChatInterface {
    */
   private clearVariables(username: string): void {
     if (!this.hasAdminPermission(username)) {
-      this.bot.say.say(`${username}さん、変数クリアには管理者権限が必要です。`);
+      this.bot.sendMessage(`${username}さん、変数クリアには管理者権限が必要です。`);
       return;
     }
 
     this.context.reset();
-    this.bot.say.say(`${username}さん、全ての変数をクリアしました。`);
+    this.bot.sendMessage(`${username}さん、全ての変数をクリアしました。`);
   }
 
   /**
@@ -345,7 +345,7 @@ export class ChatInterface {
    */
   private async saveScript(username: string, args: string[]): Promise<void> {
     if (args.length < 1) {
-      this.bot.say.say(`${username}さん、使用法: !save <名前> [説明]`);
+      this.bot.sendMessage(`${username}さん、使用法: !save <名前> [説明]`);
       return;
     }
 
@@ -364,11 +364,11 @@ export class ChatInterface {
         description
       });
 
-      this.bot.say.say(`${username}さん、スクリプト「${name}」を保存しました。（${session.lines.length}行）`);
+      this.bot.sendMessage(`${username}さん、スクリプト「${name}」を保存しました。（${session.lines.length}行）`);
       return;
     }
 
-    this.bot.say.say(`${username}さん、保存するスクリプトがありません。複数行モード(!mscript)でスクリプトを作成してください。`);
+    this.bot.sendMessage(`${username}さん、保存するスクリプトがありません。複数行モード(!mscript)でスクリプトを作成してください。`);
   }
 
   /**
@@ -379,7 +379,7 @@ export class ChatInterface {
       // 保存されたスクリプト一覧を表示
       const scripts = Array.from(this.savedScripts.values());
       if (scripts.length === 0) {
-        this.bot.say.say(`${username}さん、保存されたスクリプトはありません。`);
+        this.bot.sendMessage(`${username}さん、保存されたスクリプトはありません。`);
         return;
       }
 
@@ -387,17 +387,17 @@ export class ChatInterface {
         `${s.name}(${s.author})`
       ).join(', ');
 
-      this.bot.say.say(`${username}さん、保存済みスクリプト: ${scriptList}${scripts.length > 5 ? ` (他${scripts.length - 5}個)` : ''}`);
+      this.bot.sendMessage(`${username}さん、保存済みスクリプト: ${scriptList}${scripts.length > 5 ? ` (他${scripts.length - 5}個)` : ''}`);
       return;
     }
 
     const script = this.savedScripts.get(name);
     if (!script) {
-      this.bot.say.say(`${username}さん、スクリプト「${name}」が見つかりません。`);
+      this.bot.sendMessage(`${username}さん、スクリプト「${name}」が見つかりません。`);
       return;
     }
 
-    this.bot.say.say(`${username}さん、スクリプト「${name}」を実行します...（作成者: ${script.author}）`);
+    this.bot.sendMessage(`${username}さん、スクリプト「${name}」を実行します...（作成者: ${script.author}）`);
     await this.executeScript(username, script.content);
   }
 
@@ -406,12 +406,12 @@ export class ChatInterface {
    */
   private stopExecution(username: string): void {
     if (!this.interpreter.isExecuting()) {
-      this.bot.say.say(`${username}さん、現在実行中のスクリプトはありません。`);
+      this.bot.sendMessage(`${username}さん、現在実行中のスクリプトはありません。`);
       return;
     }
 
     this.interpreter.stop();
-    this.bot.say.say(`${username}さん、スクリプトの実行を停止しました。`);
+    this.bot.sendMessage(`${username}さん、スクリプトの実行を停止しました。`);
   }
 
   /**
@@ -423,14 +423,14 @@ export class ChatInterface {
     const sessionsCount = this.multilineSessions.size;
     const scriptsCount = this.savedScripts.size;
 
-    this.bot.say.say(`${username}さん、BotScript状態: ` +
+    this.bot.sendMessage(`${username}さん、BotScript状態: ` +
       `実行中=${isExecuting ? 'はい' : 'いいえ'}, ` +
       `セッション=${sessionsCount}, ` +
       `保存済み=${scriptsCount}, ` +
       `変数=${this.context.getAllVariables().length}`);
 
     if (stats.statementsExecuted > 0) {
-      this.bot.say.say(`実行統計: 文=${stats.statementsExecuted}, コマンド=${stats.commandsExecuted}, エラー=${stats.errors.length}`);
+      this.bot.sendMessage(`実行統計: 文=${stats.statementsExecuted}, コマンド=${stats.commandsExecuted}, エラー=${stats.errors.length}`);
     }
   }
 
@@ -439,9 +439,9 @@ export class ChatInterface {
    */
   private showHelp(username: string, topic?: string): void {
     if (!topic) {
-      this.bot.say.say(`${username}さん、BotScriptコマンド: ` +
+      this.bot.sendMessage(`${username}さん、BotScriptコマンド: ` +
         `!script <コード>, !mscript (複数行), !list (変数), !save <名前>, !load <名前>, !stop, !status`);
-      this.bot.say.say(`詳細ヘルプ: !help <コマンド名> 例: !help script`);
+      this.bot.sendMessage(`詳細ヘルプ: !help <コマンド名> 例: !help script`);
       return;
     }
 
@@ -458,9 +458,9 @@ export class ChatInterface {
 
     const helpText = helpTexts[topic.toLowerCase()];
     if (helpText) {
-      this.bot.say.say(`${username}さん、${helpText}`);
+      this.bot.sendMessage(`${username}さん、${helpText}`);
     } else {
-      this.bot.say.say(`${username}さん、「${topic}」のヘルプは見つかりません。`);
+      this.bot.sendMessage(`${username}さん、「${topic}」のヘルプは見つかりません。`);
     }
   }
 

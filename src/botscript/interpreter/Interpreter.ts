@@ -458,7 +458,7 @@ export class Interpreter {
 
   private async executeSayCommand(node: SayCommandNode, startTime: number): Promise<CommandResult> {
     const message = String(this.evaluateExpression(node.message));
-    this.bot.say.say(message);
+    this.bot.sendMessage(message);
     
     return {
       success: true,
