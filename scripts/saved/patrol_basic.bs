@@ -1,0 +1,34 @@
+# Basic Patrol Script
+# Author: system
+# Description: 基本パトロールスクリプト - 四角形のルートを3回巡回
+
+DEF $patrol_count = 0
+DEF $max_patrols = 3
+
+SAY "パトロールを開始します"
+
+REPEAT $max_patrols
+  $patrol_count = $patrol_count + 1
+  SAY "パトロール " + $patrol_count + "/" + $max_patrols + " 開始"
+  
+  MOVE "forward" 10
+  WAIT 2
+  SAY "前方確認完了"
+  
+  MOVE "right" 5
+  WAIT 2
+  SAY "右側確認完了"
+  
+  MOVE "back" 10
+  WAIT 2
+  SAY "後方確認完了"
+  
+  MOVE "left" 5
+  WAIT 2
+  SAY "左側確認完了"
+  
+  SAY "パトロール " + $patrol_count + " 完了"
+  WAIT 3
+ENDREPEAT
+
+SAY "全パトロール完了！"

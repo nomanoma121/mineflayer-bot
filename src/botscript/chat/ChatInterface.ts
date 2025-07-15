@@ -4,6 +4,8 @@ import { Parser } from '../parser/Parser';
 import { Interpreter, ExecutionResultType } from '../interpreter/Interpreter';
 import { ExecutionContext } from '../interpreter/ExecutionContext';
 import { Logger } from '../../utils/Logger';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * チャットコマンドの種類
@@ -55,11 +57,18 @@ export class ChatInterface {
   private isEnabled: boolean = true;
   private authorizedUsers: Set<string> = new Set();
   private adminUsers: Set<string> = new Set();
+  private scriptsDirectory: string = path.join(process.cwd(), 'scripts', 'saved');
 
   constructor(bot: Bot, context?: ExecutionContext) {
     this.bot = bot;
     this.context = context || new ExecutionContext();
     this.interpreter = new Interpreter(bot, this.context);
+    
+    // スクリプト保存ディレクトリを作成
+    this.ensureScriptsDirectory();
+    
+    // 保存済みスクリプトを読み込み
+    this.loadSavedScriptsFromDisk();
     
     // デフォルトの管理者設定（環境変数から読み込み）
     const adminList = process.env.BOTSCRIPT_ADMINS?.split(',') || [];
@@ -365,6 +374,13 @@ export class ChatInterface {
       });
 
       this.bot.sendMessage(`${username}さん、スクリプト「${name}」を保存しました。（${session.lines.length}行）`);
+      this.saveScriptToDisk(name, {
+        name,
+        content,
+        author: username,
+        created: Date.now(),
+        description
+      });
       return;
     }
 
@@ -512,6 +528,118 @@ export class ChatInterface {
   }
 
   // ===== ユーティリティ =====
+
+  /**
+   * スクリプト保存ディレクトリを確保
+   */
+  private ensureScriptsDirectory(): void {
+    try {
+      if (!fs.existsSync(this.scriptsDirectory)) {
+        fs.mkdirSync(this.scriptsDirectory, { recursive: true });
+        Logger.structured.info('Scripts directory created', {
+          directory: this.scriptsDirectory,
+          category: 'botscript'
+        });
+      }
+    } catch (error) {
+      Logger.structured.error('Failed to create scripts directory', error as Error, {
+        directory: this.scriptsDirectory,
+        category: 'botscript'
+      });
+    }
+  }
+
+  /**
+   * 保存済みスクリプトをディスクから読み込み
+   */
+  private loadSavedScriptsFromDisk(): void {
+    try {
+      if (!fs.existsSync(this.scriptsDirectory)) {
+        return;
+      }
+
+      const files = fs.readdirSync(this.scriptsDirectory);
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          // JSON形式のスクリプト（システム保存）
+          const filePath = path.join(this.scriptsDirectory, file);
+          const scriptData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          const scriptName = path.basename(file, '.json');
+          this.savedScripts.set(scriptName, scriptData);
+        } else if (file.endsWith('.botscript')) {
+          // .botscript形式のスクリプト（人間が読みやすい）
+          const filePath = path.join(this.scriptsDirectory, file);
+          const content = fs.readFileSync(filePath, 'utf8');
+          const scriptName = path.basename(file, '.botscript');
+          
+          // ファイルからメタデータを抽出
+          const lines = content.split('\n');
+          const description = lines.find(line => line.startsWith('//'))?.substring(2).trim() || '';
+          const actualContent = lines.filter(line => !line.startsWith('//')).join('\n').trim();
+          
+          this.savedScripts.set(scriptName, {
+            name: scriptName,
+            content: actualContent,
+            author: 'file',
+            created: Date.now(),
+            description
+          });
+        }
+      }
+
+      Logger.structured.info('Loaded saved scripts from disk', {
+        count: this.savedScripts.size,
+        category: 'botscript'
+      });
+    } catch (error) {
+      Logger.structured.error('Failed to load saved scripts', error as Error, {
+        category: 'botscript'
+      });
+    }
+  }
+
+  /**
+   * スクリプトをディスクに保存
+   */
+  private saveScriptToDisk(name: string, script: SavedScript): void {
+    try {
+      const filePath = path.join(this.scriptsDirectory, `${name}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(script, null, 2), 'utf8');
+      
+      Logger.structured.info('Script saved to disk', {
+        name,
+        filePath,
+        category: 'botscript'
+      });
+    } catch (error) {
+      Logger.structured.error('Failed to save script to disk', error as Error, {
+        name,
+        category: 'botscript'
+      });
+    }
+  }
+
+  /**
+   * ディスクからスクリプトを削除
+   */
+  private deleteScriptFromDisk(name: string): void {
+    try {
+      const filePath = path.join(this.scriptsDirectory, `${name}.json`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        Logger.structured.info('Script deleted from disk', {
+          name,
+          filePath,
+          category: 'botscript'
+        });
+      }
+    } catch (error) {
+      Logger.structured.error('Failed to delete script from disk', error as Error, {
+        name,
+        category: 'botscript'
+      });
+    }
+  }
 
   /**
    * コマンドプレフィックスを設定

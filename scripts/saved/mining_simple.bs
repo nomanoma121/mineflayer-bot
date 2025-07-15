@@ -1,0 +1,22 @@
+# Simple Mining Script
+# Author: system  
+# Description: シンプルな採掘スクリプト - 前進しながら20ブロック採掘
+
+DEF $blocks = 0
+DEF $target_blocks = 20
+
+SAY "採掘を開始します！目標: " + $target_blocks + "ブロック"
+
+REPEAT $target_blocks
+  DIG "forward"
+  MOVE "forward" 1
+  $blocks = $blocks + 1
+  
+  IF $blocks % 5 = 0 THEN
+    SAY "進捗: " + $blocks + "/" + $target_blocks + " ブロック採掘完了"
+  ENDIF
+  
+  WAIT 1
+ENDREPEAT
+
+SAY "採掘完了！合計 " + $blocks + " ブロックを採掘しました"

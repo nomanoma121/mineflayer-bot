@@ -1,0 +1,15 @@
+# Hello World Script
+# Author: system
+# Description: 初心者向けの挨拶スクリプト - BotScriptの動作確認用
+
+SAY "こんにちは、世界！"
+WAIT 1
+SAY "私はBotScriptで動いています"
+WAIT 1
+SAY "!load でこのスクリプトを実行できます"
+WAIT 1
+SAY "BotScriptへようこそ！"
+
+REPEAT 10 
+  SAY "これは繰り返しメッセージです"
+ENDREPEAT
