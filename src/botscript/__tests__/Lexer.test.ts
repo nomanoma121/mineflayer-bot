@@ -252,6 +252,7 @@ describe('BotScript Lexer', () => {
 
       expect(tokens).toHaveLength(5); // var, health, =, 20, EOF
       expect(tokens[0].type).toBe(TokenType.VAR);
+      expect(tokens[1].type).toBe(TokenType.IDENTIFIER);
       expect(tokens[2].type).toBe(TokenType.ASSIGN);
       expect(tokens[3].type).toBe(TokenType.NUMBER);
     });
