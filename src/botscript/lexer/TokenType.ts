@@ -86,5 +86,4 @@ export const KEYWORDS: Record<string, TokenType> = {
   "EQUIP": TokenType.EQUIP,
   "DROP": TokenType.DROP,
   "WAIT": TokenType.WAIT,
-  "IDENTIFIER": TokenType.IDENTIFIER,
 };
