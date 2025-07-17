@@ -89,65 +89,53 @@ describe('BotScript Lexer', () => {
         line: 1,
         column: 29
       });
-    });
-
-    test('should tokenize variables', () => {
-      lexer = new Lexer('$health $position $count');
-      const tokens = lexer.tokenize();
-      
-      expect(tokens).toHaveLength(4); // 3 variables + EOF
-      expect(tokens[0]).toEqual({
-        type: TokenType.VARIABLE,
-        value: '$health',
-        line: 1,
-        column: 1
-      });
-      expect(tokens[1]).toEqual({
-        type: TokenType.VARIABLE,
-        value: '$position',
-        line: 1,
-        column: 9
-      });
-      expect(tokens[2]).toEqual({
-        type: TokenType.VARIABLE,
-        value: '$count',
-        line: 1,
-        column: 19
-      });
+      expect(tokens[3].type).toBe(TokenType.EOF);
     });
   });
 
   describe('Keywords', () => {
     test('should tokenize control flow keywords', () => {
-      lexer = new Lexer('IF THEN ELSE ENDIF');
+      lexer = new Lexer('if {} else {}');
       const tokens = lexer.tokenize();
       
-      expect(tokens).toHaveLength(5); // 4 keywords + EOF
+      expect(tokens).toHaveLength(7); // 2 keywords + 2 braces + EOF
       expect(tokens[0].type).toBe(TokenType.IF);
-      expect(tokens[1].type).toBe(TokenType.THEN);
-      expect(tokens[2].type).toBe(TokenType.ELSE);
-      expect(tokens[3].type).toBe(TokenType.ENDIF);
+      expect(tokens[1].type).toBe(TokenType.LBRACE);
+      expect(tokens[2].type).toBe(TokenType.RBRACE);
+      expect(tokens[3].type).toBe(TokenType.ELSE);
+      expect(tokens[4].type).toBe(TokenType.LBRACE);
+      expect(tokens[5].type).toBe(TokenType.RBRACE);
+      expect(tokens[6].type).toBe(TokenType.EOF);
     });
 
     test('should tokenize loop keywords', () => {
-      lexer = new Lexer('REPEAT ENDREPEAT');
+      lexer = new Lexer('repeat {}');
       const tokens = lexer.tokenize();
-      
-      expect(tokens).toHaveLength(3); // 2 keywords + EOF
+
+      expect(tokens).toHaveLength(4); // 1 keyword + 2 braces + EOF
       expect(tokens[0].type).toBe(TokenType.REPEAT);
-      expect(tokens[1].type).toBe(TokenType.ENDREPEAT);
+      expect(tokens[1].type).toBe(TokenType.LBRACE);
+      expect(tokens[2].type).toBe(TokenType.RBRACE);
     });
 
-    test('should tokenize definition keyword', () => {
-      lexer = new Lexer('DEF');
+    test('should tokenize variable keyword', () => {
+      lexer = new Lexer('var');
       const tokens = lexer.tokenize();
       
       expect(tokens).toHaveLength(2); // 1 keyword + EOF
-      expect(tokens[0].type).toBe(TokenType.DEF);
+      expect(tokens[0].type).toBe(TokenType.VAR);
+    });
+
+    test("should tokenize set keyword", () => {
+      lexer = new Lexer('set');
+      const tokens = lexer.tokenize();
+
+      expect(tokens).toHaveLength(2); // 1 keyword + EOF
+      expect(tokens[0].type).toBe(TokenType.SET);
     });
 
     test('should tokenize boolean keywords', () => {
-      lexer = new Lexer('TRUE FALSE');
+      lexer = new Lexer('true false');
       const tokens = lexer.tokenize();
       
       expect(tokens).toHaveLength(3); // 2 keywords + EOF
@@ -156,23 +144,22 @@ describe('BotScript Lexer', () => {
     });
 
     test('should tokenize bot command keywords', () => {
-      lexer = new Lexer('SAY MOVE GOTO ATTACK DIG PLACE EQUIP DROP WAIT');
+      lexer = new Lexer('say goto attack dig place equip drop wait');
       const tokens = lexer.tokenize();
       
-      expect(tokens).toHaveLength(10); // 9 commands + EOF
+      expect(tokens).toHaveLength(9); // 8 commands + EOF
       expect(tokens[0].type).toBe(TokenType.SAY);
-      expect(tokens[1].type).toBe(TokenType.MOVE);
-      expect(tokens[2].type).toBe(TokenType.GOTO);
-      expect(tokens[3].type).toBe(TokenType.ATTACK);
-      expect(tokens[4].type).toBe(TokenType.DIG);
-      expect(tokens[5].type).toBe(TokenType.PLACE);
-      expect(tokens[6].type).toBe(TokenType.EQUIP);
-      expect(tokens[7].type).toBe(TokenType.DROP);
-      expect(tokens[8].type).toBe(TokenType.WAIT);
+      expect(tokens[1].type).toBe(TokenType.GOTO);
+      expect(tokens[2].type).toBe(TokenType.ATTACK);
+      expect(tokens[3].type).toBe(TokenType.DIG);
+      expect(tokens[4].type).toBe(TokenType.PLACE);
+      expect(tokens[5].type).toBe(TokenType.EQUIP);
+      expect(tokens[6].type).toBe(TokenType.DROP);
+      expect(tokens[7].type).toBe(TokenType.WAIT);
     });
 
     test('should tokenize logical operators', () => {
-      lexer = new Lexer('AND OR NOT');
+      lexer = new Lexer("and or not");
       const tokens = lexer.tokenize();
       
       expect(tokens).toHaveLength(4); // 3 operators + EOF
@@ -227,15 +214,6 @@ describe('BotScript Lexer', () => {
       expect(tokens[2].type).toBe(TokenType.LBRACE);
       expect(tokens[3].type).toBe(TokenType.RBRACE);
     });
-
-    test('should tokenize punctuation', () => {
-      lexer = new Lexer(', ;');
-      const tokens = lexer.tokenize();
-      
-      expect(tokens).toHaveLength(3); // 2 punctuation + EOF
-      expect(tokens[0].type).toBe(TokenType.COMMA);
-      expect(tokens[1].type).toBe(TokenType.SEMICOLON);
-    });
   });
 
   describe('Line Tracking', () => {
@@ -277,29 +255,29 @@ describe('BotScript Lexer', () => {
 
   describe('Complex Scripts', () => {
     test('should tokenize variable definition', () => {
-      lexer = new Lexer('DEF $health = 20');
+      lexer = new Lexer('var health = 20');
       const tokens = lexer.tokenize();
-      
-      expect(tokens).toHaveLength(5); // DEF, $health, =, 20, EOF
-      expect(tokens[0].type).toBe(TokenType.DEF);
-      expect(tokens[1].type).toBe(TokenType.VARIABLE);
+
+      expect(tokens).toHaveLength(5); // var, health, =, 20, EOF
+      expect(tokens[0].type).toBe(TokenType.VAR);
+      expect(tokens[1].type).toBe(TokenType.IDENTIFIER);
       expect(tokens[2].type).toBe(TokenType.ASSIGN);
       expect(tokens[3].type).toBe(TokenType.NUMBER);
     });
 
     test('should tokenize conditional statement', () => {
-      lexer = new Lexer('IF $health < 10 THEN SAY "Low health!" ENDIF');
+      lexer = new Lexer('if health < 10 { say "Low health" }');
       const tokens = lexer.tokenize();
       
       const expectedTypes = [
         TokenType.IF,
-        TokenType.VARIABLE,
+        TokenType.IDENTIFIER,
         TokenType.LESS_THAN,
         TokenType.NUMBER,
-        TokenType.THEN,
+        TokenType.LBRACE,
         TokenType.SAY,
         TokenType.STRING,
-        TokenType.ENDIF,
+        TokenType.RBRACE,
         TokenType.EOF
       ];
       
@@ -307,16 +285,6 @@ describe('BotScript Lexer', () => {
       tokens.forEach((token, index) => {
         expect(token.type).toBe(expectedTypes[index]);
       });
-    });
-
-    test('should tokenize bot command with parameters', () => {
-      lexer = new Lexer('MOVE "forward" 5');
-      const tokens = lexer.tokenize();
-      
-      expect(tokens).toHaveLength(4); // MOVE, "forward", 5, EOF
-      expect(tokens[0].type).toBe(TokenType.MOVE);
-      expect(tokens[1].type).toBe(TokenType.STRING);
-      expect(tokens[2].type).toBe(TokenType.NUMBER);
     });
   });
 

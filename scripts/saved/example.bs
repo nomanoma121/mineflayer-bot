@@ -1,0 +1,17 @@
+var hoge = 10
+set hoge = hoge + 1
+
+repeat 5 {
+  say "現在の値: " + hoge
+  set hoge = hoge + 1
+
+  if hoge > 12 {
+    say "値が12を超えました！"
+  }
+
+  goto 1 3 5
+
+  wait 1
+}
+
+say "最終的な値: " + hoge

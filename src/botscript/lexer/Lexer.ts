@@ -70,11 +70,6 @@ export class Lexer {
       return this.readString(startLine, startColumn);
     }
     
-    // 変数（$で始まる）
-    if (char === '$') {
-      return this.readVariable(startLine, startColumn);
-    }
-    
     // 数値
     if (this.isDigit(char)) {
       return this.readNumber(startLine, startColumn);
@@ -122,7 +117,7 @@ export class Lexer {
       column: startColumn
     };
   }
-
+  
   /**
    * 空白文字をスキップ（改行以外）
    */
@@ -175,31 +170,6 @@ export class Lexer {
     return {
       type: TokenType.INVALID,
       value: '"' + value,
-      line: startLine,
-      column: startColumn
-    };
-  }
-
-  /**
-   * 変数を読み取り
-   */
-  private readVariable(startLine: number, startColumn: number): Token {
-    let value = '';
-    
-    while (this.position < this.input.length) {
-      const char = this.input[this.position];
-      
-      if (char === '$' || this.isLetter(char) || this.isDigit(char) || char === '_') {
-        value += char;
-        this.advance();
-      } else {
-        break;
-      }
-    }
-    
-    return {
-      type: TokenType.VARIABLE,
-      value,
       line: startLine,
       column: startColumn
     };
@@ -304,8 +274,6 @@ export class Lexer {
       case ')': return TokenType.RPAREN;
       case '{': return TokenType.LBRACE;
       case '}': return TokenType.RBRACE;
-      case ',': return TokenType.COMMA;
-      case ';': return TokenType.SEMICOLON;
       default: return null;
     }
   }
