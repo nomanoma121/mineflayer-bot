@@ -126,6 +126,14 @@ describe('BotScript Lexer', () => {
       expect(tokens[0].type).toBe(TokenType.VAR);
     });
 
+    test("should tokenize set keyword", () => {
+      lexer = new Lexer('set');
+      const tokens = lexer.tokenize();
+
+      expect(tokens).toHaveLength(2); // 1 keyword + EOF
+      expect(tokens[0].type).toBe(TokenType.SET);
+    });
+
     test('should tokenize boolean keywords', () => {
       lexer = new Lexer('true false');
       const tokens = lexer.tokenize();
@@ -263,7 +271,7 @@ describe('BotScript Lexer', () => {
       
       const expectedTypes = [
         TokenType.IF,
-        TokenType.IDENTIFIER, // health
+        TokenType.IDENTIFIER,
         TokenType.LESS_THAN,
         TokenType.NUMBER,
         TokenType.LBRACE,
