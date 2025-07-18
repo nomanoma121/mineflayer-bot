@@ -99,9 +99,8 @@ export class Parser {
     const initializer = this.expression();
     this.consumeNewlineOrEOF();
 
-    const varName = ASTFactory.extractVariableName(variable.value);
     return ASTFactory.createVariableDeclaration(
-      varName,
+      variable.value,
       initializer,
       variable.line,
       variable.column
@@ -122,9 +121,8 @@ export class Parser {
     const value = this.expression();
     this.consumeNewlineOrEOF();
 
-    const varName = ASTFactory.extractVariableName(variable.value);
     const target = ASTFactory.createVariableReference(
-      varName,
+      variable.value,
       variable.line,
       variable.column
     );
@@ -424,9 +422,8 @@ export class Parser {
 
     if (this.match(TokenType.IDENTIFIER)) {
       const token = this.previous();
-      const varName = ASTFactory.extractVariableName(token.value);
       return ASTFactory.createVariableReference(
-        varName,
+        token.value,
         token.line,
         token.column
       );
