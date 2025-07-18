@@ -183,6 +183,7 @@ export class Parser {
     const statements = this.statementBlock([TokenType.RBRACE]);
 
     this.consume(TokenType.RBRACE, "Expected } after REPEAT statements");
+    this.consumeNewlineOrEOF();
 
     return ASTFactory.createRepeatStatement(
       count,
