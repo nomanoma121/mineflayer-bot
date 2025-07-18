@@ -98,7 +98,7 @@ describe('BotScript Interpreter', () => {
     });
 
     test('should evaluate boolean literals', async () => {
-      const result = await executeScript('TRUE');
+      const result = await executeScript('true');
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
@@ -113,7 +113,7 @@ describe('BotScript Interpreter', () => {
     });
 
     test('should evaluate logical expressions', async () => {
-      const result = await executeScript('TRUE AND FALSE');
+      const result = await executeScript('true and false');
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
@@ -138,8 +138,8 @@ describe('BotScript Interpreter', () => {
   describe('Variable Management', () => {
     test('should define and use variables', async () => {
       const result = await executeScript(`
-        DEF $health = 20
-        $health
+        var health = 20
+        health
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -148,8 +148,8 @@ describe('BotScript Interpreter', () => {
 
     test('should assign values to variables', async () => {
       const result = await executeScript(`
-        DEF $counter = 0
-        $counter = 5
+        var counter = 0
+        set counter = 5
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -158,9 +158,9 @@ describe('BotScript Interpreter', () => {
 
     test('should use variables in expressions', async () => {
       const result = await executeScript(`
-        DEF $a = 10
-        DEF $b = 5
-        DEF $result = $a + $b * 2
+        var a = 10
+        var b = 5
+        var result = a + b * 2
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -168,13 +168,13 @@ describe('BotScript Interpreter', () => {
     });
 
     test('should throw error for undefined variables', async () => {
-      const result = await executeScript('$undefined_var');
+      const result = await executeScript('undefined_var');
       expect(result.type).toBe(ExecutionResultType.ERROR);
       expect(result.message).toContain('Undefined variable: undefined_var');
     });
 
     test('should access built-in variables', async () => {
-      const result = await executeScript('$bot_name');
+      const result = await executeScript('bot_name');
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
       expect(context.getVariable('bot_name')).toBe('BotScript');
     });
@@ -183,10 +183,10 @@ describe('BotScript Interpreter', () => {
   describe('Control Flow', () => {
     test('should execute IF statement (true condition)', async () => {
       const result = await executeScript(`
-        DEF $executed = FALSE
-        IF TRUE THEN
-          $executed = TRUE
-        ENDIF
+        var executed = false
+        if true {
+          set executed = true
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -195,10 +195,10 @@ describe('BotScript Interpreter', () => {
 
     test('should skip IF statement (false condition)', async () => {
       const result = await executeScript(`
-        DEF $executed = FALSE
-        IF FALSE THEN
-          $executed = TRUE
-        ENDIF
+        var executed = false
+        if false {
+          set executed = true
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -207,12 +207,12 @@ describe('BotScript Interpreter', () => {
 
     test('should execute ELSE branch', async () => {
       const result = await executeScript(`
-        DEF $branch = "none"
-        IF FALSE THEN
-          $branch = "if"
-        ELSE
-          $branch = "else"
-        ENDIF
+        var branch = "none"
+        if false {
+          set branch = "if"
+        } else {
+          set branch = "else"
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -221,12 +221,12 @@ describe('BotScript Interpreter', () => {
 
     test('should handle complex conditions', async () => {
       const result = await executeScript(`
-        DEF $a = 10
-        DEF $b = 5
-        DEF $result = FALSE
-        IF $a > $b AND $b > 0 THEN
-          $result = TRUE
-        ENDIF
+        var a = 10
+        var b = 5
+        var result = false
+        if a > b and b > 0 {
+          set result = true
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -235,10 +235,10 @@ describe('BotScript Interpreter', () => {
 
     test('should execute REPEAT statement', async () => {
       const result = await executeScript(`
-        DEF $counter = 0
-        REPEAT 3
-          $counter = $counter + 1
-        ENDREPEAT
+        var counter = 0
+        repeat 3 {
+          set counter = counter + 1
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -247,10 +247,10 @@ describe('BotScript Interpreter', () => {
 
     test('should handle REPEAT with zero count', async () => {
       const result = await executeScript(`
-        DEF $counter = 0
-        REPEAT 0
-          $counter = 1
-        ENDREPEAT
+        var counter = 0
+        repeat 0 {
+          set counter = 1
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -259,11 +259,11 @@ describe('BotScript Interpreter', () => {
 
     test('should handle REPEAT with variable count', async () => {
       const result = await executeScript(`
-        DEF $times = 4
-        DEF $sum = 0
-        REPEAT $times
-          $sum = $sum + 1
-        ENDREPEAT
+        var times = 4
+        var sum = 0
+        repeat times {
+          set sum = sum + 1
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -272,9 +272,9 @@ describe('BotScript Interpreter', () => {
 
     test('should throw error for negative REPEAT count', async () => {
       const result = await executeScript(`
-        REPEAT -1
-          SAY "test"
-        ENDREPEAT
+        repeat -1 {
+          say "test"
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.ERROR);
@@ -283,9 +283,9 @@ describe('BotScript Interpreter', () => {
 
     test('should throw error for non-number REPEAT count', async () => {
       const result = await executeScript(`
-        REPEAT "invalid"
-          SAY "test"
-        ENDREPEAT
+        repeat "invalid" {
+          say "test"
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.ERROR);
@@ -295,53 +295,41 @@ describe('BotScript Interpreter', () => {
 
   describe('Bot Commands', () => {
     test('should execute SAY command', async () => {
-      const result = await executeScript('SAY "Hello World"');
-      
+      const result = await executeScript('say "Hello World"');
+
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
       // Note: この時点では実際のボット動作のモックアップ
     });
 
     test('should execute SAY command with variable', async () => {
       const result = await executeScript(`
-        DEF $message = "Hello from variable"
-        SAY $message
+        var message = "Hello from variable"
+        say message
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
-    test('should execute MOVE command', async () => {
-      const result = await executeScript('MOVE "forward" 5');
-      
-      expect(result.type).toBe(ExecutionResultType.SUCCESS);
-    });
-
-    test('should execute MOVE command without distance', async () => {
-      const result = await executeScript('MOVE "up"');
-      
-      expect(result.type).toBe(ExecutionResultType.SUCCESS);
-    });
-
     test('should execute GOTO command', async () => {
-      const result = await executeScript('GOTO 100 64 200');
+      const result = await executeScript('goto 100 64 200');
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute GOTO command with variables', async () => {
       const result = await executeScript(`
-        DEF $x = 150
-        DEF $y = 80
-        DEF $z = 250
-        GOTO $x $y $z
+        var x = 150
+        var y = 80
+        var z = 250
+        goto x y z
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute ATTACK command', async () => {
-      const result = await executeScript('ATTACK "zombie"');
-      
+      const result = await executeScript('attack "zombie"');
+
       if (result.type === ExecutionResultType.ERROR) {
         console.log('ATTACK Error details:', result.message);
       }
@@ -349,32 +337,32 @@ describe('BotScript Interpreter', () => {
     });
 
     test('should execute DIG command', async () => {
-      const result = await executeScript('DIG "stone"');
-      
+      const result = await executeScript('dig "stone"');
+
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute DIG command without block type', async () => {
-      const result = await executeScript('DIG');
+      const result = await executeScript('dig');
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute EQUIP command', async () => {
-      const result = await executeScript('EQUIP "sword"');
-      
+      const result = await executeScript('equip "sword"');
+
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute DROP command', async () => {
-      const result = await executeScript('DROP "stone" 10');
+      const result = await executeScript('drop "stone" 10');
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
     });
 
     test('should execute WAIT command', async () => {
       const startTime = Date.now();
-      const result = await executeScript('WAIT 0.01'); // 10ms wait
+      const result = await executeScript('wait 0.01'); // 10ms wait
       const endTime = Date.now();
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -385,13 +373,13 @@ describe('BotScript Interpreter', () => {
   describe('Complex Scripts', () => {
     test('should execute health monitoring script', async () => {
       const result = await executeScript(`
-        DEF $health_threshold = 10
-        IF $bot_health < $health_threshold THEN
-          SAY "Health is low!"
-          SAY "Current health: " + $bot_health
-        ELSE
-          SAY "Health is good"
-        ENDIF
+        var health_threshold = 10
+        if bot_health < health_threshold {
+          say "Health is low!"
+          say "Current health: " + bot_health
+        } else {
+          say "Health is good"
+        } 
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -399,16 +387,16 @@ describe('BotScript Interpreter', () => {
 
     test('should execute resource gathering script', async () => {
       const result = await executeScript(`
-        DEF $wood_needed = 5
-        DEF $wood_collected = 0
-        
-        REPEAT $wood_needed
-          DIG "log"
-          $wood_collected = $wood_collected + 1
-          SAY "Collected " + $wood_collected + " wood"
-        ENDREPEAT
-        
-        SAY "Finished collecting wood!"
+        var wood_needed = 5
+        var wood_collected = 0
+
+        repeat wood_needed {
+          dig "log"
+          set wood_collected = wood_collected + 1
+          say "Collected " + wood_collected + " wood"
+        }
+
+        say "Finished collecting wood!"
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -417,20 +405,16 @@ describe('BotScript Interpreter', () => {
 
     test('should execute movement pattern script', async () => {
       const result = await executeScript(`
-        DEF $start_x = $bot_x
-        DEF $start_y = $bot_y
-        DEF $start_z = $bot_z
-        
-        MOVE "forward" 10
-        WAIT 0.01
-        MOVE "right" 5
-        WAIT 0.01
-        MOVE "backward" 10
-        WAIT 0.01
-        MOVE "left" 5
-        
-        GOTO $start_x $start_y $start_z
-        SAY "Returned to starting position"
+        var start_x = bot_x
+        var start_y = bot_y
+        var start_z = bot_z
+
+        wait 0.01
+        wait 0.01
+        wait 0.01
+
+        goto start_x start_y start_z
+        say "Returned to starting position"
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -438,17 +422,17 @@ describe('BotScript Interpreter', () => {
 
     test('should handle nested control structures', async () => {
       const result = await executeScript(`
-        DEF $total = 0
-        REPEAT 3
-          DEF $inner_total = 0
-          REPEAT 2
-            $inner_total = $inner_total + 1
-            $total = $total + 1
-          ENDREPEAT
-          IF $inner_total == 2 THEN
-            SAY "Inner loop completed correctly"
-          ENDIF
-        ENDREPEAT
+        var total = 0
+        repeat 3 {
+          var inner_total = 0
+          repeat 2 {
+            set inner_total = inner_total + 1
+            set total = total + 1
+          }
+          if inner_total == 2 {
+            say "Inner loop completed correctly"
+          }
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
@@ -466,8 +450,8 @@ describe('BotScript Interpreter', () => {
 
     test('should report line information in errors', async () => {
       const result = await executeScript(`
-        DEF $x = 10
-        $undefined_var = 5
+        var x = 10
+        set undefined_var = 5
       `);
       
       expect(result.type).toBe(ExecutionResultType.ERROR);
@@ -476,12 +460,12 @@ describe('BotScript Interpreter', () => {
 
     test('should track execution statistics', async () => {
       await executeScript(`
-        DEF $var1 = 1
-        DEF $var2 = 2
-        SAY "test"
-        IF TRUE THEN
-          SAY "inner"
-        ENDIF
+        var var1 = 1
+        var var2 = 2
+        say "test"
+        if true {
+          say "inner"
+        }
       `);
       
       const stats = context.getStats();
@@ -495,9 +479,9 @@ describe('BotScript Interpreter', () => {
     test('should support stopping execution', async () => {
       // 長時間実行されるスクリプトを開始
       const executePromise = executeScript(`
-        REPEAT 1000000
-          WAIT 0.0001
-        ENDREPEAT
+        repeat 1000000 {
+          wait 0.0001
+        }
       `);
       
       // 少し待ってから停止
@@ -523,7 +507,7 @@ describe('BotScript Interpreter', () => {
 
   describe('System Integration', () => {
     test('should update system variables', async () => {
-      await executeScript('SAY "Starting"');
+      await executeScript('say "Starting"');
       
       // システム変数が利用可能であることを確認
       expect(context.hasVariable('bot_health')).toBe(true);
@@ -535,26 +519,26 @@ describe('BotScript Interpreter', () => {
 
     test('should handle truthiness correctly', async () => {
       const result = await executeScript(`
-        DEF $result1 = FALSE
-        DEF $result2 = FALSE
-        DEF $result3 = FALSE
-        DEF $result4 = FALSE
-        
-        IF 0 THEN
-          $result1 = TRUE
-        ENDIF
-        
-        IF 1 THEN
-          $result2 = TRUE
-        ENDIF
-        
-        IF "" THEN
-          $result3 = TRUE
-        ENDIF
-        
-        IF "hello" THEN
-          $result4 = TRUE
-        ENDIF
+        var result1 = false
+        var result2 = false
+        var result3 = false
+        var result4 = false
+
+        if 0 {
+          set result1 = true
+        }
+
+        if 1 {
+          set result2 = true
+        }
+
+        if "" {
+          set result3 = true
+        }
+
+        if "hello" {
+          set result4 = true
+        }
       `);
       
       expect(result.type).toBe(ExecutionResultType.SUCCESS);
