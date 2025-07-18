@@ -261,9 +261,9 @@ describe('BotScript Parser', () => {
 
     test('should parse REPEAT statement', () => {
       const ast = parseScript(`
-        repeat 3
+        repeat 3 {
           say "Hello"
-        endrepeat
+        }
       `);
       
       const stmt = ast.statements[0];

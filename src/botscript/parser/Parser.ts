@@ -51,7 +51,7 @@ export class Parser {
    */
   private statement(): StatementNode {
     try {
-      if (this.match(TokenType.DEF)) {
+      if (this.match(TokenType.VAR)) {
         return this.variableDeclaration();
       }
       
@@ -63,11 +63,10 @@ export class Parser {
         return this.repeatStatement();
       }
       
-      // 変数代入をチェック
-      if (this.check(TokenType.VARIABLE) && this.checkNext(TokenType.ASSIGN)) {
+      if (this.match(TokenType.SET)) {
         return this.assignmentStatement();
       }
-      
+
       // ボットコマンド
       if (this.checkBotCommand()) {
         return this.commandStatement();
@@ -85,10 +84,10 @@ export class Parser {
 
   /**
    * 変数宣言の解析
-   * DEF $variable = expression
+   * var variable = expression
    */
   private variableDeclaration(): StatementNode {
-    const variable = this.consume(TokenType.VARIABLE, 'Expected variable name after DEF');
+    const variable = this.consume(TokenType.IDENTIFIER, 'Expected variable name after var');
     this.consume(TokenType.ASSIGN, 'Expected "=" after variable name');
     
     const initializer = this.expression();
@@ -105,11 +104,11 @@ export class Parser {
 
   /**
    * 代入文の解析
-   * $variable = expression
+   * set variable = expression
    */
   private assignmentStatement(): StatementNode {
-    const variable = this.advance(); // VARIABLE token
-    this.advance(); // ASSIGN token
+    const variable = this.consume(TokenType.IDENTIFIER, 'Expected variable name after SET');
+    this.consume(TokenType.ASSIGN, 'Expected "=" after variable name');
     
     const value = this.expression();
     this.consumeNewlineOrEOF();
@@ -127,29 +126,31 @@ export class Parser {
 
   /**
    * IF文の解析
-   * IF condition THEN statements [ELSE statements] ENDIF
+   * IF condition { statements　} [else {statements}]
    */
   private ifStatement(): StatementNode {
     const ifToken = this.previous();
     const condition = this.expression();
     
-    this.consume(TokenType.THEN, 'Expected THEN after IF condition');
+    this.consume(TokenType.LBRACE, 'Expected { after IF condition');
     this.consumeNewlineOrEOF();
-    
-    const thenStatements = this.statementBlock([TokenType.ELSE, TokenType.ENDIF]);
-    
+
+    const ifStatements = this.statementBlock([TokenType.RBRACE]);
+    this.consume(TokenType.RBRACE, 'Expected } after IF statements');
+
     let elseStatements: StatementNode[] | undefined;
     if (this.match(TokenType.ELSE)) {
+      this.consume(TokenType.LBRACE, 'Expected { after ELSE');
       this.consumeNewlineOrEOF();
-      elseStatements = this.statementBlock([TokenType.ENDIF]);
+      elseStatements = this.statementBlock([TokenType.RBRACE]);
+      this.consume(TokenType.RBRACE, 'Expected } after ELSE statements');
     }
-    
-    this.consume(TokenType.ENDIF, 'Expected ENDIF');
+
     this.consumeNewlineOrEOF();
     
     return ASTFactory.createIfStatement(
       condition,
-      thenStatements,
+      ifStatements,
       elseStatements,
       ifToken.line,
       ifToken.column
@@ -158,17 +159,17 @@ export class Parser {
 
   /**
    * REPEAT文の解析
-   * REPEAT count statements ENDREPEAT
+   * repeat count { statements }
    */
   private repeatStatement(): StatementNode {
     const repeatToken = this.previous();
     const count = this.expression();
+    this.consume(TokenType.LBRACE, 'Expected { after REPEAT count');
     this.consumeNewlineOrEOF();
     
-    const statements = this.statementBlock([TokenType.ENDREPEAT]);
+    const statements = this.statementBlock([TokenType.RBRACE]);
     
-    this.consume(TokenType.ENDREPEAT, 'Expected ENDREPEAT');
-    this.consumeNewlineOrEOF();
+    this.consume(TokenType.RBRACE, 'Expected } after REPEAT statements');
     
     return ASTFactory.createRepeatStatement(
       count,
@@ -352,7 +353,7 @@ export class Parser {
       return ASTFactory.createStringLiteral(token.value, token.line, token.column);
     }
     
-    if (this.match(TokenType.VARIABLE)) {
+    if (this.match(TokenType.IDENTIFIER)) {
       const token = this.previous();
       const varName = ASTFactory.extractVariableName(token.value);
       return ASTFactory.createVariableReference(varName, token.line, token.column);
@@ -377,8 +378,6 @@ export class Parser {
     switch (commandToken.type) {
       case TokenType.SAY:
         return this.sayCommand(commandToken);
-      case TokenType.MOVE:
-        return this.moveCommand(commandToken);
       case TokenType.GOTO:
         return this.gotoCommand(commandToken);
       case TokenType.ATTACK:
@@ -401,18 +400,6 @@ export class Parser {
   private sayCommand(token: Token): BotCommandNode {
     const message = this.expression();
     return ASTFactory.createSayCommand(message, token.line, token.column);
-  }
-
-  private moveCommand(token: Token): BotCommandNode {
-    const direction = this.expression();
-    let distance: ExpressionNode | undefined;
-    
-    // 次にパースできる式があるかチェック
-    if (this.canParseExpression()) {
-      distance = this.expression();
-    }
-    
-    return ASTFactory.createMoveCommand(direction, distance, token.line, token.column);
   }
 
   private gotoCommand(token: Token): BotCommandNode {
@@ -517,7 +504,7 @@ export class Parser {
    */
   private checkBotCommand(): boolean {
     const botCommands = [
-      TokenType.SAY, TokenType.MOVE, TokenType.GOTO, TokenType.ATTACK,
+      TokenType.SAY, TokenType.GOTO, TokenType.ATTACK,
       TokenType.DIG, TokenType.PLACE, TokenType.EQUIP, TokenType.DROP, TokenType.WAIT
     ];
     return this.checkAny(botCommands);
@@ -595,7 +582,7 @@ export class Parser {
     const validExpressionTokens = [
       TokenType.NUMBER,
       TokenType.STRING,
-      TokenType.VARIABLE,
+      TokenType.IDENTIFIER,
       TokenType.TRUE,
       TokenType.FALSE,
       TokenType.LPAREN,
