@@ -442,7 +442,7 @@ describe('BotScript Interpreter', () => {
 
   describe('Error Handling', () => {
     test('should handle runtime errors gracefully', async () => {
-      const result = await executeScript('$undefined_variable + 5');
+      const result = await executeScript('undefined_variable + 5');
       
       expect(result.type).toBe(ExecutionResultType.ERROR);
       expect(result.message).toContain('Undefined variable');
