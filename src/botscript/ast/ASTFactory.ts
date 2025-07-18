@@ -375,13 +375,6 @@ export class ASTFactory {
   // ===== ヘルパーメソッド =====
 
   /**
-   * 変数名から$プレフィックスを除去
-   */
-  static extractVariableName(variableToken: string): string {
-    return variableToken.startsWith('$') ? variableToken.substring(1) : variableToken;
-  }
-
-  /**
    * トークンから二項演算子に変換
    */
   static tokenToBinaryOperator(token: string): BinaryOperator {

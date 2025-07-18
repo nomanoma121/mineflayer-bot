@@ -18,7 +18,6 @@ import {
   BinaryExpressionNode,
   UnaryExpressionNode,
   SayCommandNode,
-  MoveCommandNode,
   GotoCommandNode,
   AttackCommandNode,
   DigCommandNode,
@@ -420,9 +419,6 @@ export class Interpreter {
         case ASTNodeType.SAY_COMMAND:
           return await this.executeSayCommand(command as SayCommandNode, startTime);
         
-        case ASTNodeType.MOVE_COMMAND:
-          return await this.executeMoveCommand(command as MoveCommandNode, startTime);
-        
         case ASTNodeType.GOTO_COMMAND:
           return await this.executeGotoCommand(command as GotoCommandNode, startTime);
         
@@ -465,68 +461,6 @@ export class Interpreter {
       message: `Said: "${message}"`,
       duration: Date.now() - startTime
     };
-  }
-
-  private async executeMoveCommand(node: MoveCommandNode, startTime: number): Promise<CommandResult> {
-    const direction = String(this.evaluateExpression(node.direction)).toLowerCase();
-    const distance = node.distance ? Number(this.evaluateExpression(node.distance)) : 1;
-    
-    try {
-      const currentPos = this.bot.getPosition();
-      let targetPos = { ...currentPos };
-      
-      // 移動方向に応じて目標座標を計算
-      switch (direction) {
-        case 'forward':
-          targetPos.z += distance;
-          break;
-        case 'backward':
-          targetPos.z -= distance;
-          break;
-        case 'left':
-          targetPos.x -= distance;
-          break;
-        case 'right':
-          targetPos.x += distance;
-          break;
-        case 'up':
-          targetPos.y += distance;
-          break;
-        case 'down':
-          targetPos.y -= distance;
-          break;
-        default:
-          throw new Error(`Invalid direction: ${direction}. Use: forward, backward, left, right, up, down`);
-      }
-      
-      // 実際の移動を実行
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Movement timeout'));
-        }, 30000);
-        
-        try {
-          this.bot.goto(targetPos.x, targetPos.y, targetPos.z);
-          clearTimeout(timeout);
-          resolve();
-        } catch (error) {
-          clearTimeout(timeout);
-          reject(error);
-        }
-      });
-      
-      return {
-        success: true,
-        message: `Moved ${direction} for ${distance} blocks to (${targetPos.x}, ${targetPos.y}, ${targetPos.z})`,
-        duration: Date.now() - startTime
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Movement failed: ${(error as Error).message}`,
-        duration: Date.now() - startTime
-      };
-    }
   }
 
   private async executeGotoCommand(node: GotoCommandNode, startTime: number): Promise<CommandResult> {
