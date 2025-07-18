@@ -185,7 +185,7 @@ describe('BotScript Interpreter', () => {
       const result = await executeScript(`
         var executed = false
         if true {
-          executed = true
+          set executed = true
         }
       `);
       
@@ -197,7 +197,7 @@ describe('BotScript Interpreter', () => {
       const result = await executeScript(`
         var executed = false
         if false {
-          executed = true
+          set executed = true
         }
       `);
       
@@ -209,9 +209,9 @@ describe('BotScript Interpreter', () => {
       const result = await executeScript(`
         var branch = "none"
         if false {
-          branch = "if"
+          set branch = "if"
         } else {
-          branch = "else"
+          set branch = "else"
         }
       `);
       
@@ -225,7 +225,7 @@ describe('BotScript Interpreter', () => {
         var b = 5
         var result = false
         if a > b and b > 0 {
-          result = true
+          set result = true
         }
       `);
       
@@ -392,7 +392,7 @@ describe('BotScript Interpreter', () => {
 
         repeat wood_needed {
           dig "log"
-          wood_collected = wood_collected + 1
+          set wood_collected = wood_collected + 1
           say "Collected " + wood_collected + " wood"
         }
 
