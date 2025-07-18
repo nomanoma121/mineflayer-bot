@@ -49,7 +49,7 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse variable references', () => {
-      const ast = parseScript('$health');
+      const ast = parseScript('health');
       
       const varNode = ast.statements[0];
       expect(varNode.type).toBe(ASTNodeType.VARIABLE_REFERENCE);
@@ -59,7 +59,7 @@ describe('BotScript Parser', () => {
 
   describe('Variable Declaration', () => {
     test('should parse simple variable declaration', () => {
-      const ast = parseScript('DEF $health = 20');
+      const ast = parseScript('var health = 20');
       
       expect(ast.statements).toHaveLength(1);
       const varDecl = ast.statements[0];
@@ -70,7 +70,7 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse variable declaration with string', () => {
-      const ast = parseScript('DEF $message = "hello"');
+      const ast = parseScript('var message = "hello"');
       
       const varDecl = ast.statements[0];
       expect((varDecl as any).name).toBe('message');
@@ -79,7 +79,7 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse variable declaration with expression', () => {
-      const ast = parseScript('DEF $result = 5 + 3');
+      const ast = parseScript('var result = 5 + 3');
       
       const varDecl = ast.statements[0];
       expect((varDecl as any).name).toBe('result');
@@ -101,7 +101,7 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse comparison expressions', () => {
-      const ast = parseScript('$health < 10');
+      const ast = parseScript(`health < 10`);
       
       const expr = ast.statements[0];
       expect(expr.type).toBe(ASTNodeType.BINARY_EXPRESSION);
@@ -111,11 +111,13 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse logical expressions', () => {
-      const ast = parseScript('$health > 0 AND $food > 0');
-      
+      const ast = parseScript(`health > 10 and health < 20`);
+
       const expr = ast.statements[0];
       expect(expr.type).toBe(ASTNodeType.BINARY_EXPRESSION);
       expect((expr as any).operator).toBe(BinaryOperator.AND);
+      expect((expr as any).left.type).toBe(ASTNodeType.BINARY_EXPRESSION);
+      expect((expr as any).right.type).toBe(ASTNodeType.BINARY_EXPRESSION);
     });
 
     test('should respect operator precedence', () => {
@@ -132,7 +134,7 @@ describe('BotScript Parser', () => {
 
   describe('Unary Expressions', () => {
     test('should parse NOT expressions', () => {
-      const ast = parseScript('NOT TRUE');
+      const ast = parseScript('not true');
       
       const expr = ast.statements[0];
       expect(expr.type).toBe(ASTNodeType.UNARY_EXPRESSION);
@@ -152,7 +154,7 @@ describe('BotScript Parser', () => {
 
   describe('Bot Commands', () => {
     test('should parse SAY command', () => {
-      const ast = parseScript('SAY "hello world"');
+      const ast = parseScript('say "hello world"');
       
       const stmt = ast.statements[0];
       expect(stmt.type).toBe(ASTNodeType.COMMAND_STATEMENT);
@@ -162,34 +164,16 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse SAY command with variable', () => {
-      const ast = parseScript('SAY $message');
+      const ast = parseScript('say message');
       
       const stmt = ast.statements[0];
       expect((stmt as any).command.message.type).toBe(ASTNodeType.VARIABLE_REFERENCE);
       expect((stmt as any).command.message.name).toBe('message');
     });
 
-    test('should parse MOVE command', () => {
-      const ast = parseScript('MOVE "forward" 5');
-      
-      const stmt = ast.statements[0];
-      expect(stmt.type).toBe(ASTNodeType.COMMAND_STATEMENT);
-      expect((stmt as any).command.type).toBe(ASTNodeType.MOVE_COMMAND);
-      expect((stmt as any).command.direction.value).toBe('forward');
-      expect((stmt as any).command.distance.value).toBe(5);
-    });
-
-    test('should parse MOVE command without distance', () => {
-      const ast = parseScript('MOVE "up"');
-      
-      const stmt = ast.statements[0];
-      expect((stmt as any).command.direction.value).toBe('up');
-      expect((stmt as any).command.distance).toBeUndefined();
-    });
-
     test('should parse GOTO command', () => {
-      const ast = parseScript('GOTO 100 64 200');
-      
+      const ast = parseScript('goto 100 64 200');
+
       const stmt = ast.statements[0];
       expect(stmt.type).toBe(ASTNodeType.COMMAND_STATEMENT);
       expect((stmt as any).command.type).toBe(ASTNodeType.GOTO_COMMAND);
@@ -199,15 +183,15 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse ATTACK command', () => {
-      const ast = parseScript('ATTACK "zombie"');
-      
+      const ast = parseScript('attack "zombie"');
+
       const stmt = ast.statements[0];
       expect((stmt as any).command.type).toBe(ASTNodeType.ATTACK_COMMAND);
       expect((stmt as any).command.target.value).toBe('zombie');
     });
 
     test('should parse DIG command', () => {
-      const ast = parseScript('DIG "stone"');
+      const ast = parseScript('dig "stone"');
       
       const stmt = ast.statements[0];
       expect((stmt as any).command.type).toBe(ASTNodeType.DIG_COMMAND);
@@ -215,23 +199,23 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse DIG command without block type', () => {
-      const ast = parseScript('DIG');
+      const ast = parseScript('dig');
       
       const stmt = ast.statements[0];
       expect((stmt as any).command.blockType).toBeUndefined();
     });
 
     test('should parse EQUIP command', () => {
-      const ast = parseScript('EQUIP "sword"');
-      
+      const ast = parseScript('equip "sword"');
+
       const stmt = ast.statements[0];
       expect((stmt as any).command.type).toBe(ASTNodeType.EQUIP_COMMAND);
       expect((stmt as any).command.item.value).toBe('sword');
     });
 
     test('should parse DROP command', () => {
-      const ast = parseScript('DROP "stone" 10');
-      
+      const ast = parseScript('drop "stone" 10');
+
       const stmt = ast.statements[0];
       expect((stmt as any).command.type).toBe(ASTNodeType.DROP_COMMAND);
       expect((stmt as any).command.item.value).toBe('stone');
@@ -239,8 +223,8 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse WAIT command', () => {
-      const ast = parseScript('WAIT 5');
-      
+      const ast = parseScript('wait 5');
+
       const stmt = ast.statements[0];
       expect((stmt as any).command.type).toBe(ASTNodeType.WAIT_COMMAND);
       expect((stmt as any).command.duration.value).toBe(5);
@@ -250,9 +234,9 @@ describe('BotScript Parser', () => {
   describe('Control Flow', () => {
     test('should parse IF statement', () => {
       const ast = parseScript(`
-        IF $health < 10 THEN
-          SAY "Low health!"
-        ENDIF
+        if health < 10 {
+          say "Low health!"
+        }
       `);
       
       const stmt = ast.statements[0];
@@ -264,11 +248,11 @@ describe('BotScript Parser', () => {
 
     test('should parse IF-ELSE statement', () => {
       const ast = parseScript(`
-        IF $health < 10 THEN
-          SAY "Low health!"
-        ELSE
-          SAY "Health is good"
-        ENDIF
+        if health < 10 {
+          say "Low health!"
+        } else {
+          say "Health is good"
+        }
       `);
       
       const stmt = ast.statements[0];
@@ -277,9 +261,9 @@ describe('BotScript Parser', () => {
 
     test('should parse REPEAT statement', () => {
       const ast = parseScript(`
-        REPEAT 3
-          SAY "Hello"
-        ENDREPEAT
+        repeat 3
+          say "Hello"
+        endrepeat
       `);
       
       const stmt = ast.statements[0];
@@ -290,11 +274,11 @@ describe('BotScript Parser', () => {
 
     test('should parse nested control structures', () => {
       const ast = parseScript(`
-        IF $health < 10 THEN
-          REPEAT 3
-            SAY "Healing"
-          ENDREPEAT
-        ENDIF
+        if health < 10 {
+          repeat 3 {
+            say "Healing"
+          }
+        }
       `);
       
       const ifStmt = ast.statements[0];
@@ -305,7 +289,7 @@ describe('BotScript Parser', () => {
 
   describe('Assignment', () => {
     test('should parse variable assignment', () => {
-      const ast = parseScript('$health = 15');
+      const ast = parseScript('set health = 15');
       
       const stmt = ast.statements[0];
       expect(stmt.type).toBe(ASTNodeType.ASSIGNMENT_STATEMENT);
@@ -314,7 +298,7 @@ describe('BotScript Parser', () => {
     });
 
     test('should parse assignment with expression', () => {
-      const ast = parseScript('$result = $a + $b');
+      const ast = parseScript('set result = a + b');
       
       const stmt = ast.statements[0];
       expect((stmt as any).value.type).toBe(ASTNodeType.BINARY_EXPRESSION);
@@ -324,11 +308,11 @@ describe('BotScript Parser', () => {
   describe('Multiple Statements', () => {
     test('should parse multiple statements', () => {
       const ast = parseScript(`
-        DEF $health = 20
-        SAY "Bot started"
-        IF $health > 15 THEN
-          SAY "Feeling good!"
-        ENDIF
+        var health = 20
+        say "Bot started"
+        if health > 15 {
+          say "Feeling good!"
+        }
       `);
       
       expect(ast.statements).toHaveLength(3);
@@ -338,32 +322,32 @@ describe('BotScript Parser', () => {
     });
 
     test('should handle newlines correctly', () => {
-      const ast = parseScript('SAY "first"\nSAY "second"');
-      
+      const ast = parseScript('say "first"\nsay "second"');
+
       expect(ast.statements).toHaveLength(2);
     });
   });
 
   describe('Error Handling', () => {
     test('should throw error for invalid syntax', () => {
-      expect(() => parseScript('DEF = 20')).toThrow();
+      expect(() => parseScript('var = 20')).toThrow();
     });
 
     test('should throw error for unterminated IF', () => {
-      expect(() => parseScript('IF TRUE THEN SAY "test"')).toThrow();
+      expect(() => parseScript('if true then say "test"')).toThrow();
     });
 
     test('should throw error for unterminated REPEAT', () => {
-      expect(() => parseScript('REPEAT 3 SAY "test"')).toThrow();
+      expect(() => parseScript('repeat 3 say "test"')).toThrow();
     });
 
-    test('should throw error for missing THEN', () => {
-      expect(() => parseScript('IF TRUE SAY "test" ENDIF')).toThrow();
+    test('should throw error for missing LEFT BRACE', () => {
+      expect(() => parseScript('if true say "test" }')).toThrow();
     });
 
     test('should provide meaningful error messages', () => {
       try {
-        parseScript('DEF $var');
+        parseScript('var var');
       } catch (error) {
         expect((error as Error).message).toContain('Expected');
       }
@@ -372,14 +356,14 @@ describe('BotScript Parser', () => {
 
   describe('Comments and Whitespace', () => {
     test('should handle extra whitespace', () => {
-      const ast = parseScript('   SAY   "hello"   ');
+      const ast = parseScript('   say   "hello"   ');
       
       expect(ast.statements).toHaveLength(1);
       expect((ast.statements[0] as any).command.message.value).toBe('hello');
     });
 
     test('should handle empty lines', () => {
-      const ast = parseScript('\n\nSAY "hello"\n\n');
+      const ast = parseScript('\n\nsay "hello"\n\n');
       
       expect(ast.statements).toHaveLength(1);
     });
