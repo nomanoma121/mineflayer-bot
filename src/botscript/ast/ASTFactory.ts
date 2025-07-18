@@ -14,7 +14,6 @@ import {
   RepeatStatementNode,
   CommandStatementNode,
   SayCommandNode,
-  MoveCommandNode,
   GotoCommandNode,
   AttackCommandNode,
   DigCommandNode,
@@ -244,24 +243,6 @@ export class ASTFactory {
     return {
       type: ASTNodeType.SAY_COMMAND,
       message,
-      line,
-      column
-    };
-  }
-
-  /**
-   * MOVEコマンドノードを作成
-   */
-  static createMoveCommand(
-    direction: ExpressionNode,
-    distance: ExpressionNode | undefined,
-    line: number,
-    column: number
-  ): MoveCommandNode {
-    return {
-      type: ASTNodeType.MOVE_COMMAND,
-      direction,
-      distance,
       line,
       column
     };

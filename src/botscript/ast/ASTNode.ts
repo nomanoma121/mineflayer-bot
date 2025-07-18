@@ -27,7 +27,6 @@ export enum ASTNodeType {
   
   // ボットコマンド
   SAY_COMMAND = 'SAY_COMMAND',
-  MOVE_COMMAND = 'MOVE_COMMAND',
   GOTO_COMMAND = 'GOTO_COMMAND',
   ATTACK_COMMAND = 'ATTACK_COMMAND',
   DIG_COMMAND = 'DIG_COMMAND',
@@ -99,7 +98,7 @@ export interface BooleanLiteralNode extends ExpressionNode {
  */
 export interface VariableReferenceNode extends ExpressionNode {
   type: ASTNodeType.VARIABLE_REFERENCE;
-  name: string; // $health → "health"
+  name: string;
 }
 
 // ===== 式ノード =====
@@ -225,17 +224,6 @@ export interface SayCommandNode extends BotCommandNode {
 }
 
 /**
- * MOVEコマンド
- * MOVE "forward" 5
- * MOVE "up" $distance
- */
-export interface MoveCommandNode extends BotCommandNode {
-  type: ASTNodeType.MOVE_COMMAND;
-  direction: ExpressionNode; // "forward", "backward", "left", "right", "up", "down"
-  distance?: ExpressionNode; // オプション：距離
-}
-
-/**
  * GOTOコマンド
  * GOTO 100 64 200
  * GOTO $x $y $z
@@ -339,7 +327,6 @@ export type Statement =
  */
 export type BotCommand = 
   | SayCommandNode
-  | MoveCommandNode
   | GotoCommandNode
   | AttackCommandNode
   | DigCommandNode

@@ -1,4 +1,4 @@
-import { Token, TokenType } from '../lexer/TokenType';
+import { Token, TokenType } from "../lexer/TokenType";
 import {
   ProgramNode,
   StatementNode,
@@ -6,9 +6,9 @@ import {
   BotCommandNode,
   ASTNodeType,
   BinaryOperator,
-  UnaryOperator
-} from '../ast/ASTNode';
-import { ASTFactory } from '../ast/ASTFactory';
+  UnaryOperator,
+} from "../ast/ASTNode";
+import { ASTFactory } from "../ast/ASTFactory";
 
 /**
  * BotScript言語のパーサー
@@ -27,20 +27,20 @@ export class Parser {
    */
   public parse(): ProgramNode {
     const statements: StatementNode[] = [];
-    
+
     while (!this.isAtEnd()) {
       // 改行をスキップ
       if (this.check(TokenType.NEWLINE)) {
         this.advance();
         continue;
       }
-      
+
       const stmt = this.statement();
       if (stmt) {
         statements.push(stmt);
       }
     }
-    
+
     return ASTFactory.createProgram(statements);
   }
 
@@ -51,49 +51,54 @@ export class Parser {
    */
   private statement(): StatementNode {
     try {
-      if (this.match(TokenType.DEF)) {
+      if (this.match(TokenType.VAR)) {
         return this.variableDeclaration();
       }
-      
+
       if (this.match(TokenType.IF)) {
         return this.ifStatement();
       }
-      
+
       if (this.match(TokenType.REPEAT)) {
         return this.repeatStatement();
       }
-      
-      // 変数代入をチェック
-      if (this.check(TokenType.VARIABLE) && this.checkNext(TokenType.ASSIGN)) {
+
+      if (this.match(TokenType.SET)) {
         return this.assignmentStatement();
       }
-      
+
       // ボットコマンド
       if (this.checkBotCommand()) {
         return this.commandStatement();
       }
-      
+
       // 式文（式を単独で使用）
       const expr = this.expression();
       this.consumeNewlineOrEOF();
       return expr as any; // 式をStatementNodeとして扱う
-      
     } catch (error) {
-      throw new Error(`Parse error at line ${this.peek().line}, column ${this.peek().column}: ${(error as Error).message}`);
+      throw new Error(
+        `Parse error at line ${this.peek().line}, column ${
+          this.peek().column
+        }: ${(error as Error).message}`
+      );
     }
   }
 
   /**
    * 変数宣言の解析
-   * DEF $variable = expression
+   * var variable = expression
    */
   private variableDeclaration(): StatementNode {
-    const variable = this.consume(TokenType.VARIABLE, 'Expected variable name after DEF');
+    const variable = this.consume(
+      TokenType.IDENTIFIER,
+      "Expected variable name after var"
+    );
     this.consume(TokenType.ASSIGN, 'Expected "=" after variable name');
-    
+
     const initializer = this.expression();
     this.consumeNewlineOrEOF();
-    
+
     const varName = ASTFactory.extractVariableName(variable.value);
     return ASTFactory.createVariableDeclaration(
       varName,
@@ -105,18 +110,25 @@ export class Parser {
 
   /**
    * 代入文の解析
-   * $variable = expression
+   * set variable = expression
    */
   private assignmentStatement(): StatementNode {
-    const variable = this.advance(); // VARIABLE token
-    this.advance(); // ASSIGN token
-    
+    const variable = this.consume(
+      TokenType.IDENTIFIER,
+      "Expected variable name after SET"
+    );
+    this.consume(TokenType.ASSIGN, 'Expected "=" after variable name');
+
     const value = this.expression();
     this.consumeNewlineOrEOF();
-    
+
     const varName = ASTFactory.extractVariableName(variable.value);
-    const target = ASTFactory.createVariableReference(varName, variable.line, variable.column);
-    
+    const target = ASTFactory.createVariableReference(
+      varName,
+      variable.line,
+      variable.column
+    );
+
     return ASTFactory.createAssignmentStatement(
       target,
       value,
@@ -127,29 +139,31 @@ export class Parser {
 
   /**
    * IF文の解析
-   * IF condition THEN statements [ELSE statements] ENDIF
+   * IF condition { statements } [else {statements}]
    */
   private ifStatement(): StatementNode {
     const ifToken = this.previous();
     const condition = this.expression();
-    
-    this.consume(TokenType.THEN, 'Expected THEN after IF condition');
+
+    this.consume(TokenType.LBRACE, "Expected { after IF condition");
     this.consumeNewlineOrEOF();
-    
-    const thenStatements = this.statementBlock([TokenType.ELSE, TokenType.ENDIF]);
-    
+
+    const ifStatements = this.statementBlock([TokenType.RBRACE]);
+    this.consume(TokenType.RBRACE, "Expected } after IF statements");
+
     let elseStatements: StatementNode[] | undefined;
     if (this.match(TokenType.ELSE)) {
+      this.consume(TokenType.LBRACE, "Expected { after ELSE");
       this.consumeNewlineOrEOF();
-      elseStatements = this.statementBlock([TokenType.ENDIF]);
+      elseStatements = this.statementBlock([TokenType.RBRACE]);
+      this.consume(TokenType.RBRACE, "Expected } after ELSE statements");
     }
-    
-    this.consume(TokenType.ENDIF, 'Expected ENDIF');
+
     this.consumeNewlineOrEOF();
-    
+
     return ASTFactory.createIfStatement(
       condition,
-      thenStatements,
+      ifStatements,
       elseStatements,
       ifToken.line,
       ifToken.column
@@ -158,18 +172,19 @@ export class Parser {
 
   /**
    * REPEAT文の解析
-   * REPEAT count statements ENDREPEAT
+   * repeat count { statements }
    */
   private repeatStatement(): StatementNode {
     const repeatToken = this.previous();
     const count = this.expression();
+    this.consume(TokenType.LBRACE, "Expected { after REPEAT count");
     this.consumeNewlineOrEOF();
-    
-    const statements = this.statementBlock([TokenType.ENDREPEAT]);
-    
-    this.consume(TokenType.ENDREPEAT, 'Expected ENDREPEAT');
+
+    const statements = this.statementBlock([TokenType.RBRACE]);
+
+    this.consume(TokenType.RBRACE, "Expected } after REPEAT statements");
     this.consumeNewlineOrEOF();
-    
+
     return ASTFactory.createRepeatStatement(
       count,
       statements,
@@ -185,7 +200,7 @@ export class Parser {
     const commandToken = this.advance();
     const command = this.botCommand(commandToken);
     this.consumeNewlineOrEOF();
-    
+
     return ASTFactory.createCommandStatement(
       command,
       commandToken.line,
@@ -198,20 +213,20 @@ export class Parser {
    */
   private statementBlock(endTokens: TokenType[]): StatementNode[] {
     const statements: StatementNode[] = [];
-    
+
     while (!this.isAtEnd() && !this.checkAny(endTokens)) {
       // 改行をスキップ
       if (this.check(TokenType.NEWLINE)) {
         this.advance();
         continue;
       }
-      
+
       const stmt = this.statement();
       if (stmt) {
         statements.push(stmt);
       }
     }
-    
+
     return statements;
   }
 
@@ -229,13 +244,19 @@ export class Parser {
    */
   private logicalOr(): ExpressionNode {
     let expr = this.logicalAnd();
-    
+
     while (this.match(TokenType.OR)) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.logicalAnd();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -244,13 +265,19 @@ export class Parser {
    */
   private logicalAnd(): ExpressionNode {
     let expr = this.equality();
-    
+
     while (this.match(TokenType.AND)) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.equality();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -259,13 +286,19 @@ export class Parser {
    */
   private equality(): ExpressionNode {
     let expr = this.comparison();
-    
+
     while (this.match(TokenType.EQUALS, TokenType.NOT_EQUALS)) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.comparison();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -274,14 +307,26 @@ export class Parser {
    */
   private comparison(): ExpressionNode {
     let expr = this.term();
-    
-    while (this.match(TokenType.LESS_THAN, TokenType.GREATER_THAN, 
-                      TokenType.LESS_EQUALS, TokenType.GREATER_EQUALS)) {
+
+    while (
+      this.match(
+        TokenType.LESS_THAN,
+        TokenType.GREATER_THAN,
+        TokenType.LESS_EQUALS,
+        TokenType.GREATER_EQUALS
+      )
+    ) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.term();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -290,13 +335,19 @@ export class Parser {
    */
   private term(): ExpressionNode {
     let expr = this.factor();
-    
+
     while (this.match(TokenType.PLUS, TokenType.MINUS)) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.factor();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -305,13 +356,19 @@ export class Parser {
    */
   private factor(): ExpressionNode {
     let expr = this.unary();
-    
+
     while (this.match(TokenType.MULTIPLY, TokenType.DIVIDE)) {
       const operator = ASTFactory.tokenToBinaryOperator(this.previous().value);
       const right = this.unary();
-      expr = ASTFactory.createBinaryExpression(expr, operator, right, expr.line, expr.column);
+      expr = ASTFactory.createBinaryExpression(
+        expr,
+        operator,
+        right,
+        expr.line,
+        expr.column
+      );
     }
-    
+
     return expr;
   }
 
@@ -322,9 +379,14 @@ export class Parser {
     if (this.match(TokenType.NOT, TokenType.MINUS)) {
       const operator = ASTFactory.tokenToUnaryOperator(this.previous().value);
       const right = this.unary();
-      return ASTFactory.createUnaryExpression(operator, right, this.previous().line, this.previous().column);
+      return ASTFactory.createUnaryExpression(
+        operator,
+        right,
+        this.previous().line,
+        this.previous().column
+      );
     }
-    
+
     return this.primary();
   }
 
@@ -336,34 +398,46 @@ export class Parser {
       const token = this.previous();
       return ASTFactory.createBooleanLiteral(true, token.line, token.column);
     }
-    
+
     if (this.match(TokenType.FALSE)) {
       const token = this.previous();
       return ASTFactory.createBooleanLiteral(false, token.line, token.column);
     }
-    
+
     if (this.match(TokenType.NUMBER)) {
       const token = this.previous();
-      return ASTFactory.createNumberLiteral(parseFloat(token.value), token.line, token.column);
+      return ASTFactory.createNumberLiteral(
+        parseFloat(token.value),
+        token.line,
+        token.column
+      );
     }
-    
+
     if (this.match(TokenType.STRING)) {
       const token = this.previous();
-      return ASTFactory.createStringLiteral(token.value, token.line, token.column);
+      return ASTFactory.createStringLiteral(
+        token.value,
+        token.line,
+        token.column
+      );
     }
-    
-    if (this.match(TokenType.VARIABLE)) {
+
+    if (this.match(TokenType.IDENTIFIER)) {
       const token = this.previous();
       const varName = ASTFactory.extractVariableName(token.value);
-      return ASTFactory.createVariableReference(varName, token.line, token.column);
+      return ASTFactory.createVariableReference(
+        varName,
+        token.line,
+        token.column
+      );
     }
-    
+
     if (this.match(TokenType.LPAREN)) {
       const expr = this.expression();
       this.consume(TokenType.RPAREN, 'Expected ")" after expression');
       return expr;
     }
-    
+
     const current = this.peek();
     throw new Error(`Unexpected token: ${current.value} (${current.type})`);
   }
@@ -377,8 +451,6 @@ export class Parser {
     switch (commandToken.type) {
       case TokenType.SAY:
         return this.sayCommand(commandToken);
-      case TokenType.MOVE:
-        return this.moveCommand(commandToken);
       case TokenType.GOTO:
         return this.gotoCommand(commandToken);
       case TokenType.ATTACK:
@@ -403,18 +475,6 @@ export class Parser {
     return ASTFactory.createSayCommand(message, token.line, token.column);
   }
 
-  private moveCommand(token: Token): BotCommandNode {
-    const direction = this.expression();
-    let distance: ExpressionNode | undefined;
-    
-    // 次にパースできる式があるかチェック
-    if (this.canParseExpression()) {
-      distance = this.expression();
-    }
-    
-    return ASTFactory.createMoveCommand(direction, distance, token.line, token.column);
-  }
-
   private gotoCommand(token: Token): BotCommandNode {
     const x = this.expression();
     const y = this.expression();
@@ -429,12 +489,12 @@ export class Parser {
 
   private digCommand(token: Token): BotCommandNode {
     let blockType: ExpressionNode | undefined;
-    
+
     // 次にパースできる式があるかチェック
     if (this.canParseExpression()) {
       blockType = this.expression();
     }
-    
+
     return ASTFactory.createDigCommand(blockType, token.line, token.column);
   }
 
@@ -443,14 +503,21 @@ export class Parser {
     let x: ExpressionNode | undefined;
     let y: ExpressionNode | undefined;
     let z: ExpressionNode | undefined;
-    
+
     if (this.canParseExpression()) {
       x = this.expression();
       y = this.expression();
       z = this.expression();
     }
-    
-    return ASTFactory.createPlaceCommand(item, x, y, z, token.line, token.column);
+
+    return ASTFactory.createPlaceCommand(
+      item,
+      x,
+      y,
+      z,
+      token.line,
+      token.column
+    );
   }
 
   private equipCommand(token: Token): BotCommandNode {
@@ -461,11 +528,11 @@ export class Parser {
   private dropCommand(token: Token): BotCommandNode {
     const item = this.expression();
     let count: ExpressionNode | undefined;
-    
+
     if (this.canParseExpression()) {
       count = this.expression();
     }
-    
+
     return ASTFactory.createDropCommand(item, count, token.line, token.column);
   }
 
@@ -501,7 +568,7 @@ export class Parser {
    * 複数のトークンタイプのいずれかにマッチするかチェック
    */
   private checkAny(types: TokenType[]): boolean {
-    return types.some(type => this.check(type));
+    return types.some((type) => this.check(type));
   }
 
   /**
@@ -517,8 +584,14 @@ export class Parser {
    */
   private checkBotCommand(): boolean {
     const botCommands = [
-      TokenType.SAY, TokenType.MOVE, TokenType.GOTO, TokenType.ATTACK,
-      TokenType.DIG, TokenType.PLACE, TokenType.EQUIP, TokenType.DROP, TokenType.WAIT
+      TokenType.SAY,
+      TokenType.GOTO,
+      TokenType.ATTACK,
+      TokenType.DIG,
+      TokenType.PLACE,
+      TokenType.EQUIP,
+      TokenType.DROP,
+      TokenType.WAIT,
     ];
     return this.checkAny(botCommands);
   }
@@ -564,9 +637,11 @@ export class Parser {
    */
   private consume(type: TokenType, message: string): Token {
     if (this.check(type)) return this.advance();
-    
+
     const current = this.peek();
-    throw new Error(`${message}. Got ${current.type} (${current.value}) at line ${current.line}, column ${current.column}`);
+    throw new Error(
+      `${message}. Got ${current.type} (${current.value}) at line ${current.line}, column ${current.column}`
+    );
   }
 
   /**
@@ -588,21 +663,21 @@ export class Parser {
     if (this.checkNewlineOrEOF()) {
       return false;
     }
-    
+
     const current = this.peek();
-    
+
     // 式として有効な開始トークンかチェック
     const validExpressionTokens = [
       TokenType.NUMBER,
       TokenType.STRING,
-      TokenType.VARIABLE,
+      TokenType.IDENTIFIER,
       TokenType.TRUE,
       TokenType.FALSE,
       TokenType.LPAREN,
       TokenType.NOT,
-      TokenType.MINUS
+      TokenType.MINUS,
     ];
-    
+
     return validExpressionTokens.includes(current.type);
   }
 }
