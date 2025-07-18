@@ -374,7 +374,7 @@ describe('BotScript Interpreter', () => {
     test('should execute health monitoring script', async () => {
       const result = await executeScript(`
         var health_threshold = 10
-        if (bot_health < health_threshold) {
+        if bot_health < health_threshold {
           say "Health is low!"
           say "Current health: " + bot_health
         } else {
@@ -451,7 +451,7 @@ describe('BotScript Interpreter', () => {
     test('should report line information in errors', async () => {
       const result = await executeScript(`
         var x = 10
-        undefined_var = 5
+        set undefined_var = 5
       `);
       
       expect(result.type).toBe(ExecutionResultType.ERROR);
