@@ -7,7 +7,12 @@ import { ScriptManager } from "../interpreter/manager/ScriptManager";
  * チャット経由でBotScript言語の実行を管理する
  */
 export class ScriptCommand extends BaseCommand {
-  private scriptManager = new ScriptManager();
+  private scriptManager: ScriptManager;
+
+  constructor(scriptManager: ScriptManager) {
+    super();
+    this.scriptManager = scriptManager;
+  }
 
   protected async executeCommand(
     bot: Bot,

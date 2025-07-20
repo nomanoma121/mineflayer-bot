@@ -25,6 +25,7 @@ import { MinerCommand } from "./commands/MinerCommand";
 import { AbilityTestCommand } from "./commands/AbilityTestCommand";
 import { ScriptCommand } from "./commands/ScriptCommand";
 import { IdleState } from "./states/IdleState";
+import { ScriptManager } from "./interpreter/manager/ScriptManager";
 
 // .envファイルから環境変数を読み込み
 config();
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
     commandHandler.registerCommand("abilitytest", new AbilityTestCommand());
     
     // Scriptコマンドを登録
-    commandHandler.registerCommand("script", new ScriptCommand());
+    commandHandler.registerCommand("script", new ScriptCommand(new ScriptManager(bot)));
 
     // チャットイベントリスナーを設定
     bot.mc.on("chat", async (username: string, message: string) => {

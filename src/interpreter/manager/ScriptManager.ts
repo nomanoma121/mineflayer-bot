@@ -32,9 +32,9 @@ export class ScriptManager {
     "saved"
   );
 
-  constructor(bot: Bot, context?: ExecutionContext) {
+  constructor(bot: Bot) {
     this.bot = bot;
-    this.context = context || new ExecutionContext();
+    this.context = new ExecutionContext();
     this.interpreter = new Interpreter(bot, this.context);
 
     // スクリプト保存ディレクトリを作成
