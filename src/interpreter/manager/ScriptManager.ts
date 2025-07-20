@@ -251,44 +251,16 @@ export class ScriptManager {
 
       const files = fs.readdirSync(this.scriptsDirectory);
       for (const file of files) {
-        if (file.endsWith(".json")) {
-          // JSON形式のスクリプト（システム保存）
-          const filePath = path.join(this.scriptsDirectory, file);
-          const scriptData = JSON.parse(fs.readFileSync(filePath, "utf8"));
-          const scriptName = path.basename(file, ".json");
-          this.savedScripts.set(scriptName, scriptData);
-        } else if (file.endsWith(".bs") || file.endsWith(".botscript")) {
-          // .bs/.botscript形式のスクリプト（人間が読みやすい）
-          const filePath = path.join(this.scriptsDirectory, file);
-          const content = fs.readFileSync(filePath, "utf8");
-          const scriptName = path.basename(file).replace(/\.(bs)$/, "");
+        // .bs形式のスクリプト（人間が読みやすい）
+        const filePath = path.join(this.scriptsDirectory, file);
+        const content = fs.readFileSync(filePath, "utf8");
+        const scriptName = path.basename(file).replace(/\.(bs)$/, "");
 
-          // ファイルからメタデータを抽出
-          const lines = content.split("\n");
-          let author = "unknown";
-          let description = "";
-          let actualContent = "";
-
-          const contentLines: string[] = [];
-          for (const line of lines) {
-            if (line.startsWith("# Author:")) {
-              author = line.substring(9).trim();
-            } else if (line.startsWith("# Description:")) {
-              description = line.substring(14).trim();
-            } else if (!line.startsWith("#") || line.trim() === "") {
-              // コメント行以外、または空行をコンテンツに追加
-              contentLines.push(line);
-            }
-          }
-
-          actualContent = contentLines.join("\n").trim();
-
-          this.savedScripts.set(scriptName, {
-            name: scriptName,
-            content: actualContent,
-            created: Date.now(),
-          });
-        }
+        this.savedScripts.set(scriptName, {
+          name: scriptName,
+          content: content,
+          created: Date.now(),
+        });
       }
 
       Logger.structured.info("Loaded saved scripts from disk", {
