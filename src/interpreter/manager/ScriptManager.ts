@@ -344,7 +344,7 @@ export class ScriptManager {
   /**
    * スクリプトをディスクに保存
    */
-  public saveScriptToDisk(name: string, script: SavedScript): void {
+  private saveScriptToDisk(name: string, script: SavedScript): void {
     try {
       const filePath = path.join(this.scriptsDirectory, `${name}.bs`);
       fs.writeFileSync(filePath, script.content, "utf8");

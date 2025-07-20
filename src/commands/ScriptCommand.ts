@@ -168,7 +168,11 @@ export class ScriptCommand extends BaseCommand {
       this.scriptManager.getSavedScripts().set(scriptName, script);
 
       // ディスクに保存
-      this.scriptManager.saveScriptToDisk(scriptName, script);
+      this.scriptManager.saveScript(
+        username, 
+        scriptName, 
+        scriptContent
+      );
 
       bot.sendMessage(`${username}さん、スクリプト「${scriptName}」を保存しました。`);
     } catch (error) {
