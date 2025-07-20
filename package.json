@@ -15,7 +15,10 @@
     "cli": "ts-node src/cli/BotCLI.ts",
     "bot:start": "npm run cli start",
     "bot:config": "npm run cli config show",
-    "bot:test": "npm run cli dev test"
+    "bot:test": "npm run cli dev test",
+    "biome:check": "npx @biomejs/biome check ./src",
+    "biome:format": "npx @biomejs/biome format --write ./src",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -35,11 +38,11 @@
     "mineflayer": "^4.29.0",
     "mineflayer-pathfinder": "^2.4.5",
     "prismarine-entity": "^2.5.0",
-    "tsyringe": "^4.10.0",
     "vec3": "^0.1.10",
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.1.2",
     "@types/chokidar": "^1.7.5",
     "@types/commander": "^2.12.0",
     "@types/jest": "^30.0.0",
