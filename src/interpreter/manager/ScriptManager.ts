@@ -277,7 +277,7 @@ export class ScriptManager {
   /**
    * スクリプトをディスクに保存
    */
-  private saveScriptToDisk(name: string, script: SavedScript): void {
+  public saveScriptToDisk(name: string, script: SavedScript): void {
     try {
       const filePath = path.join(this.scriptsDirectory, `${name}.json`);
       fs.writeFileSync(filePath, JSON.stringify(script, null, 2), "utf8");
