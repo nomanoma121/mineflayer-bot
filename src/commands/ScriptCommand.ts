@@ -45,7 +45,7 @@ export class ScriptCommand extends BaseCommand {
         break;
       default:
         bot.sendMessage(`${username}さん、不明なサブコマンド: ${subCommand}`);
-        bot.sendMessage("使用可能: enable, disable, status, help, admin");
+        bot.sendMessage("使用可能: list, help, run, eval, save");
         break;
     }
   }
