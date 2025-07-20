@@ -116,11 +116,10 @@ export class ScriptManager {
         created: Date.now(),
       };
 
-      // 保存済みスクリプトに追加
-      this.savedScripts.set(scriptName, script);
-
       // ディスクに保存
       this.saveScriptToDisk(scriptName, script);
+
+      this.savedScripts.set(scriptName, script); // メモリにも保存
 
       this.bot.sendMessage(
         `${username}さん、スクリプト「${scriptName}」を保存しました。`
@@ -245,13 +244,10 @@ export class ScriptManager {
    */
   private loadSavedScriptsFromDisk(): void {
     try {
-      if (!fs.existsSync(this.scriptsDirectory)) {
-        return;
-      }
-
       const files = fs.readdirSync(this.scriptsDirectory);
       for (const file of files) {
-        // .bs形式のスクリプト（人間が読みやすい）
+        if (!file.endsWith(".bs")) continue;
+
         const filePath = path.join(this.scriptsDirectory, file);
         const content = fs.readFileSync(filePath, "utf8");
         const scriptName = path.basename(file).replace(/\.(bs)$/, "");
@@ -259,7 +255,7 @@ export class ScriptManager {
         this.savedScripts.set(scriptName, {
           name: scriptName,
           content: content,
-          created: Date.now(),
+          created: fs.statSync(filePath).mtimeMs,
         });
       }
 
@@ -279,8 +275,8 @@ export class ScriptManager {
    */
   public saveScriptToDisk(name: string, script: SavedScript): void {
     try {
-      const filePath = path.join(this.scriptsDirectory, `${name}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(script, null, 2), "utf8");
+      const filePath = path.join(this.scriptsDirectory, `${name}.bs`);
+      fs.writeFileSync(filePath, script.content, "utf8");
 
       Logger.structured.info("Script saved to disk", {
         name,
