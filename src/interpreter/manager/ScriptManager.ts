@@ -157,7 +157,7 @@ export class ScriptManager {
    */
   public stopExecution(): boolean {
     if (!this.interpreter.isExecuting()) {
-      throw new Error('現在実行中のスクリプトはありません');
+      return false;
     }
 
     this.interpreter.stop();
