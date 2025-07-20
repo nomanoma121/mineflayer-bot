@@ -1,9 +1,9 @@
 import { BaseCommand } from "./BaseCommand";
 import { Bot } from "../core/Bot";
-import { ScriptManager, ExecutionResult, ExecutionStatus } from "../interpreter/manager/ScriptManager";
+import { ScriptManager } from "../interpreter/manager/ScriptManager";
 
 /**
- * BotScriptコマンド
+ * Scriptコマンド
  * チャット経由でBotScript言語の実行を管理する
  */
 export class ScriptCommand extends BaseCommand {

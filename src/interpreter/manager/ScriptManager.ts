@@ -223,7 +223,19 @@ export class ScriptManager {
       );
     }
 
-    return fileName.trim();
+    // 高度なパストラバーサル攻撃対策
+    // path.resolve()で正規化して絶対パスが期待されるディレクトリ内にあることを確認
+    const sanitizedName = fileName.trim();
+    const resolvedPath = path.resolve(this.scriptsDirectory, sanitizedName);
+    const normalizedScriptsDir = path.resolve(this.scriptsDirectory);
+    
+    // 正規化後のパスが期待されるディレクトリ内にあるかチェック
+    if (!resolvedPath.startsWith(normalizedScriptsDir + path.sep) && 
+        resolvedPath !== normalizedScriptsDir) {
+      throw new Error("ファイルパスが許可されたディレクトリの範囲外です");
+    }
+
+    return sanitizedName;
   }
 
   /**
@@ -249,7 +261,7 @@ export class ScriptManager {
   /**
    * 単一スクリプトファイルを読み込み
    */
-  private loadSingleScript(file: string): boolean {
+  private loadSingleScript(file: string): void {
     try {
       const filePath = path.join(this.scriptsDirectory, file);
       const content = fs.readFileSync(filePath, "utf8");
@@ -263,16 +275,13 @@ export class ScriptManager {
         content: content,
         created: fs.statSync(filePath).mtimeMs,
       });
-
-      return true;
     } catch (error) {
-      // 不正なファイル名や読み込みエラーの場合
+      // 不正なファイル名や読み込みエラーの場合はログに記録して続行
       Logger.structured.warn("Failed to load single script", {
         fileName: file,
         error: (error as Error).message,
         category: "botscript",
       });
-      return false;
     }
   }
 
