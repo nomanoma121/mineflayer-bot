@@ -109,20 +109,23 @@ export class ScriptManager {
     }
 
     try {
+      // ファイル名のサニタイゼーション
+      const sanitizedName = this.sanitizeFileName(scriptName);
+
       // スクリプトのメタデータを作成
       const script: SavedScript = {
-        name: scriptName,
+        name: sanitizedName,
         content: scriptContent,
         created: Date.now(),
       };
 
       // ディスクに保存
-      this.saveScriptToDisk(scriptName, script);
+      this.saveScriptToDisk(sanitizedName, script);
 
-      this.savedScripts.set(scriptName, script); // メモリにも保存
+      this.savedScripts.set(sanitizedName, script); // メモリにも保存
 
       this.bot.sendMessage(
-        `${username}さん、スクリプト「${scriptName}」を保存しました。`
+        `${username}さん、スクリプト「${sanitizedName}」を保存しました。`
       );
     } catch (error) {
       const errorMessage = (error as Error).message;
@@ -220,6 +223,47 @@ export class ScriptManager {
   // ===== ユーティリティ =====
 
   /**
+   * ファイル名のサニタイゼーション
+   * パストラバーサル攻撃を防止し、安全なファイル名のみを許可
+   */
+  private sanitizeFileName(fileName: string): string {
+    if (!fileName || typeof fileName !== 'string') {
+      throw new Error('ファイル名が無効です');
+    }
+
+    // 基本的なバリデーション
+    if (fileName.trim().length === 0) {
+      throw new Error('ファイル名が空です');
+    }
+
+    if (fileName.length > 100) {
+      throw new Error('ファイル名が長すぎます（100文字以内）');
+    }
+
+    // パストラバーサル攻撃の検出
+    const parsed = path.parse(fileName);
+    if (parsed.dir !== '' || parsed.root !== '') {
+      throw new Error('ファイル名にディレクトリパスを含めることはできません');
+    }
+
+    // 危険な文字の検出
+    const dangerousChars = ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+    for (const char of dangerousChars) {
+      if (fileName.includes(char)) {
+        throw new Error(`ファイル名に使用できない文字が含まれています: ${char}`);
+      }
+    }
+
+    // ホワイトリスト: 英数字、ハイフン、アンダースコア、日本語のみ許可
+    const allowedPattern = /^[a-zA-Z0-9\-_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
+    if (!allowedPattern.test(fileName)) {
+      throw new Error('ファイル名には英数字、ハイフン、アンダースコア、日本語のみ使用できます');
+    }
+
+    return fileName.trim();
+  }
+
+  /**
    * スクリプト保存ディレクトリを確保
    */
   private ensureScriptsDirectory(): void {
@@ -240,6 +284,36 @@ export class ScriptManager {
   }
 
   /**
+   * 単一スクリプトファイルを読み込み
+   */
+  private loadSingleScript(file: string): boolean {
+    try {
+      const filePath = path.join(this.scriptsDirectory, file);
+      const content = fs.readFileSync(filePath, "utf8");
+      const scriptName = path.basename(file).replace(/\.(bs)$/, "");
+
+      // ファイル名のサニタイゼーション
+      const sanitizedName = this.sanitizeFileName(scriptName);
+      
+      this.savedScripts.set(sanitizedName, {
+        name: sanitizedName,
+        content: content,
+        created: fs.statSync(filePath).mtimeMs,
+      });
+
+      return true;
+    } catch (error) {
+      // 不正なファイル名や読み込みエラーの場合
+      Logger.structured.warn("Failed to load single script", {
+        fileName: file,
+        error: (error as Error).message,
+        category: "botscript",
+      });
+      return false;
+    }
+  }
+
+  /**
    * 保存済みスクリプトをディスクから読み込み
    */
   private loadSavedScriptsFromDisk(): void {
@@ -247,16 +321,9 @@ export class ScriptManager {
       const files = fs.readdirSync(this.scriptsDirectory);
       for (const file of files) {
         if (!file.endsWith(".bs")) continue;
-
-        const filePath = path.join(this.scriptsDirectory, file);
-        const content = fs.readFileSync(filePath, "utf8");
-        const scriptName = path.basename(file).replace(/\.(bs)$/, "");
-
-        this.savedScripts.set(scriptName, {
-          name: scriptName,
-          content: content,
-          created: fs.statSync(filePath).mtimeMs,
-        });
+        
+        // 単一ファイル読み込みを分離したメソッドで処理
+        this.loadSingleScript(file);
       }
 
       Logger.structured.info("Loaded saved scripts from disk", {
