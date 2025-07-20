@@ -28,6 +28,12 @@ export class ScriptCommand extends BaseCommand {
       case "help":
         this.showBotScriptHelp(bot, username);
         break;
+      case "status":
+        this.showStatus(bot, username);
+        break;
+      case "stop":
+        this.stopExecution(bot, username);
+        break;
       case "run":
         this.runSubCommand(bot, username, args.join(" "));
         break;
@@ -45,7 +51,7 @@ export class ScriptCommand extends BaseCommand {
         break;
       default:
         bot.sendMessage(`${username}さん、不明なサブコマンド: ${subCommand}`);
-        bot.sendMessage("使用可能: list, help, run, eval, save");
+        bot.sendMessage("使用可能: list, help, run, eval, save, status, stop");
         break;
     }
   }
@@ -61,14 +67,19 @@ export class ScriptCommand extends BaseCommand {
       bot.sendMessage(`${username}さん、保存されたスクリプトはありません。`);
       return;
     }
+
     const scriptList = Array.from(scripts.values())
+      .slice(0, 5)
       .map(
         (script) =>
           `${script.name} (作成日時: ${new Date(script.created).toLocaleString()})`
       )
-      .join("\n");
+      .join(", ");
+
     bot.sendMessage(
-      `${username}さん、保存されたスクリプト:\n${scriptList}`
+      `${username}さん、保存済みスクリプト: ${scriptList}${
+        scripts.size > 5 ? ` (他${scripts.size - 5}個)` : ""
+      }`
     );
   }
 
@@ -101,18 +112,19 @@ export class ScriptCommand extends BaseCommand {
       bot.sendMessage(`${username}さん、実行するスクリプト名を指定してください。`);
       return;
     }
+
     try {
-      await this.scriptManager.loadScript(username, scriptName);
-      bot.sendMessage(`${username}さん、スクリプト「${scriptName}」を実行します。`);
+      bot.sendMessage(`${username}さん、スクリプト「${scriptName}」を実行しています...`);
+      const result = await this.scriptManager.loadScript(scriptName);
+      bot.sendMessage(
+        `${username}さん、スクリプト「${scriptName}」が正常に完了しました。` +
+        `（文: ${result.statementsExecuted}、コマンド: ${result.commandsExecuted}、時間: ${result.executionTime}ms）`
+      );
     } catch (error) {
       bot.sendMessage(
         `${username}さん、スクリプト「${scriptName}」の実行に失敗しました: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
-      );
-      console.error(
-        `[${bot.getName()}] Error executing script ${scriptName}:`,
-        error
       );
     }
   }
@@ -132,16 +144,20 @@ export class ScriptCommand extends BaseCommand {
       bot.sendMessage(`${username}さん、実行するスクリプトを指定してください。`);
       return;
     }
+
     try {
-      await this.scriptManager.executeScript(username, scriptContent);
-      bot.sendMessage(`${username}さん、スクリプトを実行しました。`);
+      bot.sendMessage(`${username}さん、スクリプトを実行しています...`);
+      const result = await this.scriptManager.executeScript(scriptContent);
+      bot.sendMessage(
+        `${username}さん、スクリプトが正常に完了しました。` +
+        `（文: ${result.statementsExecuted}、コマンド: ${result.commandsExecuted}、時間: ${result.executionTime}ms）`
+      );
     } catch (error) {
       bot.sendMessage(
         `${username}さん、スクリプトの実行に失敗しました: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
-      console.error(`[${bot.getName()}] Error evaluating script:`, error);
     }
   }
 
@@ -151,36 +167,40 @@ export class ScriptCommand extends BaseCommand {
     scriptName: string,
     scriptContent: string
   ): Promise<void> {
-    if (!scriptContent.trim()) {
-      bot.sendMessage(`${username}さん、保存するスクリプトが空です。`);
-      return;
-    }
-
     try {
-      // スクリプトのメタデータを作成
-      const script = {
-        name: scriptName,
-        content: scriptContent,
-        created: Date.now(),
-      };
-
-      // 保存済みスクリプトに追加
-      this.scriptManager.getSavedScripts().set(scriptName, script);
-
-      // ディスクに保存
-      this.scriptManager.saveScript(
-        username, 
-        scriptName, 
-        scriptContent
-      );
-
-      bot.sendMessage(`${username}さん、スクリプト「${scriptName}」を保存しました。`);
+      const savedName = await this.scriptManager.saveScript(scriptName, scriptContent);
+      bot.sendMessage(`${username}さん、スクリプト「${savedName}」を保存しました。`);
     } catch (error) {
       const errorMessage = (error as Error).message;
       bot.sendMessage(
         `${username}さん、スクリプトの保存に失敗しました: ${errorMessage}`
       );
-      console.error(`[${bot.getName()}] Failed to save script`, error);
+    }
+  }
+
+  private showStatus(bot: Bot, username: string): void {
+    const status = this.scriptManager.getStatus();
+    
+    if (!status.isExecuting) {
+      bot.sendMessage(`${username}さん、現在実行中のスクリプトはありません。`);
+      return;
+    }
+
+    bot.sendMessage(
+      `${username}さん、現在のスクリプト実行状態: ` +
+      `文: ${status.statementsExecuted}, コマンド: ${status.commandsExecuted}, ` +
+      `時間: ${status.executionTime}ms`
+    );
+  }
+
+  private stopExecution(bot: Bot, username: string): void {
+    try {
+      this.scriptManager.stopExecution();
+      bot.sendMessage(`${username}さん、スクリプトの実行を停止しました。`);
+    } catch (error) {
+      bot.sendMessage(
+        `${username}さん、${error instanceof Error ? error.message : "停止に失敗しました"}`
+      );
     }
   }
 
@@ -193,7 +213,6 @@ export class ScriptCommand extends BaseCommand {
   }
 
   public getUsage(): string {
-    // script run or eval or save or list or help
-    return "script run | eval | save | list | help";
+    return "script run <name> | eval <code> | save <name> <code> | list | help | status | stop";
   }
 }

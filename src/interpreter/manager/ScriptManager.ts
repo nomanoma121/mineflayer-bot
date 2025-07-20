@@ -46,66 +46,51 @@ export class ScriptManager {
 
   /**
    * 単発スクリプトを実行
+   * @returns 実行結果の統計情報
    */
-  public async executeScript(
-    username: string,
-    scriptContent: string
-  ): Promise<void> {
+  public async executeScript(scriptContent: string): Promise<{
+    statementsExecuted: number;
+    commandsExecuted: number;
+    executionTime: number;
+  }> {
     if (!scriptContent.trim()) {
-      this.bot.sendMessage(`${username}さん、実行するスクリプトが空です。`);
-      return;
+      throw new Error('実行するスクリプトが空です');
     }
 
-    try {
-      // スクリプトをパース
-      const lexer = new Lexer(scriptContent);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens);
-      const ast = parser.parse();
+    // スクリプトをパース
+    const lexer = new Lexer(scriptContent);
+    const tokens = lexer.tokenize();
+    const parser = new Parser(tokens);
+    const ast = parser.parse();
 
-      this.bot.sendMessage(`${username}さんのスクリプトを実行しています...`);
+    // スクリプトを実行
+    const result = await this.interpreter.execute(ast);
 
-      // スクリプトを実行
-      const result = await this.interpreter.execute(ast);
-
-      if (result.type === ExecutionResultType.SUCCESS) {
-        const stats = this.context.getStats();
-        this.bot.sendMessage(
-          `${username}さん、スクリプトが正常に完了しました。` +
-            `（文: ${stats.statementsExecuted}、コマンド: ${
-              stats.commandsExecuted
-            }、時間: ${this.context.getExecutionTime()}ms）`
-        );
-      } else {
-        this.bot.sendMessage(
-          `${username}さん、スクリプトでエラーが発生しました: ${result.message}`
-        );
-      }
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      this.bot.sendMessage(
-        `${username}さん、スクリプトの解析に失敗しました: ${errorMessage}`
-      );
+    if (result.type !== ExecutionResultType.SUCCESS) {
+      throw new Error(`スクリプト実行エラー: ${result.message}`);
     }
+
+    const stats = this.context.getStats();
+    return {
+      statementsExecuted: stats.statementsExecuted,
+      commandsExecuted: stats.commandsExecuted,
+      executionTime: this.context.getExecutionTime(),
+    };
   }
 
   /**
    * スクリプトを保存
+   * @returns サニタイズされたスクリプト名
    */
   public async saveScript(
-    username: string,
     scriptName: string,
     scriptContent: string
-  ): Promise<void> {
+  ): Promise<string> {
     if (!scriptName) {
-      this.bot.sendMessage(
-        `${username}さん、保存するスクリプト名を指定してください。`
-      );
-      return;
+      throw new Error('保存するスクリプト名を指定してください');
     }
     if (!scriptContent.trim()) {
-      this.bot.sendMessage(`${username}さん、保存するスクリプトが空です。`);
-      return;
+      throw new Error('保存するスクリプトが空です');
     }
 
     try {
@@ -122,20 +107,16 @@ export class ScriptManager {
       // ディスクに保存
       this.saveScriptToDisk(sanitizedName, script);
 
-      this.savedScripts.set(sanitizedName, script); // メモリにも保存
+      // メモリにも保存
+      this.savedScripts.set(sanitizedName, script);
 
-      this.bot.sendMessage(
-        `${username}さん、スクリプト「${sanitizedName}」を保存しました。`
-      );
+      return sanitizedName;
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      this.bot.sendMessage(
-        `${username}さん、スクリプトの保存に失敗しました: ${errorMessage}`
-      );
       Logger.structured.error("Failed to save script", error as Error, {
         scriptName,
         category: "botscript",
       });
+      throw error;
     }
   }
 
@@ -144,80 +125,56 @@ export class ScriptManager {
   }
 
   /**
-   * スクリプトを読み込み
+   * スクリプトを読み込んで実行
+   * @returns 実行結果の統計情報
    */
-  public async loadScript(username: string, name: string): Promise<void> {
+  public async loadScript(name: string): Promise<{
+    statementsExecuted: number;
+    commandsExecuted: number;
+    executionTime: number;
+  }> {
     if (!name) {
-      // 保存されたスクリプト一覧を表示
-      const scripts = Array.from(this.savedScripts.values());
-      if (scripts.length === 0) {
-        this.bot.sendMessage(
-          `${username}さん、保存されたスクリプトはありません。`
-        );
-        return;
-      }
-
-      const scriptList = scripts
-        .slice(0, 5)
-        .map((s) => `${s.name}`)
-        .join(", ");
-
-      this.bot.sendMessage(
-        `${username}さん、保存済みスクリプト: ${scriptList}${
-          scripts.length > 5 ? ` (他${scripts.length - 5}個)` : ""
-        }`
-      );
-      return;
+      throw new Error('実行するスクリプト名を指定してください');
     }
 
     const script = this.savedScripts.get(name);
     if (!script) {
-      this.bot.sendMessage(
-        `${username}さん、スクリプト「${name}」が見つかりません。`
-      );
-      return;
+      throw new Error(`スクリプト「${name}」が見つかりません`);
     }
 
-    this.bot.sendMessage(
-      `${username}さん、スクリプト「${name}」を実行します...`
-    );
-    await this.executeScript(username, script.content);
+    return await this.executeScript(script.content);
   }
 
   /**
    * 実行を停止
+   * @returns 停止に成功したかどうか
    */
-  public stopExecution(username: string): void {
+  public stopExecution(): boolean {
     if (!this.interpreter.isExecuting()) {
-      this.bot.sendMessage(
-        `${username}さん、現在実行中のスクリプトはありません。`
-      );
-      return;
+      throw new Error('現在実行中のスクリプトはありません');
     }
 
     this.interpreter.stop();
-    this.bot.sendMessage(`${username}さん、スクリプトの実行を停止しました。`);
+    return true;
   }
 
   /**
-   * 実行状態を表示
+   * 実行状態を取得
+   * @returns 実行状態情報
    */
-  public showStatus(username: string): void {
+  public getStatus(): {
+    isExecuting: boolean;
+    statementsExecuted: number;
+    commandsExecuted: number;
+    executionTime: number;
+  } {
     const stats = this.context.getStats();
-    const isExecuting = this.interpreter.isExecuting();
-
-    if (!isExecuting) {
-      this.bot.sendMessage(
-        `${username}さん、現在実行中のスクリプトはありません。`
-      );
-      return;
-    }
-
-    this.bot.sendMessage(
-      `${username}さん、現在のスクリプト実行状態: ` +
-        `文: ${stats.statementsExecuted}, コマンド: ${stats.commandsExecuted}, ` +
-        `時間: ${this.context.getExecutionTime()}ms`
-    );
+    return {
+      isExecuting: this.interpreter.isExecuting(),
+      statementsExecuted: stats.statementsExecuted,
+      commandsExecuted: stats.commandsExecuted,
+      executionTime: this.context.getExecutionTime(),
+    };
   }
 
   // ===== ユーティリティ =====
