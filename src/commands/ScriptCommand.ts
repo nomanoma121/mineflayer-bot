@@ -1,6 +1,6 @@
 import { BaseCommand } from "./BaseCommand";
 import { Bot } from "../core/Bot";
-import { ScriptManager } from "../interpreter/manager/ScriptManager";
+import { ScriptManager, ExecutionResult, ExecutionStatus } from "../interpreter/manager/ScriptManager";
 
 /**
  * BotScriptコマンド

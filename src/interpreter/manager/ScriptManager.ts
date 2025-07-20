@@ -17,6 +17,22 @@ interface SavedScript {
 }
 
 /**
+ * スクリプト実行結果
+ */
+export interface ExecutionResult {
+  statementsExecuted: number;
+  commandsExecuted: number;
+  executionTime: number;
+}
+
+/**
+ * スクリプト実行状態
+ */
+export interface ExecutionStatus extends ExecutionResult {
+  isExecuting: boolean;
+}
+
+/**
  * BotScript チャットインターフェース
  * Minecraftチャットを通じてBotScriptの実行を可能にする
  */
@@ -46,11 +62,7 @@ export class ScriptManager {
    * 単発スクリプトを実行
    * @returns 実行結果の統計情報
    */
-  public async executeScript(scriptContent: string): Promise<{
-    statementsExecuted: number;
-    commandsExecuted: number;
-    executionTime: number;
-  }> {
+  public async executeScript(scriptContent: string): Promise<ExecutionResult> {
     if (!scriptContent.trim()) {
       throw new Error('実行するスクリプトが空です');
     }
@@ -126,11 +138,7 @@ export class ScriptManager {
    * スクリプトを読み込んで実行
    * @returns 実行結果の統計情報
    */
-  public async loadScript(name: string): Promise<{
-    statementsExecuted: number;
-    commandsExecuted: number;
-    executionTime: number;
-  }> {
+  public async loadScript(name: string): Promise<ExecutionResult> {
     if (!name) {
       throw new Error('実行するスクリプト名を指定してください');
     }
@@ -160,12 +168,7 @@ export class ScriptManager {
    * 実行状態を取得
    * @returns 実行状態情報
    */
-  public getStatus(): {
-    isExecuting: boolean;
-    statementsExecuted: number;
-    commandsExecuted: number;
-    executionTime: number;
-  } {
+  public getStatus(): ExecutionStatus {
     const stats = this.context.getStats();
     return {
       isExecuting: this.interpreter.isExecuting(),
