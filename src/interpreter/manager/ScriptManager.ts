@@ -22,7 +22,6 @@ interface SavedScript {
  */
 
 export class ScriptManager {
-  private bot: Bot;
   private interpreter: Interpreter;
   private context: ExecutionContext;
   private savedScripts: Map<string, SavedScript> = new Map();
@@ -33,7 +32,6 @@ export class ScriptManager {
   );
 
   constructor(bot: Bot) {
-    this.bot = bot;
     this.context = new ExecutionContext();
     this.interpreter = new Interpreter(bot, this.context);
 
