@@ -131,7 +131,7 @@ export class ScriptManager {
   }
 
   public getSavedScripts(): Map<string, SavedScript> {
-    return this.savedScripts;
+    return new Map(this.savedScripts);
   }
 
   /**
@@ -224,15 +224,30 @@ export class ScriptManager {
     }
 
     // 高度なパストラバーサル攻撃対策
-    // path.resolve()で正規化して絶対パスが期待されるディレクトリ内にあることを確認
+    // path.resolve()で正規化してpath.relative()で安全性を確認
     const sanitizedName = fileName.trim();
     const resolvedPath = path.resolve(this.scriptsDirectory, sanitizedName);
     const normalizedScriptsDir = path.resolve(this.scriptsDirectory);
     
-    // 正規化後のパスが期待されるディレクトリ内にあるかチェック
-    if (!resolvedPath.startsWith(normalizedScriptsDir + path.sep) && 
-        resolvedPath !== normalizedScriptsDir) {
-      throw new Error("ファイルパスが許可されたディレクトリの範囲外です");
+    // 相対パスを計算してセキュリティチェック
+    const relativePath = path.relative(normalizedScriptsDir, resolvedPath);
+    
+    // セキュリティチェック: ディレクトリ自体、親ディレクトリ、絶対パスを禁止
+    if (relativePath === "") {
+      throw new Error("ディレクトリ自体にはアクセスできません");
+    }
+    
+    if (relativePath.startsWith("..")) {
+      throw new Error("親ディレクトリへのアクセスは禁止されています");
+    }
+    
+    if (path.isAbsolute(relativePath)) {
+      throw new Error("絶対パスは許可されていません");
+    }
+    
+    // Windows環境での追加チェック: バックスラッシュでの親ディレクトリアクセス
+    if (relativePath.includes("..")) {
+      throw new Error("パストラバーサル攻撃が検出されました");
     }
 
     return sanitizedName;
@@ -265,7 +280,7 @@ export class ScriptManager {
     try {
       const filePath = path.join(this.scriptsDirectory, file);
       const content = fs.readFileSync(filePath, "utf8");
-      const scriptName = path.basename(file).replace(/\.(bs)$/, "");
+      const scriptName = path.basename(file).replace(/\.bs$/, "");
 
       // ファイル名のサニタイゼーション
       const sanitizedName = this.sanitizeFileName(scriptName);
