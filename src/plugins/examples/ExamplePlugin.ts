@@ -1,261 +1,281 @@
-import { IPlugin, PluginMetadata } from "../IPlugin";
-import { Bot } from "../../core/Bot";
+import type { Bot } from "../../core/Bot";
 import { Logger } from "../../utils/Logger";
+import type { IPlugin, PluginMetadata } from "../IPlugin";
 
 /**
  * 例: プラグインの実装サンプル
  * ボットの挨拶機能を拡張するプラグイン
  */
 export class ExamplePlugin implements IPlugin {
-  private bot: Bot | null = null;
-  private enabled = false;
-  private config = {
-    autoGreeting: true,
-    greetingInterval: 60000, // 60秒
-    customGreetings: [
-      "こんにちは！元気ですか？",
-      "今日もよろしくお願いします！",
-      "調子はどうですか？",
-      "何かお手伝いできることはありますか？"
-    ]
-  };
-  private greetingTimer: NodeJS.Timeout | null = null;
+	private bot: Bot | null = null;
+	private enabled = false;
+	private config = {
+		autoGreeting: true,
+		greetingInterval: 60000, // 60秒
+		customGreetings: [
+			"こんにちは！元気ですか？",
+			"今日もよろしくお願いします！",
+			"調子はどうですか？",
+			"何かお手伝いできることはありますか？",
+		],
+	};
+	private greetingTimer: NodeJS.Timeout | null = null;
 
-  getMetadata(): PluginMetadata {
-    return {
-      name: "ExamplePlugin",
-      version: "1.0.0",
-      description: "ボットの挨拶機能を拡張するサンプルプラグイン",
-      author: "MinecraftBot Team",
-      dependencies: [],
-      permissions: ["chat.send"]
-    };
-  }
+	getMetadata(): PluginMetadata {
+		return {
+			name: "ExamplePlugin",
+			version: "1.0.0",
+			description: "ボットの挨拶機能を拡張するサンプルプラグイン",
+			author: "MinecraftBot Team",
+			dependencies: [],
+			permissions: ["chat.send"],
+		};
+	}
 
-  async initialize(bot: Bot): Promise<void> {
-    this.bot = bot;
-    Logger.structured.info("ExamplePlugin initialized", { 
-      botName: bot.getName() 
-    });
-  }
+	async initialize(bot: Bot): Promise<void> {
+		this.bot = bot;
+		Logger.structured.info("ExamplePlugin initialized", {
+			botName: bot.getName(),
+		});
+	}
 
-  async enable(): Promise<void> {
-    if (!this.bot) {
-      throw new Error("Plugin not initialized");
-    }
+	async enable(): Promise<void> {
+		if (!this.bot) {
+			throw new Error("Plugin not initialized");
+		}
 
-    this.enabled = true;
-    
-    // 初回挨拶
-    this.bot.say.randomGreeting();
-    
-    // 定期挨拶の開始
-    if (this.config.autoGreeting) {
-      this.startPeriodicGreeting();
-    }
+		this.enabled = true;
 
-    Logger.structured.info("ExamplePlugin enabled");
-  }
+		// 初回挨拶
+		this.bot.say.randomGreeting();
 
-  async disable(): Promise<void> {
-    this.enabled = false;
-    
-    // 定期挨拶の停止
-    this.stopPeriodicGreeting();
-    
-    if (this.bot) {
-      this.bot.say.say("ExamplePluginが無効化されました");
-    }
+		// 定期挨拶の開始
+		if (this.config.autoGreeting) {
+			this.startPeriodicGreeting();
+		}
 
-    Logger.structured.info("ExamplePlugin disabled");
-  }
+		Logger.structured.info("ExamplePlugin enabled");
+	}
 
-  isEnabled(): boolean {
-    return this.enabled;
-  }
+	async disable(): Promise<void> {
+		this.enabled = false;
 
-  getConfig(): any {
-    return { ...this.config };
-  }
+		// 定期挨拶の停止
+		this.stopPeriodicGreeting();
 
-  updateConfig(newConfig: any): void {
-    this.config = { ...this.config, ...newConfig };
-    
-    // 設定変更に応じて定期挨拶を再設定
-    if (this.enabled) {
-      this.stopPeriodicGreeting();
-      if (this.config.autoGreeting) {
-        this.startPeriodicGreeting();
-      }
-    }
-    
-    Logger.structured.info("ExamplePlugin configuration updated", {
-      config: this.config
-    });
-  }
+		if (this.bot) {
+			this.bot.say.say("ExamplePluginが無効化されました");
+		}
 
-  registerEventHandlers(): void {
-    if (!this.bot) return;
+		Logger.structured.info("ExamplePlugin disabled");
+	}
 
-    // カスタムイベントハンドラーの例
-    this.bot.mc.on('chat', (username: string, message: string) => {
-      this.handleChatMessage(username, message);
-    });
+	isEnabled(): boolean {
+		return this.enabled;
+	}
 
-    this.bot.mc.on('playerJoined', (player: any) => {
-      this.handlePlayerJoined(player);
-    });
+	getConfig(): any {
+		return { ...this.config };
+	}
 
-    this.bot.mc.on('playerLeft', (player: any) => {
-      this.handlePlayerLeft(player);
-    });
+	updateConfig(newConfig: any): void {
+		this.config = { ...this.config, ...newConfig };
 
-    Logger.structured.info("ExamplePlugin event handlers registered");
-  }
+		// 設定変更に応じて定期挨拶を再設定
+		if (this.enabled) {
+			this.stopPeriodicGreeting();
+			if (this.config.autoGreeting) {
+				this.startPeriodicGreeting();
+			}
+		}
 
-  async cleanup(): Promise<void> {
-    this.stopPeriodicGreeting();
-    this.bot = null;
-    Logger.structured.info("ExamplePlugin cleanup completed");
-  }
+		Logger.structured.info("ExamplePlugin configuration updated", {
+			config: this.config,
+		});
+	}
 
-  /**
-   * 定期挨拶を開始
-   */
-  private startPeriodicGreeting(): void {
-    if (this.greetingTimer) {
-      clearInterval(this.greetingTimer);
-    }
+	registerEventHandlers(): void {
+		if (!this.bot) return;
 
-    this.greetingTimer = setInterval(() => {
-      if (this.bot && this.enabled) {
-        const randomGreeting = this.getRandomCustomGreeting();
-        this.bot.say.say(randomGreeting);
-      }
-    }, this.config.greetingInterval);
-  }
+		// カスタムイベントハンドラーの例
+		this.bot.mc.on("chat", (username: string, message: string) => {
+			this.handleChatMessage(username, message);
+		});
 
-  /**
-   * 定期挨拶を停止
-   */
-  private stopPeriodicGreeting(): void {
-    if (this.greetingTimer) {
-      clearInterval(this.greetingTimer);
-      this.greetingTimer = null;
-    }
-  }
+		this.bot.mc.on("playerJoined", (player: any) => {
+			this.handlePlayerJoined(player);
+		});
 
-  /**
-   * ランダムなカスタム挨拶を取得
-   */
-  private getRandomCustomGreeting(): string {
-    const greetings = this.config.customGreetings;
-    return greetings[Math.floor(Math.random() * greetings.length)];
-  }
+		this.bot.mc.on("playerLeft", (player: any) => {
+			this.handlePlayerLeft(player);
+		});
 
-  /**
-   * チャットメッセージの処理
-   */
-  private handleChatMessage(username: string, message: string): void {
-    if (!this.bot || !this.enabled) return;
+		Logger.structured.info("ExamplePlugin event handlers registered");
+	}
 
-    // 特定のキーワードに反応
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('こんにちは')) {
-      this.bot.say.greet(username);
-    } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye') || lowerMessage.includes('さようなら')) {
-      this.bot.say.farewell(username);
-    } else if (lowerMessage.includes('thank') || lowerMessage.includes('ありがとう')) {
-      this.bot.say.say(`どういたしまして、${username}さん！`);
-    }
+	async cleanup(): Promise<void> {
+		this.stopPeriodicGreeting();
+		this.bot = null;
+		Logger.structured.info("ExamplePlugin cleanup completed");
+	}
 
-    // ログ記録
-    Logger.structured.debug("ExamplePlugin processed chat message", {
-      username,
-      message,
-      botName: this.bot.getName()
-    });
-  }
+	/**
+	 * 定期挨拶を開始
+	 */
+	private startPeriodicGreeting(): void {
+		if (this.greetingTimer) {
+			clearInterval(this.greetingTimer);
+		}
 
-  /**
-   * プレイヤー参加の処理
-   */
-  private handlePlayerJoined(player: any): void {
-    if (!this.bot || !this.enabled) return;
+		this.greetingTimer = setInterval(() => {
+			if (this.bot && this.enabled) {
+				const randomGreeting = this.getRandomCustomGreeting();
+				this.bot.say.say(randomGreeting);
+			}
+		}, this.config.greetingInterval);
+	}
 
-    // 新しいプレイヤーを歓迎
-    setTimeout(() => {
-      if (this.bot) {
-        this.bot.say.say(`${player.username}さん、サーバーへようこそ！`);
-        this.bot.say.encourage();
-      }
-    }, 2000); // 2秒後に挨拶
+	/**
+	 * 定期挨拶を停止
+	 */
+	private stopPeriodicGreeting(): void {
+		if (this.greetingTimer) {
+			clearInterval(this.greetingTimer);
+			this.greetingTimer = null;
+		}
+	}
 
-    Logger.structured.info("ExamplePlugin welcomed new player", {
-      playerName: player.username,
-      botName: this.bot.getName()
-    });
-  }
+	/**
+	 * ランダムなカスタム挨拶を取得
+	 */
+	private getRandomCustomGreeting(): string {
+		const greetings = this.config.customGreetings;
+		return greetings[Math.floor(Math.random() * greetings.length)];
+	}
 
-  /**
-   * プレイヤー離脱の処理
-   */
-  private handlePlayerLeft(player: any): void {
-    if (!this.bot || !this.enabled) return;
+	/**
+	 * チャットメッセージの処理
+	 */
+	private handleChatMessage(username: string, message: string): void {
+		if (!this.bot || !this.enabled) return;
 
-    this.bot.say.say(`${player.username}さん、また遊びに来てくださいね！`);
+		// 特定のキーワードに反応
+		const lowerMessage = message.toLowerCase();
 
-    Logger.structured.info("ExamplePlugin said goodbye to player", {
-      playerName: player.username,
-      botName: this.bot.getName()
-    });
-  }
+		if (
+			lowerMessage.includes("hello") ||
+			lowerMessage.includes("hi") ||
+			lowerMessage.includes("こんにちは")
+		) {
+			this.bot.say.greet(username);
+		} else if (
+			lowerMessage.includes("bye") ||
+			lowerMessage.includes("goodbye") ||
+			lowerMessage.includes("さようなら")
+		) {
+			this.bot.say.farewell(username);
+		} else if (
+			lowerMessage.includes("thank") ||
+			lowerMessage.includes("ありがとう")
+		) {
+			this.bot.say.say(`どういたしまして、${username}さん！`);
+		}
 
-  /**
-   * プラグイン固有のコマンド処理（例）
-   */
-  public handleCustomCommand(command: string, args: string[], username: string): boolean {
-    if (!this.bot || !this.enabled) return false;
+		// ログ記録
+		Logger.structured.debug("ExamplePlugin processed chat message", {
+			username,
+			message,
+			botName: this.bot.getName(),
+		});
+	}
 
-    switch (command) {
-      case 'greet':
-        if (args.length > 0) {
-          this.bot.say.greet(args[0]);
-        } else {
-          this.bot.say.greet(username);
-        }
-        return true;
+	/**
+	 * プレイヤー参加の処理
+	 */
+	private handlePlayerJoined(player: any): void {
+		if (!this.bot || !this.enabled) return;
 
-      case 'customgreet':
-        const customGreeting = this.getRandomCustomGreeting();
-        this.bot.say.say(customGreeting);
-        return true;
+		// 新しいプレイヤーを歓迎
+		setTimeout(() => {
+			if (this.bot) {
+				this.bot.say.say(`${player.username}さん、サーバーへようこそ！`);
+				this.bot.say.encourage();
+			}
+		}, 2000); // 2秒後に挨拶
 
-      case 'pluginstatus':
-        this.reportPluginStatus();
-        return true;
+		Logger.structured.info("ExamplePlugin welcomed new player", {
+			playerName: player.username,
+			botName: this.bot.getName(),
+		});
+	}
 
-      default:
-        return false;
-    }
-  }
+	/**
+	 * プレイヤー離脱の処理
+	 */
+	private handlePlayerLeft(player: any): void {
+		if (!this.bot || !this.enabled) return;
 
-  /**
-   * プラグインの状態を報告
-   */
-  private reportPluginStatus(): void {
-    if (!this.bot) return;
+		this.bot.say.say(`${player.username}さん、また遊びに来てくださいね！`);
 
-    const metadata = this.getMetadata();
-    this.bot.say.reportInfo(`${metadata.name} v${metadata.version} - ${this.enabled ? '有効' : '無効'}`);
-    
-    if (this.config.autoGreeting) {
-      this.bot.say.say(`定期挨拶: ${this.config.greetingInterval / 1000}秒間隔で有効`);
-    } else {
-      this.bot.say.say('定期挨拶: 無効');
-    }
-  }
+		Logger.structured.info("ExamplePlugin said goodbye to player", {
+			playerName: player.username,
+			botName: this.bot.getName(),
+		});
+	}
+
+	/**
+	 * プラグイン固有のコマンド処理（例）
+	 */
+	public handleCustomCommand(
+		command: string,
+		args: string[],
+		username: string,
+	): boolean {
+		if (!this.bot || !this.enabled) return false;
+
+		switch (command) {
+			case "greet":
+				if (args.length > 0) {
+					this.bot.say.greet(args[0]);
+				} else {
+					this.bot.say.greet(username);
+				}
+				return true;
+
+			case "customgreet": {
+				const customGreeting = this.getRandomCustomGreeting();
+				this.bot.say.say(customGreeting);
+				return true;
+			}
+
+			case "pluginstatus":
+				this.reportPluginStatus();
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * プラグインの状態を報告
+	 */
+	private reportPluginStatus(): void {
+		if (!this.bot) return;
+
+		const metadata = this.getMetadata();
+		this.bot.say.reportInfo(
+			`${metadata.name} v${metadata.version} - ${this.enabled ? "有効" : "無効"}`,
+		);
+
+		if (this.config.autoGreeting) {
+			this.bot.say.say(
+				`定期挨拶: ${this.config.greetingInterval / 1000}秒間隔で有効`,
+			);
+		} else {
+			this.bot.say.say("定期挨拶: 無効");
+		}
+	}
 }
 
 // プラグインのエクスポート
