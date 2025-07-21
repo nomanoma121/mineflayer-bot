@@ -1,0 +1,50 @@
+name: CI
+
+# ワークフローが実行されるタイミングを定義
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# 実行する一連のジョブを定義
+jobs:
+  # ジョブの名前（任意）
+  build:
+    # 実行環境を指定
+    runs-on: ubuntu-latest
+
+    # 実行するステップを定義
+    steps:
+      # 1. リポジトリのコードをチェックアウトする
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. pnpmをインストール・セットアップする (このステップを追加)
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1 # pnpmのバージョンを指定
+
+      # 3. Node.jsの環境をセットアップする
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.1'
+          cache: 'pnpm'
+
+      # 4. 依存パッケージをインストールする
+      - name: Install dependencies
+        run: pnpm install # `pnpm ci`から変更
+
+      # 5. BiomeでコードのフォーマットとLintをチェックする
+      - name: Check formatting and lint with Biome
+        run: pnpm run biome:check
+
+      # 6. TypeScriptで型チェックを実行する
+      - name: Check types with TypeScript
+        run: pnpm run typecheck
+
+      # 7. 単体テストを実行する
+      - name: Run tests
+        run: pnpm test
