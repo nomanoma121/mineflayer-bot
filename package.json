@@ -17,7 +17,7 @@
     "bot:config": "npm run cli config show",
     "bot:test": "npm run cli dev test",
     "biome:check": "npx @biomejs/biome check ./src",
-    "biome:format": "npx @biomejs/biome format --write ./src",
+    "biome:fix": "npx @biomejs/biome check --write --unsafe ./src",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
