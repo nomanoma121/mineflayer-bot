@@ -35,7 +35,7 @@ export class PlaceCommand implements ICommand {
 				const y = parseInt(args[2]);
 				const z = parseInt(args[3]);
 
-				if (isNaN(x) || isNaN(y) || isNaN(z)) {
+				if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
 					bot.sendMessage(
 						"座標は数値で指定してください。使用法: @botname place <アイテム名> <x> <y> <z>",
 					);

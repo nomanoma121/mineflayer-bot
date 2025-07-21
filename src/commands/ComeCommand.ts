@@ -35,7 +35,7 @@ export class ComeCommand implements ICommand {
 
 			// ボット番号から追従距離を計算（もしくはデフォルト2）
 			const botNumber = parseInt(bot.getName().replace("bot", ""), 10);
-			const followDistance = 1 + (isNaN(botNumber) ? 1 : botNumber);
+			const followDistance = 1 + (Number.isNaN(botNumber) ? 1 : botNumber);
 
 			bot.sendMessage(`${targetPlayerName}さんの追従を開始します。`);
 

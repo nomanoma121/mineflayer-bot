@@ -1,5 +1,4 @@
 import type { Item } from "prismarine-item";
-import { Bot } from "../core/Bot";
 
 /**
  * ボットの状態を表すインターフェース

@@ -280,6 +280,7 @@ describe("AbilityManager", () => {
 		it("should handle missing abilities in emergency", async () => {
 			// Create manager without abilities
 			const emptyManager = new AbilityManager();
+			// biome-ignore lint/complexity/useLiteralKeys: テストで使用するため
 			emptyManager["abilities"].clear(); // Clear all abilities
 
 			const result = await emptyManager.handleEmergency();

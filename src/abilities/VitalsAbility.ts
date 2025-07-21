@@ -62,7 +62,6 @@ export class VitalsAbility implements IAbility {
 		if (!this.bot) return null;
 
 		const currentPos = this.bot.mc.entity.position;
-		const mcData = this.bot.mc.registry;
 
 		// 現在位置から半径内で安全な場所を検索
 		for (let x = -radius; x <= radius; x += 2) {

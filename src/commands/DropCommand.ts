@@ -28,7 +28,7 @@ export class DropCommand implements ICommand {
 			const itemName = args[0];
 			const quantity = args.length > 1 ? parseInt(args[1]) : 1;
 
-			if (isNaN(quantity) || quantity <= 0) {
+			if (Number.isNaN(quantity) || quantity <= 0) {
 				bot.sendMessage("数量は1以上の数値で指定してください。");
 				return;
 			}

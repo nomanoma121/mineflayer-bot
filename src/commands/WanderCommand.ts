@@ -24,7 +24,11 @@ export class WanderCommand implements ICommand {
 
 			if (args.length > 0) {
 				const parsedRange = parseInt(args[0], 10);
-				if (!isNaN(parsedRange) && parsedRange > 0 && parsedRange <= 100) {
+				if (
+					!Number.isNaN(parsedRange) &&
+					parsedRange > 0 &&
+					parsedRange <= 100
+				) {
 					range = parsedRange;
 				} else {
 					bot.sendMessage(

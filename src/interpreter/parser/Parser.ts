@@ -1,12 +1,9 @@
 import { ASTFactory } from "../ast/ASTFactory";
-import {
-	ASTNodeType,
-	BinaryOperator,
-	type BotCommandNode,
-	type ExpressionNode,
-	type ProgramNode,
-	type StatementNode,
-	UnaryOperator,
+import type {
+	BotCommandNode,
+	ExpressionNode,
+	ProgramNode,
+	StatementNode,
 } from "../ast/ASTNode";
 import { type Token, TokenType } from "../lexer/TokenType";
 
@@ -566,14 +563,6 @@ export class Parser {
 	 */
 	private checkAny(types: TokenType[]): boolean {
 		return types.some((type) => this.check(type));
-	}
-
-	/**
-	 * 次のトークンが指定したタイプかチェック
-	 */
-	private checkNext(type: TokenType): boolean {
-		if (this.current + 1 >= this.tokens.length) return false;
-		return this.tokens[this.current + 1].type === type;
 	}
 
 	/**

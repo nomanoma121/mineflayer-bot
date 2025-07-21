@@ -30,7 +30,7 @@ export class MinerCommand implements ICommand {
 			const coords = args.slice(0, 6).map((arg) => parseInt(arg, 10));
 
 			// 座標の妥当性をチェック
-			if (coords.some((coord) => isNaN(coord))) {
+			if (coords.some((coord) => Number.isNaN(coord))) {
 				bot.sendMessage("エラー: すべての座標は整数で指定してください。");
 				return;
 			}

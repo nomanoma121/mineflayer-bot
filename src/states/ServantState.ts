@@ -99,7 +99,7 @@ export class ServantState implements IBotState {
 	 */
 	private startFollowingMaster(): void {
 		const master = this.bot.mc.players[this.masterName];
-		if (master && master.entity) {
+		if (master?.entity) {
 			const distance = this.bot.mc.entity.position.distanceTo(
 				master.entity.position,
 			);

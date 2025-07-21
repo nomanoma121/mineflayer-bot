@@ -22,6 +22,11 @@ export class HomeCommand implements ICommand {
 		try {
 			console.log(`[${bot.getName()}] Home command executed by ${username}`);
 
+			if (args.length > 0) {
+				bot.sendMessage("使用法: @botname home");
+				return;
+			}
+
 			const homePosition = SetHomeCommand.getHomePosition(bot.getName());
 
 			if (!homePosition) {

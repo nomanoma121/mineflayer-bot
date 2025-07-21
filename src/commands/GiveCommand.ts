@@ -31,7 +31,7 @@ export class GiveCommand implements ICommand {
 			const itemName = args[1];
 			const quantity = args.length > 2 ? parseInt(args[2]) : 1;
 
-			if (isNaN(quantity) || quantity <= 0) {
+			if (Number.isNaN(quantity) || quantity <= 0) {
 				bot.sendMessage("数量は1以上の数値で指定してください。");
 				return;
 			}

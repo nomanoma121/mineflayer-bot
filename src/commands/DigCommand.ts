@@ -21,7 +21,7 @@ export class DigCommand implements ICommand {
 		try {
 			console.log(`[${bot.getName()}] Dig command executed by ${username}`);
 
-			let targetBlock;
+			let targetBlock = null;
 
 			if (args.length === 3) {
 				// 座標指定の場合
@@ -29,7 +29,7 @@ export class DigCommand implements ICommand {
 				const y = parseInt(args[1]);
 				const z = parseInt(args[2]);
 
-				if (isNaN(x) || isNaN(y) || isNaN(z)) {
+				if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
 					bot.sendMessage(
 						"座標は数値で指定してください。使用法: @botname dig <x> <y> <z>",
 					);

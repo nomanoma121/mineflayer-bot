@@ -14,7 +14,6 @@ export class FarmingState implements IBotState {
 	private currentTask: "scanning" | "moving" | "harvesting" | "planting" =
 		"scanning";
 	private currentTarget: Block | null = null;
-	private scanPosition: Vec3;
 	private harvestableBlocks: string[] = [
 		"wheat",
 		"carrots",
@@ -41,8 +40,6 @@ export class FarmingState implements IBotState {
 				Math.max(corner1.z, corner2.z),
 			),
 		};
-
-		this.scanPosition = this.farmArea.min.clone();
 	}
 
 	/**
@@ -55,7 +52,6 @@ export class FarmingState implements IBotState {
 		);
 
 		this.currentTask = "scanning";
-		this.scanPosition = this.farmArea.min.clone();
 	}
 
 	/**

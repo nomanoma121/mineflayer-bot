@@ -13,11 +13,7 @@ export class ExplorerCommand implements ICommand {
 	 * @param username - コマンドを実行したプレイヤーのユーザー名
 	 * @param args - コマンドの引数配列
 	 */
-	public async execute(
-		bot: Bot,
-		username: string,
-		args: string[],
-	): Promise<void> {
+	public async execute(bot: Bot, username: string): Promise<void> {
 		try {
 			console.log(
 				`[${bot.getName()}] Explorer command executed by ${username}`,

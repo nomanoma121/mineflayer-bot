@@ -526,7 +526,7 @@ export class Interpreter {
 
 		try {
 			// 座標の妥当性チェック
-			if (isNaN(x) || isNaN(y) || isNaN(z)) {
+			if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
 				throw new Error("Invalid coordinates: must be numbers");
 			}
 

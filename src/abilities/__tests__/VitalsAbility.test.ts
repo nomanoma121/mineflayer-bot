@@ -1,4 +1,3 @@
-import { Vec3 } from "vec3";
 import { MinecraftBotMock } from "../../__mocks__/MinecraftBotMock";
 import type { Bot } from "../../core/Bot";
 import { VitalsAbility } from "../VitalsAbility";

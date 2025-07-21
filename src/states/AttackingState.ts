@@ -85,7 +85,7 @@ export class AttackingState implements IBotState {
 	 */
 	public execute(): void {
 		// ターゲットが存在しない場合は適切な状態に戻る
-		if (!this.target || !this.target.isValid) {
+		if (!this.target?.isValid) {
 			this.stopAttacking();
 			if (this.onComplete) {
 				this.onComplete();
@@ -274,7 +274,7 @@ export class AttackingState implements IBotState {
 			return; // クールダウン中
 		}
 
-		if (this.target && this.target.isValid) {
+		if (this.target?.isValid) {
 			const distance = this.bot.mc.entity.position.distanceTo(
 				this.target.position,
 			);

@@ -85,7 +85,7 @@ export class CommandUtils {
 		bot: Bot,
 	): number | null {
 		const parsed = parseInt(value, 10);
-		if (isNaN(parsed)) {
+		if (Number.isNaN(parsed)) {
 			bot.sendMessage(`${paramName}は有効な数値で指定してください。`);
 			return null;
 		}

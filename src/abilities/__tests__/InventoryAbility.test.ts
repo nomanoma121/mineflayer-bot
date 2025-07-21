@@ -43,8 +43,8 @@ describe("InventoryAbility", () => {
 
 	describe("item checking", () => {
 		beforeEach(() => {
-			const breadItem = mockMinecraftBot.addItem("bread", 5);
-			const stoneItem = mockMinecraftBot.addItem("stone", 32);
+			mockMinecraftBot.addItem("bread", 5);
+			mockMinecraftBot.addItem("stone", 32);
 			mockMinecraftBot.addItem("iron_sword", 1);
 		});
 
@@ -291,7 +291,7 @@ describe("InventoryAbility", () => {
 		});
 
 		it("should drop items", async () => {
-			await inventoryAbility.dropItem("cobblestone", 32);
+			await inventoryAbility.dropItem("cobblestone");
 			expect(mockMinecraftBot.tossStack).toHaveBeenCalled();
 		});
 
@@ -345,7 +345,7 @@ describe("InventoryAbility", () => {
 		it("should deposit items to chest", async () => {
 			mockMinecraftBot.addItem("bread", 5);
 
-			await inventoryAbility.deposit(mockChest, "bread", 3);
+			await inventoryAbility.deposit("bread", 3);
 			// Note: Current implementation just logs, so no assertions on actual transfer
 			expect(true).toBe(true); // Placeholder for future implementation
 		});

@@ -1,9 +1,6 @@
 import { MinecraftBotMock } from "../../__mocks__/MinecraftBotMock";
 import type { Bot } from "../../core/Bot";
-import {
-	ExecutionContext,
-	VariableScope,
-} from "../interpreter/ExecutionContext";
+import { ExecutionContext } from "../interpreter/ExecutionContext";
 import { ExecutionResultType, Interpreter } from "../interpreter/Interpreter";
 import { Lexer } from "../lexer/Lexer";
 import { Parser } from "../parser/Parser";

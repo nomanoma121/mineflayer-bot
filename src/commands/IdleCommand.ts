@@ -23,6 +23,11 @@ export class IdleCommand implements ICommand {
 				`[${bot.getName()}] Executing idle command requested by ${username}`,
 			);
 
+			if (args.length > 0) {
+				bot.say.say("使用法: @botname idle");
+				return;
+			}
+
 			const currentStateName = bot.getCurrentState()?.getName() || "Unknown";
 
 			// 既に待機状態の場合

@@ -156,7 +156,7 @@ export class Lexer {
 				// 未終了の文字列
 				return {
 					type: TokenType.INVALID,
-					value: '"' + value,
+					value: `"${value}`,
 					line: startLine,
 					column: startColumn,
 				};
@@ -169,7 +169,7 @@ export class Lexer {
 		// 未終了の文字列
 		return {
 			type: TokenType.INVALID,
-			value: '"' + value,
+			value: `"${value}`,
 			line: startLine,
 			column: startColumn,
 		};

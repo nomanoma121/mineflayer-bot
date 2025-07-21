@@ -7,7 +7,6 @@ import type { InventoryAbility } from "../abilities/InventoryAbility";
 import type { SayAbility } from "../abilities/SayAbility";
 import type { SensingAbility } from "../abilities/SensingAbility";
 import type { VitalsAbility } from "../abilities/VitalsAbility";
-import { type BotConfig, ConfigManager } from "../config/ConfigManager";
 import type { IBotState } from "../states/IBotState";
 import { IdleState } from "../states/IdleState";
 import { Logger } from "../utils/Logger";
@@ -32,18 +31,14 @@ export class Bot {
 	public readonly mc: MineflayerBot;
 	private currentState: IBotState | null = null;
 	private readonly options: BotOptions;
-	private readonly config: BotConfig;
 	private mainLoopStarted: boolean = false;
 	private isEating: boolean = false;
 	private hungerNotificationSent: boolean = false;
 	private mcData: mcData.IndexedData;
 	private abilityManager: AbilityManager;
-	private logger: typeof Logger;
 
-	constructor(options: BotOptions, configManager?: ConfigManager) {
+	constructor(options: BotOptions) {
 		this.options = options;
-		this.config = configManager?.getConfig() || new ConfigManager().getConfig();
-		this.logger = Logger;
 
 		// ロガーの初期化
 		Logger.bot.connected(options.host, options.port, options.username);
@@ -301,7 +296,7 @@ export class Bot {
 	): Promise<void> {
 		try {
 			// 現在のStateに推奨装備メソッドが実装されているか確認
-			if (this.currentState && this.currentState.getRecommendedEquipment) {
+			if (this.currentState?.getRecommendedEquipment) {
 				const recommendedItem = this.currentState.getRecommendedEquipment();
 				if (recommendedItem) {
 					await this.mc.equip(recommendedItem, "hand");

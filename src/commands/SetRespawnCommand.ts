@@ -23,6 +23,11 @@ export class SetRespawnCommand implements ICommand {
 				`[${bot.getName()}] SetRespawn command executed by ${username}`,
 			);
 
+			if (args.length > 0) {
+				bot.sendMessage("使用法: @botname setrespawn");
+				return;
+			}
+
 			// 周辺のベッドを検索
 			const beds = this.findNearbyBeds(bot);
 

@@ -227,8 +227,6 @@ describe("BotScript ExecutionContext", () => {
 		});
 
 		test("should track execution time", () => {
-			const startTime = Date.now();
-
 			// 少し時間を経過させる
 			const executionTime = context.getExecutionTime();
 			expect(executionTime).toBeGreaterThanOrEqual(0);

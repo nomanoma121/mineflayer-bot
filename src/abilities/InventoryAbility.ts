@@ -143,11 +143,7 @@ export class InventoryAbility implements IAbility {
 	 * @param count 預ける数（デフォルト: 全て）
 	 * @returns 預け入れ完了のPromise
 	 */
-	async deposit(
-		chest: Window,
-		itemName: string,
-		count?: number,
-	): Promise<void> {
+	async deposit(itemName: string, count?: number): Promise<void> {
 		if (!this.bot) return;
 
 		const items = this.bot.mc.inventory.items().filter((item) => {
@@ -285,7 +281,7 @@ export class InventoryAbility implements IAbility {
 	 * @param count 捨てる数（デフォルト: 全て）
 	 * @returns 捨て完了のPromise
 	 */
-	async dropItem(itemName: string, count?: number): Promise<void> {
+	async dropItem(itemName: string): Promise<void> {
 		if (!this.bot) return;
 
 		const item = this.findItem(itemName);
@@ -293,7 +289,6 @@ export class InventoryAbility implements IAbility {
 			throw new Error(`アイテム「${itemName}」が見つかりません`);
 		}
 
-		const dropCount = count || item.count;
 		await this.bot.mc.tossStack(item);
 	}
 

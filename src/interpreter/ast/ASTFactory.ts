@@ -1,5 +1,4 @@
 import {
-	ASTNode,
 	ASTNodeType,
 	type AssignmentStatementNode,
 	type AttackCommandNode,

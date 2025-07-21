@@ -1,5 +1,5 @@
 import { Lexer } from "../lexer/Lexer";
-import { Token, TokenType } from "../lexer/TokenType";
+import { TokenType } from "../lexer/TokenType";
 
 describe("BotScript Lexer", () => {
 	let lexer: Lexer;

@@ -28,20 +28,17 @@ export class EntityUtils {
 			const lowerTargetName = targetName.toLowerCase();
 
 			// 名前チェック
-			if (entity.name && entity.name.toLowerCase().includes(lowerTargetName)) {
+			if (entity.name?.toLowerCase().includes(lowerTargetName)) {
 				return true;
 			}
 
 			// プレイヤー名チェック
-			if (
-				entity.username &&
-				entity.username.toLowerCase().includes(lowerTargetName)
-			) {
+			if (entity.username?.toLowerCase().includes(lowerTargetName)) {
 				return true;
 			}
 
 			// エンティティタイプチェック
-			if (entity.type && entity.type.toLowerCase().includes(lowerTargetName)) {
+			if (entity.type?.toLowerCase().includes(lowerTargetName)) {
 				return true;
 			}
 

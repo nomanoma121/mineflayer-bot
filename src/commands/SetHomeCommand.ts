@@ -24,6 +24,11 @@ export class SetHomeCommand implements ICommand {
 		try {
 			console.log(`[${bot.getName()}] Setting home position for ${username}`);
 
+			if (args.length > 0) {
+				bot.sendMessage("使用法: @botname sethome");
+				return;
+			}
+
 			const currentPosition = bot.mc.entity.position;
 			const homePosition = new Vec3(
 				Math.floor(currentPosition.x),

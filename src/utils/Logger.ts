@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import winston from "winston";
 
 /**
@@ -34,7 +34,7 @@ export class Logger {
 				let output = `${timestamp} [${level.toUpperCase()}] ${message}`;
 
 				if (Object.keys(meta).length > 0) {
-					output += " " + JSON.stringify(meta);
+					output += ` ${JSON.stringify(meta)}`;
 				}
 
 				return output;
@@ -49,7 +49,7 @@ export class Logger {
 				let output = `${timestamp} ${level} ${message}`;
 
 				if (Object.keys(meta).length > 0) {
-					output += " " + JSON.stringify(meta);
+					output += ` ${JSON.stringify(meta)}`;
 				}
 
 				return output;

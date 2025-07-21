@@ -1,5 +1,4 @@
 import type { Bot } from "../core/Bot";
-import { IdleState } from "../states/IdleState";
 import type { ICommand } from "./ICommand";
 
 /**
@@ -23,6 +22,11 @@ export class StopCommand implements ICommand {
 			console.log(
 				`[${bot.getName()}] Executing stop command requested by ${username}`,
 			);
+
+			if (args.length > 0) {
+				bot.sendMessage("使用法: @botname stop または @all stop");
+				return;
+			}
 
 			// パスファインダーによる移動を停止
 			if (bot.mc.pathfinder) {

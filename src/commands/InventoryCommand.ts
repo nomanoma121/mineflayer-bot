@@ -20,6 +20,11 @@ export class InventoryCommand implements ICommand {
 		try {
 			console.log(`[${bot.getName()}] Displaying inventory for ${username}`);
 
+			if (args.length > 0) {
+				bot.sendMessage("使用法: @botname inventory");
+				return;
+			}
+
 			const items = bot.mc.inventory.items();
 
 			if (items.length === 0) {

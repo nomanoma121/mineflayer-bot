@@ -22,7 +22,9 @@ export class GotoCommand implements ICommand {
 		try {
 			// 引数の検証
 			if (args.length < 3) {
-				bot.sendMessage(`使用法: @${bot.getName()} goto <x> <y> <z>`);
+				bot.sendMessage(
+					`${username}, 使用法: @${bot.getName()} goto <x> <y> <z>`,
+				);
 				return;
 			}
 
@@ -31,7 +33,7 @@ export class GotoCommand implements ICommand {
 			const z = parseFloat(args[2]);
 
 			// 数値の検証
-			if (isNaN(x) || isNaN(y) || isNaN(z)) {
+			if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
 				bot.sendMessage(
 					"座標は数値で指定してください。例: @bot01 goto 100 64 -200",
 				);
