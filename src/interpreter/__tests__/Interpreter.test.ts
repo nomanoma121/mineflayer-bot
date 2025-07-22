@@ -4,6 +4,7 @@ import { ExecutionContext } from "../interpreter/ExecutionContext";
 import { ExecutionResultType, Interpreter } from "../interpreter/Interpreter";
 import { Lexer } from "../lexer/Lexer";
 import { Parser } from "../parser/Parser";
+import { Vec3 } from "vec3";
 
 describe("BotScript Interpreter", () => {
 	let interpreter: Interpreter;
@@ -12,6 +13,8 @@ describe("BotScript Interpreter", () => {
 
 	beforeEach(() => {
 		const botMock = new MinecraftBotMock();
+		// ボットの位置をブロック位置に近づける
+		botMock.entity.position = new Vec3(100, 64, -200);
 
 		// モック用のBotオブジェクトを作成
 		mockBot = {
@@ -19,13 +22,44 @@ describe("BotScript Interpreter", () => {
 			getName: () => "TestBot",
 			getPosition: () => ({ x: 100, y: 64, z: -200 }),
 			getInventory: jest.fn().mockReturnValue([]),
+			vitals: {
+				getVitalStats: jest.fn().mockReturnValue({
+					health: 20,
+					hunger: 20,
+					saturation: 20,
+					oxygen: 20,
+					experience: { level: 0, points: 0 },
+					isInDanger: false,
+				}),
+				needsToEat: jest.fn().mockReturnValue(false),
+				isHealthLow: jest.fn().mockReturnValue(false),
+				isHungerLow: jest.fn().mockReturnValue(false),
+			},
 			sensing: {
 				findNearestEntity: jest.fn().mockReturnValue(null),
+				getEnvironmentInfo: jest.fn().mockReturnValue({
+					position: { x: 100, y: 64, z: -200 },
+					lightLevel: 15,
+					time: { isNight: false, timeOfDay: 1000 },
+					weather: { isRaining: false },
+					nearbyPlayersCount: 0,
+					nearbyHostileMobsCount: 0,
+					nearbyAnimalsCount: 0,
+				}),
+				findNearestBlock: jest.fn().mockReturnValue(new Vec3(100, 63, -200)),
 			},
 			inventory: {
 				hasItem: jest.fn().mockReturnValue(false),
 				findItem: jest.fn().mockReturnValue(null),
 				dropItem: jest.fn().mockResolvedValue(undefined),
+				getInventoryInfo: jest.fn().mockReturnValue({
+					usedSlots: 0,
+					totalSlots: 36,
+					emptySlots: 36,
+					equippedItem: null,
+				}),
+				isFull: jest.fn().mockReturnValue(false),
+				findBestTool: jest.fn().mockReturnValue(null),
 			},
 			say: {
 				say: jest.fn(),
@@ -72,6 +106,28 @@ describe("BotScript Interpreter", () => {
 		});
 
 		mockBot.getInventory = jest.fn().mockReturnValue([]);
+
+		// mineflayer Botに必要なプロパティを追加
+		(mockBot.mc as any).registry = {
+			blocksByName: {
+				stone: { id: 1 },
+				log: { id: 17 },
+			},
+		};
+		(mockBot.mc as any).blockAtCursor = jest.fn().mockReturnValue({
+			position: new Vec3(100, 63, -200),
+			name: "stone",
+		});
+		(mockBot.mc as any).targetDigBlock = {
+			position: new Vec3(100, 63, -200),
+			name: "stone",
+		};
+		(mockBot.mc as any).dig = jest.fn().mockResolvedValue(undefined);
+		(mockBot.mc as any).placeBlock = jest.fn().mockResolvedValue(undefined);
+		(mockBot.mc as any).blockAt = jest.fn().mockReturnValue({
+			position: new Vec3(100, 63, -200),
+			name: "stone",
+		});
 
 		context = new ExecutionContext();
 		interpreter = new Interpreter(mockBot, context);
@@ -341,12 +397,18 @@ describe("BotScript Interpreter", () => {
 		test("should execute DIG command", async () => {
 			const result = await executeScript('dig "stone"');
 
+			if (result.type === ExecutionResultType.ERROR) {
+				console.log("DIG Error details:", result.message);
+			}
 			expect(result.type).toBe(ExecutionResultType.SUCCESS);
 		});
 
 		test("should execute DIG command without block type", async () => {
 			const result = await executeScript("dig");
 
+			if (result.type === ExecutionResultType.ERROR) {
+				console.log("DIG without block Error details:", result.message);
+			}
 			expect(result.type).toBe(ExecutionResultType.SUCCESS);
 		});
 
