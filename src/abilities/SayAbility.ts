@@ -29,11 +29,12 @@ export class SayAbility implements IAbility {
 	/**
 	 * チャットメッセージを送信
 	 * @param message 送信するメッセージ
+	 * @param forceImmediate 強制的に即座に送信するかどうか
 	 */
-	say(message: string): void {
+	say(message: string, forceImmediate = false): void {
 		if (!this.bot) return;
 
-		this.bot.sendMessage(message);
+		this.bot.sendMessage(message, forceImmediate);
 		this.addToHistory(message);
 	}
 
@@ -46,7 +47,7 @@ export class SayAbility implements IAbility {
 		if (!this.bot) return;
 
 		const whisperMessage = `/msg ${player} ${message}`;
-		this.bot.sendMessage(whisperMessage);
+		this.bot.sendMessage(whisperMessage, false);
 		this.addToHistory(`[Whisper to ${player}] ${message}`);
 	}
 
