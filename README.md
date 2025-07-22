@@ -156,7 +156,11 @@ BotScriptでは、ボットの状態を自動的に取得できるシステム�
 - **patrol_basic.bs** - 基本的な4方向パトロール
 - **adaptive_patrol.bs** - 環境適応型パトロール（夜間・雨天対応）
 
-詳細な使用例は `scripts/examples.md` をご覧ください。
+詳細な使用例とBotScript言語仕様は [`scripts/examples.md`](./scripts/examples.md) をご覧ください。
+
+### サンプルファイルの場所
+- **BotScript言語ガイド**: [`scripts/examples.md`](./scripts/examples.md)
+- **実行可能なスクリプト**: [`scripts/saved/`](./scripts/saved/) フォルダ
 
 ### スクリプトの実行方法
 
