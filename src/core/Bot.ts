@@ -38,7 +38,11 @@ export class Bot {
 	private abilityManager: AbilityManager;
 	private lastMessageTime: number = 0;
 	private messageInterval: number = 0.2; // デフォルト0.5秒間隔
-	private messageQueue: Array<{ message: string; timestamp: number; forceImmediate: boolean }> = [];
+	private messageQueue: Array<{
+		message: string;
+		timestamp: number;
+		forceImmediate: boolean;
+	}> = [];
 	private messageQueueTimer: NodeJS.Timeout | null = null;
 
 	constructor(options: BotOptions) {
@@ -178,18 +182,22 @@ export class Bot {
 	 */
 	public sendMessage(message: string, forceImmediate: boolean = false): void {
 		const currentTime = Date.now();
-		
+
 		// 強制即座送信の場合
 		if (forceImmediate) {
 			this.sendMessageDirect(message);
 			this.lastMessageTime = currentTime;
 			return;
 		}
-		
+
 		// 間隔チェック
 		if (currentTime - this.lastMessageTime < this.messageInterval) {
 			// キューに追加
-			this.messageQueue.push({ message, timestamp: currentTime, forceImmediate });
+			this.messageQueue.push({
+				message,
+				timestamp: currentTime,
+				forceImmediate,
+			});
 			this.processMessageQueue();
 		} else {
 			// 即座に送信
@@ -197,7 +205,7 @@ export class Bot {
 			this.lastMessageTime = currentTime;
 		}
 	}
-	
+
 	/**
 	 * メッセージを直接送信（内部用）
 	 * @param message - 送信するメッセージ
@@ -209,23 +217,23 @@ export class Bot {
 			console.error("Error sending message:", error);
 		}
 	}
-	
+
 	/**
 	 * メッセージキューを処理
 	 */
 	private processMessageQueue(): void {
 		if (this.messageQueueTimer || this.messageQueue.length === 0) return;
-		
+
 		const nextMessage = this.messageQueue[0];
 		const currentTime = Date.now();
 		const timeSinceLastMessage = currentTime - this.lastMessageTime;
-		
+
 		if (timeSinceLastMessage >= this.messageInterval) {
 			// 送信可能
 			this.messageQueue.shift();
 			this.sendMessageDirect(nextMessage.message);
 			this.lastMessageTime = currentTime;
-			
+
 			// 次のメッセージがある場合は再帰処理
 			if (this.messageQueue.length > 0) {
 				setTimeout(() => this.processMessageQueue(), this.messageInterval);

@@ -350,5 +350,4 @@ export class SayAbility implements IAbility {
 			],
 		};
 	}
-
 }
