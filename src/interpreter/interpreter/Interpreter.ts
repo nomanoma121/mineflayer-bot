@@ -1,4 +1,5 @@
 import type { Bot } from "../../core/Bot";
+import { Vec3 } from "vec3";
 import {
 	ASTNodeType,
 	type AssignmentStatementNode,
@@ -507,7 +508,9 @@ export class Interpreter {
 		startTime: number,
 	): Promise<CommandResult> {
 		const message = String(this.evaluateExpression(node.message));
-		this.bot.sendMessage(message);
+		
+		// SayAbilityを使用してメッセージを送信（履歴管理付き）
+		this.bot.say.say(message);
 
 		return {
 			success: true,
@@ -610,33 +613,206 @@ export class Interpreter {
 			? String(this.evaluateExpression(node.blockType))
 			: "any";
 
-		return {
-			success: true,
-			message: `Digging ${blockType}`,
-			duration: Date.now() - startTime,
-		};
+		try {
+			let targetBlock = null;
+
+			if (blockType !== "any") {
+				// 指定されたブロックタイプを探す
+				const blockId = this.bot.mc.registry.blocksByName[blockType]?.id;
+				if (blockId) {
+					const blockPosition = this.bot.sensing.findNearestBlock({
+						matching: blockId,
+						maxDistance: 16,
+						count: 1,
+					});
+					if (blockPosition) {
+						targetBlock = this.bot.mc.blockAt(blockPosition);
+					}
+				}
+			} else {
+				// 見ているブロックを掘る
+				targetBlock = this.bot.mc.targetDigBlock;
+			}
+
+			if (!targetBlock) {
+				return {
+					success: false,
+					message: `Target block '${blockType}' not found`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// 掘れないブロックをチェック
+			if (
+				targetBlock.name === "air" ||
+				targetBlock.name === "water" ||
+				targetBlock.name === "lava"
+			) {
+				return {
+					success: false,
+					message: `Cannot dig ${targetBlock.name}`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// 距離チェック
+			const distance = this.bot.mc.entity.position.distanceTo(targetBlock.position);
+			if (distance > 6) {
+				return {
+					success: false,
+					message: `Block too far away (distance: ${distance.toFixed(1)})`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// 最適なツールを装備
+			const bestTool = this.bot.inventory.findBestTool(targetBlock);
+			if (bestTool) {
+				await this.bot.mc.equip(bestTool, "hand");
+			}
+
+			// 掘削を実行
+			await this.bot.mc.dig(targetBlock);
+
+			return {
+				success: true,
+				message: `Successfully dug ${targetBlock.name} at (${targetBlock.position.x}, ${targetBlock.position.y}, ${targetBlock.position.z})`,
+				duration: Date.now() - startTime,
+			};
+		} catch (error) {
+			return {
+				success: false,
+				message: `Dig failed: ${(error as Error).message}`,
+				duration: Date.now() - startTime,
+			};
+		}
 	}
 
 	private async executePlaceCommand(
 		node: PlaceCommandNode,
 		startTime: number,
 	): Promise<CommandResult> {
-		const item = String(this.evaluateExpression(node.item));
+		const itemName = String(this.evaluateExpression(node.item));
 
-		if (node.x && node.y && node.z) {
-			const x = Number(this.evaluateExpression(node.x));
-			const y = Number(this.evaluateExpression(node.y));
-			const z = Number(this.evaluateExpression(node.z));
+		try {
+			// アイテムをインベントリから検索
+			const item = this.bot.inventory.findItem(itemName);
+			if (!item) {
+				return {
+					success: false,
+					message: `Item '${itemName}' not found in inventory`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			let targetPosition;
+
+			if (node.x && node.y && node.z) {
+				// 座標指定の場合
+				const x = Number(this.evaluateExpression(node.x));
+				const y = Number(this.evaluateExpression(node.y));
+				const z = Number(this.evaluateExpression(node.z));
+
+				// 座標の妥当性チェック
+				if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
+					return {
+						success: false,
+						message: "Invalid coordinates: must be numbers",
+						duration: Date.now() - startTime,
+					};
+				}
+
+				targetPosition = { x, y, z };
+			} else {
+				// 現在見ているブロックの隣に設置
+				const targetBlock = this.bot.mc.blockAtCursor();
+				if (!targetBlock) {
+					return {
+						success: false,
+						message: "No target block found. Please look at a block.",
+						duration: Date.now() - startTime,
+					};
+				}
+
+				// 設置位置は見ているブロックの上
+				targetPosition = {
+					x: targetBlock.position.x,
+					y: targetBlock.position.y + 1,
+					z: targetBlock.position.z,
+				};
+			}
+
+			// Vec3オブジェクトに変換
+			const targetVec3 = new Vec3(targetPosition.x, targetPosition.y, targetPosition.z);
+
+			// 設置位置の距離チェック
+			const distance = this.bot.mc.entity.position.distanceTo(targetVec3);
+			if (distance > 6) {
+				return {
+					success: false,
+					message: `Target position too far away (distance: ${distance.toFixed(1)})`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// 設置位置が空いているかチェック
+			const blockAtPosition = this.bot.mc.blockAt(targetVec3);
+			if (blockAtPosition && blockAtPosition.name !== "air") {
+				return {
+					success: false,
+					message: `Position (${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z}) is not empty`,
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// 設置する隣接ブロックを見つける
+			const adjacentPositions = [
+				new Vec3(targetPosition.x, targetPosition.y - 1, targetPosition.z), // 下
+				new Vec3(targetPosition.x, targetPosition.y + 1, targetPosition.z), // 上
+				new Vec3(targetPosition.x + 1, targetPosition.y, targetPosition.z), // 東
+				new Vec3(targetPosition.x - 1, targetPosition.y, targetPosition.z), // 西
+				new Vec3(targetPosition.x, targetPosition.y, targetPosition.z + 1), // 南
+				new Vec3(targetPosition.x, targetPosition.y, targetPosition.z - 1), // 北
+			];
+
+			let referenceBlock = null;
+			for (const pos of adjacentPositions) {
+				const block = this.bot.mc.blockAt(pos);
+				if (block && block.name !== "air") {
+					referenceBlock = block;
+					break;
+				}
+			}
+
+			if (!referenceBlock) {
+				return {
+					success: false,
+					message: "No adjacent block found for placement",
+					duration: Date.now() - startTime,
+				};
+			}
+
+			// アイテムを装備
+			await this.bot.mc.equip(item, "hand");
+
+			// ブロックを設置
+			const faceVector = new Vec3(
+				targetPosition.x - referenceBlock.position.x,
+				targetPosition.y - referenceBlock.position.y,
+				targetPosition.z - referenceBlock.position.z,
+			);
+
+			await this.bot.mc.placeBlock(referenceBlock, faceVector);
 
 			return {
 				success: true,
-				message: `Placing ${item} at (${x}, ${y}, ${z})`,
+				message: `Successfully placed ${itemName} at (${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z})`,
 				duration: Date.now() - startTime,
 			};
-		} else {
+		} catch (error) {
 			return {
-				success: true,
-				message: `Placing ${item}`,
+				success: false,
+				message: `Place failed: ${(error as Error).message}`,
 				duration: Date.now() - startTime,
 			};
 		}
@@ -762,11 +938,49 @@ export class Interpreter {
 	 * システム変数を更新
 	 */
 	private updateSystemVariables(): void {
+		// 基本ステータス
+		const vitals = this.bot.vitals.getVitalStats();
+		const environment = this.bot.sensing.getEnvironmentInfo();
+		const inventoryInfo = this.bot.inventory.getInventoryInfo();
+
 		this.context.updateSystemVariables({
-			health: this.bot.mc.health,
-			food: this.bot.mc.food,
+			// 基本情報
+			health: vitals.health,
+			food: vitals.hunger,
+			saturation: vitals.saturation,
+			oxygen: vitals.oxygen,
+			experience_level: vitals.experience.level,
+			experience_points: vitals.experience.points,
+			
+			// 位置情報
 			position: this.bot.getPosition(),
-			inventory_count: this.bot.getInventory().length,
+			x: environment.position.x,
+			y: environment.position.y,
+			z: environment.position.z,
+			
+			// 環境情報
+			light_level: environment.lightLevel,
+			is_night: environment.time.isNight,
+			is_raining: environment.weather.isRaining,
+			time_of_day: environment.time.timeOfDay,
+			
+			// インベントリ情報
+			inventory_count: inventoryInfo.usedSlots,
+			inventory_slots_total: inventoryInfo.totalSlots,
+			inventory_slots_empty: inventoryInfo.emptySlots,
+			equipped_item: inventoryInfo.equippedItem || "none",
+			
+			// エンティティ情報
+			nearby_players: environment.nearbyPlayersCount,
+			nearby_mobs: environment.nearbyHostileMobsCount,
+			nearby_animals: environment.nearbyAnimalsCount,
+			
+			// 状態フラグ
+			is_in_danger: vitals.isInDanger,
+			needs_food: this.bot.vitals.needsToEat(),
+			health_low: this.bot.vitals.isHealthLow(),
+			hunger_low: this.bot.vitals.isHungerLow(),
+			inventory_full: this.bot.inventory.isFull(),
 		});
 	}
 

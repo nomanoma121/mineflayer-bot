@@ -316,8 +316,30 @@ export class ExecutionContext {
 	updateSystemVariables(botData?: {
 		health?: number;
 		food?: number;
+		saturation?: number;
+		oxygen?: number;
+		experience_level?: number;
+		experience_points?: number;
 		position?: { x: number; y: number; z: number };
+		x?: number;
+		y?: number;
+		z?: number;
+		light_level?: number;
+		is_night?: boolean;
+		is_raining?: boolean;
+		time_of_day?: number;
 		inventory_count?: number;
+		inventory_slots_total?: number;
+		inventory_slots_empty?: number;
+		equipped_item?: string;
+		nearby_players?: number;
+		nearby_mobs?: number;
+		nearby_animals?: number;
+		is_in_danger?: boolean;
+		needs_food?: boolean;
+		health_low?: boolean;
+		hunger_low?: boolean;
+		inventory_full?: boolean;
 	}): void {
 		// タイムスタンプを更新
 		this.globalVariables.get("timestamp")!.value = Date.now();
