@@ -1,10 +1,10 @@
+import { Vec3 } from "vec3";
 import { MinecraftBotMock } from "../../__mocks__/MinecraftBotMock";
 import type { Bot } from "../../core/Bot";
 import { ExecutionContext } from "../interpreter/ExecutionContext";
 import { ExecutionResultType, Interpreter } from "../interpreter/Interpreter";
 import { Lexer } from "../lexer/Lexer";
 import { Parser } from "../parser/Parser";
-import { Vec3 } from "vec3";
 
 describe("BotScript Interpreter", () => {
 	let interpreter: Interpreter;

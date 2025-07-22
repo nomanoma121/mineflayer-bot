@@ -1,7 +1,7 @@
 import { Vec3 } from "vec3";
 import type { Bot } from "../core/Bot";
-import type { ICommand } from "./ICommand";
 import { PlaceState } from "../states/PlaceState";
+import type { ICommand } from "./ICommand";
 
 /**
  * ブロック設置コマンドクラス
@@ -77,15 +77,16 @@ export class PlaceCommand implements ICommand {
 				targetPosition,
 				itemName,
 				() => {
-					console.log(`[${bot.getName()}] Place operation completed successfully`);
+					console.log(
+						`[${bot.getName()}] Place operation completed successfully`,
+					);
 				},
 				(error: Error) => {
 					console.error(`[${bot.getName()}] Place operation failed:`, error);
-				}
+				},
 			);
 
 			await bot.changeState(placeState);
-
 		} catch (error) {
 			console.error(`[${bot.getName()}] Error in place command:`, error);
 			bot.sendMessage(

@@ -1,5 +1,5 @@
-import type { Bot } from "../../core/Bot";
 import { Vec3 } from "vec3";
+import type { Bot } from "../../core/Bot";
 import {
 	ASTNodeType,
 	type AssignmentStatementNode,
@@ -508,7 +508,7 @@ export class Interpreter {
 		startTime: number,
 	): Promise<CommandResult> {
 		const message = String(this.evaluateExpression(node.message));
-		
+
 		// SayAbilityを使用してメッセージを送信（履歴管理付き）
 		this.bot.say.say(message);
 
@@ -656,7 +656,9 @@ export class Interpreter {
 			}
 
 			// 距離チェック
-			const distance = this.bot.mc.entity.position.distanceTo(targetBlock.position);
+			const distance = this.bot.mc.entity.position.distanceTo(
+				targetBlock.position,
+			);
 			if (distance > 6) {
 				return {
 					success: false,
@@ -705,7 +707,7 @@ export class Interpreter {
 				};
 			}
 
-			let targetPosition;
+			let targetPosition: { x: number; y: number; z: number };
 
 			if (node.x && node.y && node.z) {
 				// 座標指定の場合
@@ -743,7 +745,11 @@ export class Interpreter {
 			}
 
 			// Vec3オブジェクトに変換
-			const targetVec3 = new Vec3(targetPosition.x, targetPosition.y, targetPosition.z);
+			const targetVec3 = new Vec3(
+				targetPosition.x,
+				targetPosition.y,
+				targetPosition.z,
+			);
 
 			// 設置位置の距離チェック
 			const distance = this.bot.mc.entity.position.distanceTo(targetVec3);
@@ -951,30 +957,30 @@ export class Interpreter {
 			oxygen: vitals.oxygen,
 			experience_level: vitals.experience.level,
 			experience_points: vitals.experience.points,
-			
+
 			// 位置情報
 			position: this.bot.getPosition(),
 			x: environment.position.x,
 			y: environment.position.y,
 			z: environment.position.z,
-			
+
 			// 環境情報
 			light_level: environment.lightLevel,
 			is_night: environment.time.isNight,
 			is_raining: environment.weather.isRaining,
 			time_of_day: environment.time.timeOfDay,
-			
+
 			// インベントリ情報
 			inventory_count: inventoryInfo.usedSlots,
 			inventory_slots_total: inventoryInfo.totalSlots,
 			inventory_slots_empty: inventoryInfo.emptySlots,
 			equipped_item: inventoryInfo.equippedItem || "none",
-			
+
 			// エンティティ情報
 			nearby_players: environment.nearbyPlayersCount,
 			nearby_mobs: environment.nearbyHostileMobsCount,
 			nearby_animals: environment.nearbyAnimalsCount,
-			
+
 			// 状態フラグ
 			is_in_danger: vitals.isInDanger,
 			needs_food: this.bot.vitals.needsToEat(),
