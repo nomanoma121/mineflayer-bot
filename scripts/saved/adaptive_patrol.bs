@@ -1,0 +1,154 @@
+# Adaptive Patrol Script
+# Author: system
+# Description: 適応的パトロールスクリプト - 環境と状況に応じて行動を変更
+
+SAY "=== 適応的パトロールシステム開始 ==="
+
+var patrol_points = 4
+var current_patrol = 0
+var max_patrols = 3
+var start_x = x
+var start_y = y
+var start_z = z
+
+SAY "パトロール回数: " + max_patrols + "回"
+SAY "基準点: (" + start_x + ", " + start_y + ", " + start_z + ")"
+
+repeat max_patrols {
+  current_patrol = current_patrol + 1
+  
+  SAY "=== パトロール " + current_patrol + "/" + max_patrols + " 開始 ==="
+  
+  # パトロール開始前の状況確認
+  SAY "パトロール前チェック："
+  SAY "体力: " + health + "/20, 空腹度: " + food + "/20"
+  SAY "時刻: " + time_of_day + " (" + (is_night ? "夜間" : "昼間") + ")"
+  SAY "天候: " + (is_raining ? "雨天" : "晴天")
+  
+  # 危険状態チェック
+  if is_in_danger {
+    SAY "⚠️ 危険状態のためパトロールを中断します"
+    break
+  }
+  
+  # 夜間パトロールの注意事項
+  if is_night {
+    SAY "🌙 夜間パトロール - 敵対Mobに警戒"
+    if nearby_mobs > 0 {
+      SAY "⚠️ 敵対Mob " + nearby_mobs + "体を検出！注意深く行動します"
+    }
+  }
+  
+  # 雨天時の調整
+  if is_raining {
+    SAY "🌧️ 雨天のため移動速度を調整します"
+  }
+  
+  # 4方向パトロール
+  repeat patrol_points {
+    var direction = _loop_index + 1
+    var move_distance = is_night ? 5 : 10  # 夜間は移動距離を短縮
+    
+    SAY "方向 " + direction + "/4 へ移動中..."
+    
+    # 方向別移動
+    if direction = 1 {
+      # 北へ
+      goto (start_x) (start_y) (start_z + move_distance)
+      SAY "🧭 北方向の確認完了"
+    }
+    
+    if direction = 2 {
+      # 東へ
+      goto (start_x + move_distance) (start_y) (start_z + move_distance)
+      SAY "🧭 東方向の確認完了"
+    }
+    
+    if direction = 3 {
+      # 南へ
+      goto (start_x + move_distance) (start_y) (start_z)
+      SAY "🧭 南方向の確認完了"
+    }
+    
+    if direction = 4 {
+      # 西へ（出発点に戻る）
+      goto start_x start_y start_z
+      SAY "🧭 西方向の確認完了 - 出発点に帰還"
+    }
+    
+    # 各地点での状況確認
+    SAY "現在位置: (" + x + ", " + y + ", " + z + ")"
+    SAY "光レベル: " + light_level + "/15"
+    
+    # 周囲の状況報告
+    if nearby_players > 0 {
+      SAY "👥 プレイヤー " + nearby_players + "人を確認"
+    }
+    
+    if nearby_mobs > 0 {
+      SAY "⚠️ 敵対Mob " + nearby_mobs + "体を確認"
+      if is_night {
+        SAY "夜間のため警戒レベルを上げます"
+      }
+    }
+    
+    if nearby_animals > 0 {
+      SAY "🐄 動物 " + nearby_animals + "匹を確認"
+    }
+    
+    # 体力・空腹度チェック
+    if health_low {
+      SAY "⚠️ 体力低下！パトロールを中断して回復してください"
+      break
+    }
+    
+    if needs_food {
+      SAY "🍖 空腹度低下 - 食事をお勧めします"
+    }
+    
+    # インベントリチェック
+    if inventory_full {
+      SAY "📦 インベントリが満杯です"
+    }
+    
+    # 待機時間の調整（夜間は短縮）
+    var wait_time = is_night ? 1 : 2
+    wait wait_time
+  }
+  
+  SAY "--- パトロール " + current_patrol + " 完了 ---"
+  
+  # パトロール間の休憩
+  if current_patrol < max_patrols {
+    SAY "次のパトロールまで休憩..."
+    
+    # 体力状況に応じた休憩時間
+    var rest_time = 3
+    if health_low or needs_food {
+      rest_time = 5
+      SAY "体力・空腹度を考慮して長めの休憩を取ります"
+    }
+    
+    wait rest_time
+  }
+}
+
+# パトロール完了報告
+SAY "=== 適応的パトロール完了 ==="
+SAY "実施パトロール数: " + current_patrol + "/" + max_patrols
+SAY "最終位置: (" + x + ", " + y + ", " + z + ")"
+SAY "最終体力: " + health + "/20"
+SAY "最終空腹度: " + food + "/20"
+
+# 総括報告
+if is_night {
+  SAY "🌙 夜間パトロールお疲れ様でした"
+} else {
+  SAY "☀️ 昼間パトロールお疲れ様でした"
+}
+
+if is_raining {
+  SAY "🌧️ 雨天でのパトロールお疲れ様でした"
+}
+
+SAY "パトロール任務完了！"

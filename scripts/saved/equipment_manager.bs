@@ -1,0 +1,176 @@
+# Equipment Manager Script
+# Author: system
+# Description: 装備管理スクリプト - 状況に応じて最適な装備を自動選択
+
+SAY "=== 装備管理システム開始 ==="
+
+var equipment_checks = 8
+var check_count = 0
+
+SAY "装備最適化を " + equipment_checks + " 回実行します"
+SAY "現在の装備: " + equipped_item
+
+repeat equipment_checks {
+  check_count = check_count + 1
+  
+  SAY "=== 装備チェック " + check_count + "/" + equipment_checks + " ==="
+  
+  # 現在の状況分析
+  SAY "【状況分析】"
+  SAY "時刻: " + time_of_day + " (" + (is_night ? "夜間" : "昼間") + ")"
+  SAY "周囲の敵対Mob: " + nearby_mobs + "体"
+  SAY "現在の装備: " + equipped_item
+  SAY "体力: " + health + "/20"
+  
+  # 戦闘状況の判定
+  var combat_situation = false
+  if nearby_mobs > 0 {
+    combat_situation = true
+    SAY "⚔️ 戦闘状況を検出"
+  }
+  
+  # 夜間リスク評価
+  var night_risk = false
+  if is_night {
+    night_risk = true
+    SAY "🌙 夜間リスク有り"
+  }
+  
+  # 装備推奨システム
+  SAY "【装備推奨】"
+  
+  if combat_situation {
+    SAY "戦闘状況につき武器装備を推奨"
+    
+    # 武器の優先順位で装備
+    equip "diamond_sword"
+    wait 1
+    if equipped_item = "diamond_sword" {
+      SAY "✅ ダイヤモンドソードを装備しました"
+    } else {
+      equip "iron_sword"
+      wait 1
+      if equipped_item = "iron_sword" {
+        SAY "✅ 鉄の剣を装備しました"
+      } else {
+        equip "stone_sword"
+        wait 1
+        if equipped_item = "stone_sword" {
+          SAY "✅ 石の剣を装備しました"
+        } else {
+          equip "wooden_sword"
+          wait 1
+          SAY "✅ 木の剣を装備しました"
+        }
+      }
+    }
+  } else {
+    # 非戦闘時の装備選択
+    
+    if night_risk and not combat_situation {
+      SAY "夜間警戒のため武器を準備"
+      equip "iron_sword"
+      wait 1
+      if equipped_item = "iron_sword" {
+        SAY "✅ 警戒用に鉄の剣を装備"
+      }
+    } else {
+      # 作業用装備
+      SAY "作業用装備を選択"
+      
+      # ピッケルの優先順位で装備
+      equip "diamond_pickaxe"
+      wait 1
+      if equipped_item = "diamond_pickaxe" {
+        SAY "✅ ダイヤモンドピッケルを装備（作業用）"
+      } else {
+        equip "iron_pickaxe"
+        wait 1
+        if equipped_item = "iron_pickaxe" {
+          SAY "✅ 鉄のピッケルを装備（作業用）"
+        } else {
+          equip "stone_pickaxe"
+          wait 1
+          if equipped_item = "stone_pickaxe" {
+            SAY "✅ 石のピッケルを装備（作業用）"
+          } else {
+            SAY "⚠️ 作業用ツールが見つかりません"
+          }
+        }
+      }
+    }
+  }
+  
+  # 装備後の評価
+  SAY "【装備評価】"
+  SAY "最終装備: " + equipped_item
+  
+  if combat_situation {
+    if equipped_item = "diamond_sword" or equipped_item = "iron_sword" {
+      SAY "✅ 戦闘に適した装備です"
+    } else {
+      SAY "⚠️ より良い武器の入手をお勧めします"
+    }
+  }
+  
+  # 体力に応じた推奨
+  if health_low {
+    SAY "⚠️ 体力低下中 - 戦闘回避を推奨"
+    SAY "回復アイテムの使用を検討してください"
+  }
+  
+  # インベントリ内の装備品確認
+  SAY "【装備品インベントリ】"
+  SAY "総スロット数: " + inventory_slots_total
+  SAY "使用中: " + inventory_count
+  
+  if inventory_full {
+    SAY "⚠️ インベントリ満杯 - 装備変更が制限される可能性"
+  }
+  
+  # 次の装備チェックまでの待機
+  if check_count < equipment_checks {
+    var wait_time = 3
+    
+    # 戦闘状況なら短い間隔でチェック
+    if combat_situation {
+      wait_time = 1
+      SAY "戦闘中につき短間隔でチェック"
+    }
+    
+    # 夜間は警戒して頻繁にチェック
+    if night_risk {
+      wait_time = 2
+      SAY "夜間警戒中"
+    }
+    
+    SAY "次のチェックまで " + wait_time + " 秒待機..."
+    wait wait_time
+  }
+}
+
+# 装備管理完了報告
+SAY "=== 装備管理システム完了 ==="
+SAY "実行チェック数: " + equipment_checks + " 回"
+SAY "最終装備: " + equipped_item
+
+# 最終推奨事項
+SAY "【最終推奨事項】"
+
+if is_night {
+  SAY "🌙 夜間につき武器携帯を推奨"
+}
+
+if nearby_mobs > 0 {
+  SAY "⚔️ 敵対Mob検出中 - 戦闘準備完了"
+}
+
+if health_low {
+  SAY "❤️ 体力回復を最優先で行ってください"
+}
+
+if inventory_full {
+  SAY "📦 インベントリ整理により装備効率が向上します"
+}
+
+SAY "装備管理システム終了 - 適切な装備でご安全に！"

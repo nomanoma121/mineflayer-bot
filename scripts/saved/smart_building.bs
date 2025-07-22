@@ -1,0 +1,157 @@
+# Smart Building Script
+# Author: system
+# Description: スマート建築スクリプト - インベントリ管理と材料チェックを含む建築システム
+
+SAY "=== スマート建築システム開始 ==="
+
+var building_material = "stone"
+var structure_size = 5
+var blocks_placed = 0
+var start_x = x
+var start_y = y
+var start_z = z
+
+SAY "建築材料: " + building_material
+SAY "構造サイズ: " + structure_size + "x" + structure_size
+SAY "建築開始位置: (" + start_x + ", " + start_y + ", " + start_z + ")"
+
+# 事前チェック
+SAY "=== 事前チェック ==="
+SAY "インベントリ状況: " + inventory_count + "/" + inventory_slots_total
+
+# 材料の必要数計算
+var required_blocks = structure_size * structure_size
+SAY "必要ブロック数: " + required_blocks + " 個"
+
+# インベントリ容量チェック
+if inventory_full {
+  SAY "⚠️ インベントリが満杯です"
+  SAY "建築材料のためのスペースを確保してください"
+} else {
+  SAY "✅ インベントリに空きがあります"
+}
+
+# 環境チェック
+if is_night {
+  SAY "🌙 夜間建築 - 照明に注意してください"
+  SAY "光レベル: " + light_level + "/15"
+}
+
+if is_raining {
+  SAY "🌧️ 雨天での建築を開始します"
+}
+
+SAY "=== 建築開始 ==="
+
+repeat structure_size {
+  var row = _loop_index + 1
+  SAY "--- 行 " + row + "/" + structure_size + " を建築中 ---"
+  
+  repeat structure_size {
+    var col = _loop_index + 1
+    
+    # 建築座標計算
+    var build_x = start_x + (_loop_index)
+    var build_y = start_y
+    var build_z = start_z + (row - 1)
+    
+    # 安全性チェック
+    if is_in_danger {
+      SAY "⚠️ 危険状態検出！建築を中断します"
+      break
+    }
+    
+    # 体力チェック
+    if health_low {
+      SAY "⚠️ 体力低下！建築を中断します"
+      break
+    }
+    
+    # インベントリチェック
+    if inventory_full {
+      SAY "📦 インベントリが満杯です"
+      SAY "建築を一時停止 - アイテム整理が必要"
+      break
+    }
+    
+    # 建築位置への移動
+    goto build_x build_y build_z
+    SAY "位置 (" + build_x + ", " + build_y + ", " + build_z + ") に移動"
+    
+    # ブロック設置
+    place building_material build_x build_y build_z
+    blocks_placed = blocks_placed + 1
+    
+    SAY "ブロック設置 [" + row + "," + col + "] 完了 (" + blocks_placed + "/" + required_blocks + ")"
+    
+    # 進捗表示
+    var progress = (blocks_placed * 100) / required_blocks
+    if blocks_placed % 5 = 0 {
+      SAY "📊 進捗: " + progress + "% (" + blocks_placed + "/" + required_blocks + ")"
+      SAY "体力: " + health + "/20, 空腹度: " + food + "/20"
+      SAY "インベントリ: " + inventory_count + "/" + inventory_slots_total
+    }
+    
+    # 夜間の安全確認
+    if is_night and nearby_mobs > 0 {
+      SAY "🌙 夜間で敵対Mob " + nearby_mobs + "体を検出"
+      SAY "安全確認のため少し待機します"
+      wait 2
+    }
+    
+    # 空腹度チェック
+    if needs_food {
+      SAY "🍖 空腹度低下 - 食事をお勧めします"
+    }
+    
+    wait 1
+  }
+  
+  # 行完了報告
+  SAY "✅ 行 " + row + " 完了！"
+  
+  # 行間の小休憩
+  if row < structure_size {
+    SAY "次の行に移る前に状況確認..."
+    
+    # 材料チェック
+    if inventory_count < 5 {
+      SAY "⚠️ 材料が少なくなっています"
+      SAY "残りインベントリ: " + inventory_count + "スロット"
+    }
+    
+    wait 2
+  }
+}
+
+# 建築完了報告
+SAY "=== 建築完了 ==="
+SAY "設置ブロック数: " + blocks_placed + "/" + required_blocks
+
+if blocks_placed >= required_blocks {
+  SAY "🎉 建築完了！" + structure_size + "x" + structure_size + "の構造を完成させました"
+} else {
+  SAY "⚠️ 建築未完了 - " + (required_blocks - blocks_placed) + "ブロック不足"
+}
+
+# 最終状況報告
+SAY "=== 最終状況 ==="
+SAY "現在位置: (" + x + ", " + y + ", " + z + ")"
+SAY "体力: " + health + "/20"
+SAY "空腹度: " + food + "/20"
+SAY "インベントリ: " + inventory_count + "/" + inventory_slots_total
+
+# 建築後の推奨アクション
+if needs_food {
+  SAY "💡 推奨: 食事を取って体力を回復してください"
+}
+
+if inventory_count < 10 {
+  SAY "💡 推奨: 材料を補充してください"
+}
+
+if is_night {
+  SAY "💡 推奨: 夜間のため照明を設置することをお勧めします"
+}
+
+SAY "建築プロジェクト完了！お疲れ様でした！"

@@ -1,0 +1,111 @@
+# Smart Status Monitor Script
+# Author: system
+# Description: 高度なステータス監視スクリプト - Ability機能を活用してボットの状態を詳細監視
+
+SAY "=== スマートステータス監視開始 ==="
+
+var monitoring_cycles = 10
+var cycle_count = 0
+
+repeat monitoring_cycles {
+  cycle_count = cycle_count + 1
+  
+  SAY "=== 監視サイクル " + cycle_count + "/" + monitoring_cycles + " ==="
+  
+  # 基本生存情報の監視
+  SAY "【生存状況】"
+  SAY "体力: " + health + "/20 (" + (health * 5) + "%)"
+  SAY "空腹度: " + food + "/20 (" + (food * 5) + "%)"
+  SAY "酸素: " + oxygen + "/20"
+  SAY "経験値: Lv." + experience_level + " (" + experience_points + "pt)"
+  
+  # 危険状態の判定
+  if is_in_danger {
+    SAY "⚠️ 警告: 危険状態を検出！"
+    
+    if health_low {
+      SAY "  - 体力が危険レベル（10以下）"
+    }
+    
+    if hunger_low {
+      SAY "  - 空腹度が危険レベル（10以下）"
+    }
+    
+    if oxygen < 10 {
+      SAY "  - 酸素不足を検出"
+    }
+  } else {
+    SAY "✅ 安全: 生存状況は良好です"
+  }
+  
+  # 環境情報の表示
+  SAY "【環境状況】"
+  SAY "位置: (" + x + ", " + y + ", " + z + ")"
+  SAY "時刻: " + time_of_day + " " + (is_night ? "(夜間)" : "(昼間)")
+  SAY "天候: " + (is_raining ? "雨天" : "晴天")
+  SAY "光レベル: " + light_level + "/15"
+  
+  # 夜間・雨天時の警告
+  if is_night {
+    SAY "🌙 夜間です。敵対Mobに注意してください"
+  }
+  
+  if is_raining {
+    SAY "🌧️ 雨が降っています"
+  }
+  
+  # インベントリ状況
+  SAY "【インベントリ】"
+  SAY "使用: " + inventory_count + "/" + inventory_slots_total + " (空き: " + inventory_slots_empty + ")"
+  SAY "装備: " + equipped_item
+  
+  if inventory_full {
+    SAY "⚠️ インベントリ満杯！アイテム整理が必要"
+  } else {
+    var usage_percent = (inventory_count * 100) / inventory_slots_total
+    if usage_percent > 80 {
+      SAY "⚠️ インベントリ使用率: " + usage_percent + "%（整理推奨）"
+    } else {
+      SAY "✅ インベントリに十分な空きがあります"
+    }
+  }
+  
+  # 周囲の状況
+  SAY "【周辺情報】"
+  SAY "プレイヤー: " + nearby_players + "人"
+  SAY "敵対Mob: " + nearby_mobs + "体"
+  SAY "動物: " + nearby_animals + "匹"
+  
+  if nearby_mobs > 0 {
+    SAY "⚠️ 警告: 近くに敵対Mobがいます！"
+  }
+  
+  if nearby_players > 0 {
+    SAY "👥 他のプレイヤーが近くにいます"
+  }
+  
+  # 推奨アクション
+  SAY "【推奨アクション】"
+  
+  if needs_food {
+    SAY "🍖 食事を取ることをお勧めします"
+  }
+  
+  if health_low {
+    SAY "❤️ 体力回復アイテムの使用をお勧めします"
+  }
+  
+  if is_night and nearby_mobs > 0 {
+    SAY "🏠 安全な場所への避難をお勧めします"
+  }
+  
+  if inventory_full {
+    SAY "📦 不要なアイテムの整理をお勧めします"
+  }
+  
+  SAY "--- サイクル " + cycle_count + " 完了 ---"
+  wait 5
+}
+
+SAY "=== スマートステータス監視終了 ==="
+SAY "合計 " + monitoring_cycles + " サイクルの監視を完了しました"

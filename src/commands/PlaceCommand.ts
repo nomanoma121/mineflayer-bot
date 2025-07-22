@@ -1,10 +1,12 @@
 import { Vec3 } from "vec3";
 import type { Bot } from "../core/Bot";
+import { PlaceState } from "../states/PlaceState";
 import type { ICommand } from "./ICommand";
 
 /**
  * ブロック設置コマンドクラス
  * 指定されたアイテムを指定された座標に設置する
+ * PlaceStateを使用してステートパターンでブロック設置を管理
  */
 export class PlaceCommand implements ICommand {
 	/**
@@ -60,20 +62,6 @@ export class PlaceCommand implements ICommand {
 				return;
 			}
 
-			// アイテムをインベントリから検索
-			const item = bot.mc.inventory
-				.items()
-				.find(
-					(item) =>
-						item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-						item.displayName.toLowerCase().includes(itemName.toLowerCase()),
-				);
-
-			if (!item) {
-				bot.sendMessage(`アイテム「${itemName}」が見つかりません。`);
-				return;
-			}
-
 			// 設置位置の距離チェック
 			const distance = bot.mc.entity.position.distanceTo(targetPosition);
 			if (distance > 6) {
@@ -83,37 +71,26 @@ export class PlaceCommand implements ICommand {
 				return;
 			}
 
-			// 設置位置が空いているかチェック
-			const blockAtPosition = bot.mc.blockAt(targetPosition);
-			if (blockAtPosition && blockAtPosition.name !== "air") {
-				bot.sendMessage(
-					`設置位置 (${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z}) には既にブロックがあります。`,
-				);
-				return;
-			}
-
-			// 設置する面を見つける（設置位置の下のブロック）
-			const referenceBlock = bot.mc.blockAt(targetPosition.offset(0, -1, 0));
-			if (!referenceBlock || referenceBlock.name === "air") {
-				bot.sendMessage("設置する面が見つかりません。");
-				return;
-			}
-
-			bot.sendMessage(
-				`${item.displayName} を設置します... (${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z})`,
+			// PlaceStateを作成してボットの状態を変更
+			const placeState = new PlaceState(
+				bot,
+				targetPosition,
+				itemName,
+				() => {
+					console.log(
+						`[${bot.getName()}] Place operation completed successfully`,
+					);
+				},
+				(error: Error) => {
+					console.error(`[${bot.getName()}] Place operation failed:`, error);
+				},
 			);
 
-			// アイテムを装備
-			await bot.mc.equip(item, "hand");
-
-			// ブロックを設置
-			await bot.mc.placeBlock(referenceBlock, new Vec3(0, 1, 0));
-
-			bot.sendMessage(`${item.displayName} を設置しました！`);
+			await bot.changeState(placeState);
 		} catch (error) {
 			console.error(`[${bot.getName()}] Error in place command:`, error);
 			bot.sendMessage(
-				`設置中にエラーが発生しました: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`設置コマンド実行中にエラーが発生しました: ${error instanceof Error ? error.message : "Unknown error"}`,
 			);
 		}
 	}

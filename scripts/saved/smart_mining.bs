@@ -1,0 +1,103 @@
+# Smart Mining Script
+# Author: system
+# Description: スマート採掘スクリプト - インベントリ管理と体力監視を組み込んだ安全な採掘
+
+SAY "=== スマート採掘システム開始 ==="
+
+var target_blocks = 30
+var blocks_mined = 0
+var safety_checks = 0
+
+SAY "目標: " + target_blocks + "ブロック採掘"
+SAY "開始位置: (" + x + ", " + y + ", " + z + ")"
+
+repeat target_blocks {
+  safety_checks = safety_checks + 1
+  
+  # 安全性チェック（10回ごと）
+  if safety_checks % 10 = 0 {
+    SAY "=== 安全性チェック ==="
+    
+    if is_in_danger {
+      SAY "⚠️ 危険状態検出！採掘を中断します"
+      break
+    }
+    
+    if health_low {
+      SAY "⚠️ 体力低下！採掘を中断します"
+      SAY "現在体力: " + health + "/20"
+      break
+    }
+    
+    if needs_food {
+      SAY "🍖 空腹度低下！食事が必要です"
+      SAY "現在空腹度: " + food + "/20"
+    }
+  }
+  
+  # インベントリチェック
+  if inventory_full {
+    SAY "📦 インベントリが満杯です"
+    SAY "採掘を一時停止します"
+    SAY "不要なアイテムを整理するか、チェストに保管してください"
+    break
+  }
+  
+  # インベントリ使用率の警告
+  var usage_percent = (inventory_count * 100) / inventory_slots_total
+  if usage_percent > 90 {
+    SAY "⚠️ インベントリ使用率: " + usage_percent + "%"
+  }
+  
+  # 実際の採掘
+  dig "stone"
+  blocks_mined = blocks_mined + 1
+  
+  # 進捗報告
+  if blocks_mined % 5 = 0 {
+    SAY "進捗: " + blocks_mined + "/" + target_blocks + " (" + ((blocks_mined * 100) / target_blocks) + "%)"
+    SAY "体力: " + health + "/20, 空腹度: " + food + "/20"
+    SAY "インベントリ: " + inventory_count + "/" + inventory_slots_total
+  }
+  
+  # 夜間チェック
+  if is_night and nearby_mobs > 0 {
+    SAY "🌙 夜間で敵対Mobが近くにいます"
+    SAY "採掘を一時停止し、安全を確保してください"
+    wait 3
+  }
+  
+  # 酸素レベルチェック（水中採掘時）
+  if oxygen < 15 {
+    SAY "💨 酸素レベル低下: " + oxygen + "/20"
+    if oxygen < 5 {
+      SAY "⚠️ 緊急！酸素不足！水面に上がってください"
+      break
+    }
+  }
+  
+  wait 1
+}
+
+# 採掘結果の報告
+SAY "=== 採掘完了 ==="
+SAY "採掘ブロック数: " + blocks_mined + "/" + target_blocks
+
+if blocks_mined >= target_blocks {
+  SAY "✅ 目標達成！全ての採掘を完了しました"
+} else {
+  SAY "⚠️ 目標未達成 - 安全上の理由で採掘を中断しました"
+}
+
+SAY "最終位置: (" + x + ", " + y + ", " + z + ")"
+SAY "最終体力: " + health + "/20"
+SAY "最終空腹度: " + food + "/20"
+SAY "最終インベントリ: " + inventory_count + "/" + inventory_slots_total
+
+if inventory_full {
+  SAY "💡 提案: インベントリが満杯です。アイテムを整理してください"
+}
+
+if health_low or needs_food {
+  SAY "💡 提案: 体力・空腹度の回復をお勧めします"
+}
