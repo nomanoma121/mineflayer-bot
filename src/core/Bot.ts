@@ -37,7 +37,7 @@ export class Bot {
 	private mcData: mcData.IndexedData;
 	private abilityManager: AbilityManager;
 	private lastMessageTime: number = 0;
-	private messageInterval: number = 0.2; // デフォルト0.5秒間隔
+	private messageInterval: number = 200; // デフォルト0.2秒間隔（ミリ秒）
 	private messageQueue: Array<{
 		message: string;
 		timestamp: number;
