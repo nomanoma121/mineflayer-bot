@@ -36,15 +36,6 @@ export class Bot {
 	private hungerNotificationSent: boolean = false;
 	private mcData: mcData.IndexedData;
 	private abilityManager: AbilityManager;
-	private lastMessageTime: number = 0;
-	private messageInterval: number = 200; // デフォルト0.2秒間隔（ミリ秒）
-	private messageQueue: Array<{
-		message: string;
-		timestamp: number;
-		forceImmediate: boolean;
-	}> = [];
-	private messageQueueTimer: NodeJS.Timeout | null = null;
-	private readonly maxQueueSize = 50; // 最大キューサイズ
 
 	constructor(options: BotOptions) {
 		this.options = options;
@@ -85,17 +76,14 @@ export class Bot {
 
 		this.mc.on("error", (err) => {
 			console.error(`Bot ${this.options.username} encountered an error:`, err);
-			this.cleanup();
 		});
 
 		this.mc.on("end", (reason) => {
 			console.log(`Bot ${this.options.username} disconnected: ${reason}`);
-			this.cleanup();
 		});
 
 		this.mc.on("kicked", (reason) => {
 			console.log(`Bot ${this.options.username} was kicked: ${reason}`);
-			this.cleanup();
 		});
 
 		this.mc.on("spawn", async () => {
@@ -180,47 +168,10 @@ export class Bot {
 	}
 
 	/**
-	 * チャットメッセージを送信（間隔制御付き）
-	 * @param message - 送信するメッセージ
-	 * @param forceImmediate - 強制的に即座に送信するかどうか
-	 */
-	public sendMessage(message: string, forceImmediate: boolean = false): void {
-		const currentTime = Date.now();
-
-		// 強制即座送信の場合
-		if (forceImmediate) {
-			this.sendMessageDirect(message);
-			this.lastMessageTime = currentTime;
-			return;
-		}
-
-		// 間隔チェック
-		if (currentTime - this.lastMessageTime < this.messageInterval) {
-			// キューサイズ制限チェック
-			if (this.messageQueue.length >= this.maxQueueSize) {
-				console.warn(`[${this.options.username}] Message queue full (${this.maxQueueSize}), dropping oldest message`);
-				this.messageQueue.shift(); // 古いメッセージを削除
-			}
-			
-			// キューに追加
-			this.messageQueue.push({
-				message,
-				timestamp: currentTime,
-				forceImmediate,
-			});
-			this.processMessageQueue();
-		} else {
-			// 即座に送信
-			this.sendMessageDirect(message);
-			this.lastMessageTime = currentTime;
-		}
-	}
-
-	/**
-	 * メッセージを直接送信（内部用）
+	 * チャットメッセージを送信
 	 * @param message - 送信するメッセージ
 	 */
-	private sendMessageDirect(message: string): void {
+	public sendMessage(message: string): void {
 		try {
 			this.mc.chat(message);
 		} catch (error) {
@@ -228,38 +179,6 @@ export class Bot {
 		}
 	}
 
-	/**
-	 * メッセージキューを処理
-	 */
-	private processMessageQueue(): void {
-		if (this.messageQueueTimer || this.messageQueue.length === 0) return;
-
-		const nextMessage = this.messageQueue[0];
-		const currentTime = Date.now();
-		const timeSinceLastMessage = currentTime - this.lastMessageTime;
-
-		if (timeSinceLastMessage >= this.messageInterval) {
-			// 送信可能
-			this.messageQueue.shift();
-			this.sendMessageDirect(nextMessage.message);
-			this.lastMessageTime = currentTime;
-
-			// 次のメッセージがある場合は再帰処理
-			if (this.messageQueue.length > 0) {
-				this.messageQueueTimer = setTimeout(() => {
-					this.messageQueueTimer = null;
-					this.processMessageQueue();
-				}, this.messageInterval);
-			}
-		} else {
-			// 待機が必要
-			const delay = this.messageInterval - timeSinceLastMessage;
-			this.messageQueueTimer = setTimeout(() => {
-				this.messageQueueTimer = null;
-				this.processMessageQueue();
-			}, delay);
-		}
-	}
 
 	/**
 	 * 現在の位置を取得
@@ -475,54 +394,5 @@ export class Bot {
 		await this.mc.pathfinder.goto(goal);
 	}
 
-	/**
-	 * メッセージ送信間隔を設定
-	 * @param intervalMs ミリ秒単位の間隔
-	 */
-	public setMessageInterval(intervalMs: number): void {
-		this.messageInterval = Math.max(100, intervalMs); // 最小100ms
-	}
 
-	/**
-	 * 現在のメッセージ送信間隔を取得
-	 * @returns ミリ秒単位の間隔
-	 */
-	public getMessageInterval(): number {
-		return this.messageInterval;
-	}
-
-	/**
-	 * メッセージキューをクリア
-	 */
-	public clearMessageQueue(): void {
-		this.messageQueue = [];
-		if (this.messageQueueTimer) {
-			clearTimeout(this.messageQueueTimer);
-			this.messageQueueTimer = null;
-		}
-	}
-
-	/**
-	 * 現在のメッセージキューの状態を取得
-	 * @returns キューに残っているメッセージ数
-	 */
-	public getMessageQueueSize(): number {
-		return this.messageQueue.length;
-	}
-
-	/**
-	 * Bot終了時のクリーンアップ処理
-	 */
-	private cleanup(): void {
-		// メッセージキューのタイマーをクリア
-		if (this.messageQueueTimer) {
-			clearTimeout(this.messageQueueTimer);
-			this.messageQueueTimer = null;
-		}
-		
-		// メッセージキューをクリア
-		this.messageQueue = [];
-		
-		console.log(`Bot ${this.options.username} cleaned up resources.`);
-	}
 }
