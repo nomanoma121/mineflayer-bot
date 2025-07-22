@@ -47,7 +47,7 @@ export class SayAbility implements IAbility {
 		if (!this.bot) return;
 
 		const whisperMessage = `/msg ${player} ${message}`;
-		this.bot.sendMessage(whisperMessage);
+		this.bot.sendMessage(whisperMessage, false);
 		this.addToHistory(`[Whisper to ${player}] ${message}`);
 	}
 
