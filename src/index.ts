@@ -1,27 +1,18 @@
 import { config } from "dotenv";
 import { AbilityTestCommand } from "./commands/AbilityTestCommand";
-import { AttackCommand } from "./commands/AttackCommand";
 import { ComeCommand } from "./commands/ComeCommand";
 import { DigCommand } from "./commands/DigCommand";
 import { DropCommand } from "./commands/DropCommand";
 import { EquipCommand } from "./commands/EquipCommand";
-import { ExplorerCommand } from "./commands/ExplorerCommand";
-import { FarmerCommand } from "./commands/FarmerCommand";
 import { GiveCommand } from "./commands/GiveCommand";
 import { GotoCommand } from "./commands/GotoCommand";
-import { HomeCommand } from "./commands/HomeCommand";
-import { IdleCommand } from "./commands/IdleCommand";
 import { InventoryCommand } from "./commands/InventoryCommand";
 import { KillCommand } from "./commands/KillCommand";
-import { LumberjackCommand } from "./commands/LumberjackCommand";
-import { MinerCommand } from "./commands/MinerCommand";
 import { PlaceCommand } from "./commands/PlaceCommand";
 import { ScriptCommand } from "./commands/ScriptCommand";
 import { ServantCommand } from "./commands/ServantCommand";
-import { SetHomeCommand } from "./commands/SetHomeCommand";
 import { SetRespawnCommand } from "./commands/SetRespawnCommand";
 import { StopCommand } from "./commands/StopCommand";
-import { WanderCommand } from "./commands/WanderCommand";
 import { Bot, type BotOptions } from "./core/Bot";
 import { CommandHandler } from "./core/CommandHandler";
 import { ScriptManager } from "./interpreter/manager/ScriptManager";
@@ -55,26 +46,15 @@ async function main(): Promise<void> {
 
 		// 基本コマンドを登録
 		commandHandler.registerCommand("stop", new StopCommand());
-		commandHandler.registerCommand("idle", new IdleCommand());
 		commandHandler.registerCommand("servant", new ServantCommand());
 
 		// 移動・ナビゲーション機能コマンドを登録
 		commandHandler.registerCommand("come", new ComeCommand());
 		commandHandler.registerCommand("goto", new GotoCommand());
-		commandHandler.registerCommand("sethome", new SetHomeCommand());
-		commandHandler.registerCommand("home", new HomeCommand());
-
-		// 新しい高度なモードコマンドを登録
-		commandHandler.registerCommand("wander", new WanderCommand());
-		commandHandler.registerCommand("lumberjack", new LumberjackCommand());
-		commandHandler.registerCommand("explorer", new ExplorerCommand());
-		commandHandler.registerCommand("farmer", new FarmerCommand());
-		commandHandler.registerCommand("miner", new MinerCommand());
 
 		// ワールド操作・作業機能コマンドを登録
 		commandHandler.registerCommand("dig", new DigCommand());
 		commandHandler.registerCommand("place", new PlaceCommand());
-		commandHandler.registerCommand("attack", new AttackCommand());
 		commandHandler.registerCommand("kill", new KillCommand());
 		commandHandler.registerCommand("setrespawn", new SetRespawnCommand());
 
