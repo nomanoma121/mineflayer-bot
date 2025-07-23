@@ -1,0 +1,55 @@
+# Treasure Hunt Script
+# Author: system
+# Description: 宝探しスクリプト - ランダムな場所を探索して鉱石を探す
+
+var start_x = bot_x
+var start_y = bot_y
+var start_z = bot_z
+var found_treasures = 0
+
+say "🏴‍☠️ 宝探し開始！"
+say "開始地点: (" + start_x + ", " + start_y + ", " + start_z + ")"
+
+repeat 10 {
+  var search_num = _loop_index + 1
+  say "== 探索 " + search_num + "/10 =="
+  
+  # ランダムな座標を生成（-50から+50の範囲）
+  var rand_x = start_x + ((_loop_index * 17) % 101) - 50
+  var rand_z = start_z + ((_loop_index * 23) % 101) - 50
+  var target_y = start_y - 10
+  
+  say "📍 目標座標: (" + rand_x + ", " + target_y + ", " + rand_z + ")"
+  
+  goto rand_x target_y rand_z
+  wait 2
+  
+  say "🔍 周辺を調査中..."
+  
+  # 周辺のブロックを掘って探索
+  var local_x = 0
+  repeat 3 {
+    dig
+    wait 1
+    
+    # 宝物判定（単純な乱数シミュレーション）
+    if (_loop_index + local_x) % 7 == 0 {
+      set found_treasures = found_treasures + 1
+      say "💎 宝物発見！ 総発見数: " + found_treasures
+    } else {
+      say "💨 何もありませんでした..."
+    }
+    
+    set local_x = local_x + 1
+  }
+  
+  wait 1
+}
+
+say "🎉 宝探し完了！"
+say "📊 結果: " + found_treasures + "個の宝物を発見しました"
+
+# ホームポジションに戻る
+say "🏠 開始地点に戻ります..."
+goto start_x start_y start_z
+say "探索お疲れ様でした！"

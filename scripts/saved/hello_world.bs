@@ -2,15 +2,15 @@
 # Author: system
 # Description: 初心者向けの挨拶スクリプト - BotScriptの動作確認用
 
-SAY "こんにちは、世界！"
-WAIT 1
-SAY "私はBotScriptで動いています"
-WAIT 1
-SAY "!load でこのスクリプトを実行できます"
-WAIT 1
-SAY "BotScriptへようこそ！"
+say "こんにちは、世界！"
+wait 1
+say "私はBotScriptで動いています"
+wait 1
+say "@bot script run でこのスクリプトを実行できます"
+wait 1
+say "BotScriptへようこそ！"
 
-REPEAT 10 
-  SAY "これは繰り返しメッセージです"
-  WAIT 1
-ENDREPEAT
+repeat 10 {
+  say "これは繰り返しメッセージです"
+  wait 1
+}

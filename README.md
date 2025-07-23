@@ -30,130 +30,125 @@ npm start
 
 BotScriptは、Minecraftのチャット経由でボットに複雑な操作をさせることができるスクリプト言語です。
 
-**注意：BotScript機能はデフォルトで有効です。**
-
 ### 基本的な使い方
 
-#### 単発コマンド実行
+#### スクリプト管理コマンド
 ```
-!script SAY "Hello World"
-```
-
-#### 複数行スクリプト
-```
-!mscript
-DEF $count = 1
-REPEAT 3
-  SAY "カウント: $count"
-  DEF $count = $count + 1
-ENDREPEAT
-!end
+@bot script run <name>         # 保存済みスクリプトを実行
+@bot script eval <code>        # インラインコードを実行
+@bot script save <name> <code> # スクリプトを保存
+@bot script list              # 保存済みスクリプト一覧
+@bot script help              # ヘルプを表示
+@bot script status            # 実行状態を確認
+@bot script stop              # 実行中のスクリプトを停止
 ```
 
-### BotScript管理（オプション）
-
-必要に応じて機能の有効/無効を切り替えられます：
-
-```
-@Bot botscript enable     # BotScript機能を有効化（デフォルトで有効）
-@Bot botscript disable    # BotScript機能を無効化
-@Bot botscript status     # 現在の状態を確認
-@Bot botscript help       # ヘルプを表示
-```
-
-### BotScript言語仕様
+### BotScript言語仕様（推奨：小文字形式）
 
 #### 基本構文
 
-**変数定義と操作**
+**変数宣言と代入**
 ```
-DEF $name = "Bot"        # 文字列
-DEF $count = 10          # 数値
-DEF $flag = true         # ブール値
-```
-
-**制御構文**
-```
-IF $count > 5 THEN
-  SAY "大きい数です"
-ELSE
-  SAY "小さい数です"
-ENDIF
-
-REPEAT 5
-  SAY "繰り返し処理"
-ENDREPEAT
+var name = "Bot"           # 変数宣言
+var count = 10             # 数値
+var flag = true            # 真偽値
+set count = count + 1      # 変数代入
 ```
 
-**コメント**
+**制御構造**
 ```
-# これはコメントです
-DEF $x = 100  # 行末コメント
+if count > 5 {
+  say "大きい数です"
+} else {
+  say "小さい数です"
+}
+
+repeat 5 {
+  say "繰り返し処理 " + _loop_index
+  wait 1
+}
+```
+
+#### データ型
+
+- **数値**: `10`, `3.14`, `-5`
+- **文字列**: `"こんにちは"`, `""`
+- **真偽値**: `true`, `false`
+
+#### 演算子
+
+**算術演算子**
+```
+var result = 10 + 5    # 加算
+var result = 10 - 5    # 減算
+var result = 10 * 5    # 乗算
+var result = 10 / 5    # 除算
+```
+
+**比較演算子**
+```
+if x == 10 { ... }     # 等しい
+if x != 10 { ... }     # 等しくない
+if x < 10 { ... }      # 小さい
+if x > 10 { ... }      # 大きい
+if x <= 10 { ... }     # 以下
+if x >= 10 { ... }     # 以上
+```
+
+**論理演算子**
+```
+if x > 5 AND x < 15 { ... }  # 論理積
+if x < 5 OR x > 15 { ... }   # 論理和
+if NOT flag { ... }          # 論理否定
 ```
 
 #### 利用可能なコマンド
 
 | コマンド | 使用例 | 説明 |
 |---------|--------|------|
-| `SAY` | `SAY "メッセージ"` | チャットでメッセージを送信 |
-| `MOVE` | `MOVE 10 64 20` | 指定座標に移動 |
-| `GOTO` | `GOTO 100 65 -50` | 指定座標に移動（パスファインディング） |
-| `ATTACK` | `ATTACK "zombie"` | 指定エンティティを攻撃 |
-| `DIG` | `DIG 10 64 20` | 指定座標のブロックを破壊 |
-| `PLACE` | `PLACE "stone" 10 64 20` | 指定座標にブロックを設置 |
-| `EQUIP` | `EQUIP "diamond_sword"` | アイテムを装備 |
-| `DROP` | `DROP "dirt" 10` | アイテムをドロップ |
-| `WAIT` | `WAIT 3000` | 指定ミリ秒待機 |
+| `say` | `say "メッセージ"` | チャットでメッセージを送信 |
+| `goto` | `goto 100 64 200` | 指定座標に移動 |
+| `attack` | `attack "zombie"` | 指定エンティティを攻撃 |
+| `dig` | `dig "stone"` | ブロックを掘削 |
+| `place` | `place "stone" 10 64 20` | 指定座標にブロックを設置 |
+| `equip` | `equip "diamond_sword"` | アイテムを装備 |
+| `drop` | `drop "dirt" 10` | アイテムをドロップ |
+| `wait` | `wait 5` | 指定秒数待機 |
 
-#### システム変数（読み取り専用）
+#### 組み込み変数
 
+**システム変数（読み取り専用）**
 ```
-bot_x, bot_y, bot_z      # ボットの現在位置
-bot_health               # ボットの体力
-bot_food                 # ボットの満腹度
-bot_inventory_count      # インベントリのアイテム数
+bot_name                 # ボット名
+version                  # バージョン
+pi                       # 円周率
 timestamp                # 現在のタイムスタンプ
 ```
 
-### チャットコマンド
-
-#### スクリプト実行
+**動的システム変数（実行時更新）**
 ```
-!script <コード>         # 単発実行
-!mscript                 # 複数行スクリプト開始
-!end                     # 複数行スクリプト終了・実行
-!stop                    # 実行中のスクリプトを停止
-!status                  # 実行状態を確認
+bot_health               # ボットの体力
+bot_food                 # ボットの満腹度
+bot_x, bot_y, bot_z      # ボットの現在座標
+bot_inventory_count      # インベントリのアイテム数
 ```
 
-#### 変数・セッション管理
+**ループ変数**
 ```
-!list                    # 現在の変数一覧を表示
-!clear                   # 全変数をクリア
-!save <名前>             # スクリプトを保存
-!load <名前>             # 保存済みスクリプトを読み込み
-!load                    # 保存済みスクリプト一覧を表示
+_loop_index              # REPEATループ内の現在のインデックス（0から開始）
 ```
 
 #### スクリプトファイル
-BotScriptは`.bs`ファイル形式でも保存・実行できます：
+BotScriptは`.bs`ファイル形式で保存・実行できます：
 
 ```bash
 # scripts/saved/フォルダに.bsファイルを配置
-echo '# My Script
-SAY "Hello from file!"
-WAIT 1000' > scripts/saved/my_script.bs
+echo 'say "Hello from file!"
+wait 1
+say "BotScript実行中"' > scripts/saved/my_script.bs
 
 # ゲーム内で実行
-!load my_script
-```
-
-#### BotScript管理（オプション）
-```
-@Bot botscript enable    # BotScript機能を有効化（デフォルトで有効）
-@Bot botscript disable   # BotScript機能を無効化
-@Bot botscript status    # 現在の状態を確認
-@Bot botscript help      # ヘルプを表示
+@bot script run my_script
 ```
 
 ## 🎮 通常のボットコマンド
@@ -218,47 +213,65 @@ const options = {
 
 ## 📝 スクリプト例
 
-### 自動建築
+### 基本的な挨拶スクリプト
 ```
-!mscript
-# 5x5の石の床を作る
-DEF $x = 0
-REPEAT 5
-  DEF $z = 0
-  REPEAT 5
-    PLACE "stone" $x 64 $z
-    DEF $z = $z + 1
-  ENDREPEAT
-  DEF $x = $x + 1
-ENDREPEAT
-SAY "建築完了！"
-!end
+say "こんにちは！"
+wait 1
+say "私はBotScriptで動いています"
+
+var count = 0
+repeat 3 {
+  set count = count + 1
+  say "カウント: " + count
+  wait 1
+}
+
+say "終了します"
 ```
 
-### 条件分岐での行動
+### 条件分岐での体力管理
 ```
-!mscript
-IF bot_health < 10 THEN
-  SAY "体力が低いです！"
-  EQUIP "food"
-ELSE
-  SAY "体力は十分です"
-  GOTO 100 65 100
-ENDIF
-!end
+var health = bot_health
+
+if health < 10 {
+  say "危険！体力が少ないです"
+  equip "apple"
+} else {
+  if health < 15 {
+    say "体力がやや少ないです"
+  } else {
+    say "体力は十分です"
+  }
+}
 ```
 
-### ループでの採掘
+### ループでの座標移動
 ```
-!mscript
-DEF $y = 64
-REPEAT 10
-  DIG 100 $y -50
-  WAIT 1000
-  DEF $y = $y - 1
-ENDREPEAT
-SAY "採掘完了！"
-!end
+say "パトロール開始"
+
+repeat 4 {
+  say "ポイント " + (_loop_index + 1) + " に移動中"
+  goto (100 + _loop_index * 10) 64 200
+  wait 2
+  say "到着しました"
+}
+
+say "パトロール完了"
+```
+
+### 変数と演算の活用
+```
+var base_x = 100
+var base_y = 64
+var base_z = 200
+
+var distance = 10
+repeat 5 {
+  var new_x = base_x + distance * _loop_index
+  say "座標 " + new_x + " に移動します"
+  goto new_x base_y base_z
+  wait 1
+}
 ```
 
 ## 🐛 トラブルシューティング

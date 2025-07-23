@@ -2,21 +2,20 @@
 # Author: system  
 # Description: シンプルな採掘スクリプト - 前進しながら20ブロック採掘
 
-DEF $blocks = 0
-DEF $target_blocks = 20
+var blocks = 0
+var target_blocks = 20
 
-SAY "採掘を開始します！目標: " + $target_blocks + "ブロック"
+say "採掘を開始します！目標: " + target_blocks + "ブロック"
 
-REPEAT $target_blocks
-  DIG "forward"
-  MOVE "forward" 1
-  $blocks = $blocks + 1
+repeat target_blocks {
+  dig
+  set blocks = blocks + 1
   
-  IF $blocks % 5 = 0 THEN
-    SAY "進捗: " + $blocks + "/" + $target_blocks + " ブロック採掘完了"
-  ENDIF
+  if blocks % 5 == 0 {
+    say "進捗: " + blocks + "/" + target_blocks + " ブロック採掘完了"
+  }
   
-  WAIT 1
-ENDREPEAT
+  wait 1
+}
 
-SAY "採掘完了！合計 " + $blocks + " ブロックを採掘しました"
+say "採掘完了！合計 " + blocks + " ブロックを採掘しました"

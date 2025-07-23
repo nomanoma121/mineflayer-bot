@@ -1,0 +1,30 @@
+# Auto Builder Script
+# Author: system
+# Description: 自動建築スクリプト - 5x5の石の床を作成
+
+var start_x = bot_x
+var start_y = bot_y - 1
+var start_z = bot_z
+var size = 5
+
+say "5x5の石の床を建築します..."
+equip "stone"
+
+var x = 0
+repeat size {
+  var z = 0
+  repeat size {
+    var pos_x = start_x + x
+    var pos_z = start_z + z
+    
+    place "stone" pos_x start_y pos_z
+    say "ブロック設置: (" + pos_x + ", " + start_y + ", " + pos_z + ")"
+    
+    set z = z + 1
+    wait 0.5
+  }
+  set x = x + 1
+  say "列 " + (x) + "/" + size + " 完了"
+}
+
+say "建築完了！" + (size * size) + "個のブロックを設置しました"
