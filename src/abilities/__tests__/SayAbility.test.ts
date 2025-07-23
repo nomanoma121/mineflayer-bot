@@ -43,7 +43,7 @@ describe("SayAbility", () => {
 	describe("basic messaging", () => {
 		it("should send basic message", () => {
 			sayAbility.say("Hello, world!");
-			expect(bot.sendMessage).toHaveBeenCalledWith("Hello, world!", false);
+			expect(bot.sendMessage).toHaveBeenCalledWith("Hello, world!");
 		});
 
 		it("should track message history", () => {
@@ -71,7 +71,6 @@ describe("SayAbility", () => {
 			sayAbility.reportStatus("Operating normally");
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"[状況報告] Operating normally",
-				false,
 			);
 		});
 
@@ -79,7 +78,6 @@ describe("SayAbility", () => {
 			sayAbility.reportError("Something went wrong");
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"[エラー] Something went wrong",
-				false,
 			);
 		});
 
@@ -87,60 +85,44 @@ describe("SayAbility", () => {
 			sayAbility.reportSuccess("Task completed");
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"[成功] Task completedが完了しました",
-				false,
 			);
 		});
 
 		it("should send warning report", () => {
 			sayAbility.reportWarning("Low health");
-			expect(bot.sendMessage).toHaveBeenCalledWith("[警告] Low health", false);
+			expect(bot.sendMessage).toHaveBeenCalledWith("[警告] Low health");
 		});
 
 		it("should send info report", () => {
 			sayAbility.reportInfo("Current status");
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"[情報] Current status",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("[情報] Current status");
 		});
 	});
 
 	describe("social interactions", () => {
 		it("should greet specific player", () => {
 			sayAbility.greet("Alice");
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"こんにちは、Aliceさん！",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("こんにちは、Aliceさん！");
 		});
 
 		it("should greet generally", () => {
 			sayAbility.greet();
-			expect(bot.sendMessage).toHaveBeenCalledWith("こんにちは！", false);
+			expect(bot.sendMessage).toHaveBeenCalledWith("こんにちは！");
 		});
 
 		it("should say farewell to specific player", () => {
 			sayAbility.farewell("Bob");
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"さようなら、Bobさん！",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("さようなら、Bobさん！");
 		});
 
 		it("should thank specific player", () => {
 			sayAbility.thank("Charlie");
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"ありがとう、Charlieさん！",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("ありがとう、Charlieさん！");
 		});
 
 		it("should apologize to specific player", () => {
 			sayAbility.apologize("Dave");
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"すみません、Daveさん",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("すみません、Daveさん");
 		});
 	});
 
@@ -189,7 +171,6 @@ describe("SayAbility", () => {
 			sayAbility.whisper("target_player", "secret message");
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"/msg target_player secret message",
-				false,
 			);
 		});
 
@@ -282,7 +263,6 @@ describe("SayAbility", () => {
 			sayAbility.reportPosition();
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"現在位置: X=100, Y=64, Z=-200",
-				false,
 			);
 		});
 
@@ -290,7 +270,6 @@ describe("SayAbility", () => {
 			sayAbility.reportHealth();
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"体力: 15/20, 空腹度: 18/20",
-				false,
 			);
 		});
 
@@ -298,21 +277,17 @@ describe("SayAbility", () => {
 			sayAbility.reportInventory();
 			expect(bot.sendMessage).toHaveBeenCalledWith(
 				"インベントリ: 2個のアイテム, 空きスロット: 5",
-				false,
 			);
 		});
 
 		it("should report time", () => {
 			sayAbility.reportTime();
-			expect(bot.sendMessage).toHaveBeenCalledWith(
-				"現在の時刻: 昼 (6000)",
-				false,
-			);
+			expect(bot.sendMessage).toHaveBeenCalledWith("現在の時刻: 昼 (6000)");
 		});
 
 		it("should report weather", () => {
 			sayAbility.reportWeather();
-			expect(bot.sendMessage).toHaveBeenCalledWith("天候: 晴れ", false);
+			expect(bot.sendMessage).toHaveBeenCalledWith("天候: 晴れ");
 		});
 	});
 
@@ -324,13 +299,13 @@ describe("SayAbility", () => {
 
 		it("should handle empty messages", () => {
 			sayAbility.say("");
-			expect(bot.sendMessage).toHaveBeenCalledWith("", false);
+			expect(bot.sendMessage).toHaveBeenCalledWith("");
 		});
 
 		it("should handle very long messages", () => {
 			const longMessage = "a".repeat(1000);
 			sayAbility.say(longMessage);
-			expect(bot.sendMessage).toHaveBeenCalledWith(longMessage, false);
+			expect(bot.sendMessage).toHaveBeenCalledWith(longMessage);
 		});
 	});
 });
