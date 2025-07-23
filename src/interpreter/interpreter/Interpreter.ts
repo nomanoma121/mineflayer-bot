@@ -678,11 +678,53 @@ export class Interpreter {
    * システム変数を更新
    */
   private updateSystemVariables(): void {
+    const position = this.bot.getPosition();
+    const yaw = this.bot.mc.entity?.yaw || 0;
+    const pitch = this.bot.mc.entity?.pitch || 0;
+    const timeOfDay = this.bot.mc.time?.timeOfDay || 0;
+    const isDay = timeOfDay < 12300 || timeOfDay > 23850; // Minecraft day/night cycle
+    const isNight = !isDay;
+    
+    // 天気情報の取得（基本実装）
+    const isRaining = this.bot.mc.isRaining || false;
+    const isThundering = this.bot.mc.thunderState > 0;
+    let weather = 'clear';
+    if (isThundering) {
+      weather = 'thunder';
+    } else if (isRaining) {
+      weather = 'rain';
+    }
+    
+    // ディメンション情報
+    const dimension = this.bot.mc.dimension || 'overworld';
+    
+    // 近くのエンティティ数をカウント
+    const nearbyEntities = Object.values(this.bot.mc.entities || {});
+    const nearbyPlayers = nearbyEntities.filter(entity => 
+      entity.type === 'player' && entity.position && 
+      entity.position.distanceTo(this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 }) <= 16
+    );
+    const nearbyMobs = nearbyEntities.filter(entity => 
+      entity.type === 'mob' && entity.position &&
+      entity.position.distanceTo(this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 }) <= 16
+    );
+
     this.context.updateSystemVariables({
       health: this.bot.mc.health,
       food: this.bot.mc.food,
-      position: this.bot.getPosition(),
-      inventory_count: this.bot.getInventory().length
+      position: position,
+      inventory_count: this.bot.getInventory().length,
+      yaw: Math.round(yaw * 180 / Math.PI), // ラジアンから度に変換
+      pitch: Math.round(pitch * 180 / Math.PI),
+      experience: this.bot.mc.experience?.level || 0,
+      air: this.bot.mc.entity?.air || 300, // 水中の酸素値
+      time_of_day: timeOfDay,
+      is_day: isDay,
+      is_night: isNight,
+      weather: weather,
+      dimension: dimension,
+      nearby_players_count: nearbyPlayers.length,
+      nearby_mobs_count: nearbyMobs.length
     });
   }
 

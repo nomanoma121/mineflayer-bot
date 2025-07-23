@@ -1,14 +1,29 @@
 # Treasure Hunt Script
 # Author: system
-# Description: 宝探しスクリプト - ランダムな場所を探索して鉱石を探す
+# Description: 宝探しスクリプト - 環境変数を活用したスマート探索
 
 var start_x = bot_x
 var start_y = bot_y
 var start_z = bot_z
 var found_treasures = 0
 
-say "🏴‍☠️ 宝探し開始！"
+say "🏴‍☠️ スマート宝探し開始！"
 say "開始地点: (" + start_x + ", " + start_y + ", " + start_z + ")"
+say "現在の向き: " + bot_yaw + "° (Yaw)"
+
+# 環境チェック
+if is_night {
+  say "🌙 夜間探索 - 危険度が高いです"
+  if nearby_mobs_count > 0 {
+    say "⚠️ Mob " + nearby_mobs_count + "体が近くにいます！"
+  }
+} else {
+  say "☀️ 昼間探索 - 安全な環境です"
+}
+
+if weather != "clear" {
+  say "🌧️ 天気: " + weather + " - 注意して探索します"
+}
 
 repeat 10 {
   var search_num = _loop_index + 1

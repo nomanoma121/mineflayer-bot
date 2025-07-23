@@ -315,6 +315,17 @@ export class ExecutionContext {
     food?: number;
     position?: { x: number; y: number; z: number };
     inventory_count?: number;
+    yaw?: number;
+    pitch?: number;
+    experience?: number;
+    air?: number;
+    time_of_day?: number;
+    is_day?: boolean;
+    is_night?: boolean;
+    weather?: string;
+    dimension?: string;
+    nearby_players_count?: number;
+    nearby_mobs_count?: number;
   }): void {
     // タイムスタンプを更新
     this.globalVariables.get('timestamp')!.value = Date.now();
@@ -354,6 +365,98 @@ export class ExecutionContext {
           this.globalVariables.get('bot_inventory_count')!.value = botData.inventory_count;
         } else {
           this.defineVariable('bot_inventory_count', botData.inventory_count, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 方向情報
+      if (botData.yaw !== undefined) {
+        if (this.hasVariable('bot_yaw')) {
+          this.globalVariables.get('bot_yaw')!.value = botData.yaw;
+        } else {
+          this.defineVariable('bot_yaw', botData.yaw, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.pitch !== undefined) {
+        if (this.hasVariable('bot_pitch')) {
+          this.globalVariables.get('bot_pitch')!.value = botData.pitch;
+        } else {
+          this.defineVariable('bot_pitch', botData.pitch, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 経験値とステータス
+      if (botData.experience !== undefined) {
+        if (this.hasVariable('bot_experience')) {
+          this.globalVariables.get('bot_experience')!.value = botData.experience;
+        } else {
+          this.defineVariable('bot_experience', botData.experience, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.air !== undefined) {
+        if (this.hasVariable('bot_air')) {
+          this.globalVariables.get('bot_air')!.value = botData.air;
+        } else {
+          this.defineVariable('bot_air', botData.air, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 時間・環境情報
+      if (botData.time_of_day !== undefined) {
+        if (this.hasVariable('time_of_day')) {
+          this.globalVariables.get('time_of_day')!.value = botData.time_of_day;
+        } else {
+          this.defineVariable('time_of_day', botData.time_of_day, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.is_day !== undefined) {
+        if (this.hasVariable('is_day')) {
+          this.globalVariables.get('is_day')!.value = botData.is_day;
+        } else {
+          this.defineVariable('is_day', botData.is_day, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.is_night !== undefined) {
+        if (this.hasVariable('is_night')) {
+          this.globalVariables.get('is_night')!.value = botData.is_night;
+        } else {
+          this.defineVariable('is_night', botData.is_night, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.weather !== undefined) {
+        if (this.hasVariable('weather')) {
+          this.globalVariables.get('weather')!.value = botData.weather;
+        } else {
+          this.defineVariable('weather', botData.weather, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.dimension !== undefined) {
+        if (this.hasVariable('dimension')) {
+          this.globalVariables.get('dimension')!.value = botData.dimension;
+        } else {
+          this.defineVariable('dimension', botData.dimension, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 周辺情報
+      if (botData.nearby_players_count !== undefined) {
+        if (this.hasVariable('nearby_players_count')) {
+          this.globalVariables.get('nearby_players_count')!.value = botData.nearby_players_count;
+        } else {
+          this.defineVariable('nearby_players_count', botData.nearby_players_count, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.nearby_mobs_count !== undefined) {
+        if (this.hasVariable('nearby_mobs_count')) {
+          this.globalVariables.get('nearby_mobs_count')!.value = botData.nearby_mobs_count;
+        } else {
+          this.defineVariable('nearby_mobs_count', botData.nearby_mobs_count, VariableScope.GLOBAL, true);
         }
       }
     }

@@ -1,0 +1,106 @@
+# Smart Guard Script  
+# Author: system
+# Description: スマート警備スクリプト - 時間と周辺状況に応じて警備行動
+
+say "🛡️ スマート警備システム開始"
+
+var base_x = bot_x
+var base_y = bot_y  
+var base_z = bot_z
+var patrol_radius = 8
+
+say "🏠 拠点設定: (" + base_x + ", " + base_y + ", " + base_z + ")"
+
+repeat 30 {
+  var patrol_count = _loop_index + 1
+  say "== 警備パトロール " + patrol_count + "/30 =="
+  
+  # 時間に応じた行動変更
+  if is_night {
+    say "🌙 夜間警備モード"
+    set patrol_radius = 6  # 夜は範囲を狭める
+    
+    if nearby_mobs_count > 0 {
+      say "⚠️ 夜間にMob " + nearby_mobs_count + "体を発見！"
+      if nearby_mobs_count > 2 {
+        say "🚨 多数のMob発見 - 拠点に後退します"
+        goto base_x base_y base_z
+        wait 2
+        continue  # 次のループへ
+      }
+    }
+  } else {
+    say "☀️ 昼間警備モード"  
+    set patrol_radius = 10  # 昼は範囲を広げる
+  }
+  
+  # 天気による行動調整
+  if weather == "thunder" {
+    say "⛈️ 雷雨のため屋内待機"
+    goto base_x base_y base_z
+    wait 5
+    continue
+  }
+  
+  # パトロールポイント計算（方角に基づく）
+  var angle = (_loop_index % 4) * 90  # 0, 90, 180, 270度
+  var offset_x = 0
+  var offset_z = 0
+  
+  if angle == 0 {    # 北
+    set offset_z = -patrol_radius
+    say "🧭 北方向へパトロール"
+  } else {
+    if angle == 90 {  # 東
+      set offset_x = patrol_radius
+      say "🧭 東方向へパトロール"
+    } else {
+      if angle == 180 { # 南
+        set offset_z = patrol_radius
+        say "🧭 南方向へパトロール"
+      } else {           # 西
+        set offset_x = -patrol_radius
+        say "🧭 西方向へパトロール"
+      }
+    }
+  }
+  
+  var target_x = base_x + offset_x
+  var target_z = base_z + offset_z
+  
+  # パトロールポイントへ移動
+  goto target_x base_y target_z
+  wait 2
+  
+  # 周辺チェック
+  if nearby_players_count > 0 {
+    say "👥 プレイヤー " + nearby_players_count + "人を確認"
+  }
+  
+  if nearby_mobs_count > 0 {
+    say "👹 Mob " + nearby_mobs_count + "体を発見"
+    
+    # 体力チェック
+    if bot_health < 15 {
+      say "⚠️ 体力不足 - 戦闘回避します"
+    } else {
+      say "⚔️ 警備のため攻撃態勢"
+      # 実際の攻撃コマンドは状況に応じて
+    }
+  }
+  
+  # 拠点に戻る
+  say "🏠 拠点に帰還"
+  goto base_x base_y base_z
+  wait 1
+  
+  # 次のパトロールまでの待機時間を時間に応じて調整
+  if is_night {
+    wait 4  # 夜は頻繁にチェック
+  } else {
+    wait 6  # 昼は余裕を持つ
+  }
+}
+
+say "🎯 警備任務完了"
+say "📍 最終位置: (" + bot_x + ", " + bot_y + ", " + bot_z + ")"

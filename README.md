@@ -115,26 +115,49 @@ if NOT flag { ... }          # 論理否定
 | `drop` | `drop "dirt" 10` | アイテムをドロップ |
 | `wait` | `wait 5` | 指定秒数待機 |
 
-#### 組み込み変数
+#### 組み込み変数（全て読み取り専用）
 
-**システム変数（読み取り専用）**
-```
-bot_name                 # ボット名
-version                  # バージョン
-pi                       # 円周率
-timestamp                # 現在のタイムスタンプ
+**基本情報**
+```bash
+bot_name                 # ボット名 ("BotScript")
+version                  # BotScriptバージョン ("1.0.0")
+pi                       # 円周率 (3.14159...)
+timestamp                # 現在のタイムスタンプ（実行時更新）
 ```
 
-**動的システム変数（実行時更新）**
-```
-bot_health               # ボットの体力
-bot_food                 # ボットの満腹度
-bot_x, bot_y, bot_z      # ボットの現在座標
+**ボット状態**
+```bash
+bot_health               # 体力値 (0-20)
+bot_food                 # 満腹度 (0-20)
+bot_experience           # 経験値レベル
+bot_air                  # 酸素値（水中時）
 bot_inventory_count      # インベントリのアイテム数
 ```
 
-**ループ変数**
+**位置・方向**
+```bash
+bot_x, bot_y, bot_z      # ボットの現在座標
+bot_yaw                  # 水平方向の向き（度、-180～180）
+bot_pitch                # 垂直方向の向き（度、-90～90）
 ```
+
+**環境情報**
+```bash
+time_of_day              # ゲーム内時刻 (0-24000)
+is_day                   # 昼間かどうか (true/false)
+is_night                 # 夜間かどうか (true/false)  
+weather                  # 天気 ("clear", "rain", "thunder")
+dimension                # 現在のディメンション ("overworld", "nether", "end")
+```
+
+**周辺情報**
+```bash
+nearby_players_count     # 16ブロック以内のプレイヤー数
+nearby_mobs_count        # 16ブロック以内のMob数
+```
+
+**ループ変数**
+```bash
 _loop_index              # REPEATループ内の現在のインデックス（0から開始）
 ```
 

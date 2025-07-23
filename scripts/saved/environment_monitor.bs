@@ -1,0 +1,75 @@
+# Environment Monitor Script
+# Author: system
+# Description: 環境情報監視スクリプト - 新しい組み込み変数を活用
+
+say "🌍 環境監視システム開始"
+
+repeat 15 {
+  var cycle = _loop_index + 1
+  say "== 監視サイクル " + cycle + "/15 =="
+  
+  # 基本ボット情報
+  say "📍 座標: (" + bot_x + ", " + bot_y + ", " + bot_z + ")"
+  say "🧭 向き: Yaw=" + bot_yaw + "° Pitch=" + bot_pitch + "°"
+  say "❤️ 体力: " + bot_health + "/20  🍖 満腹: " + bot_food + "/20"
+  
+  # 環境情報
+  var time_display = time_of_day
+  if is_day {
+    say "☀️ 昼間です (時刻: " + time_display + ")"
+  } else {
+    say "🌙 夜間です (時刻: " + time_display + ")"
+  }
+  
+  if weather == "clear" {
+    say "🌞 天気: 晴れ"
+  } else {
+    if weather == "rain" {
+      say "🌧️ 天気: 雨"
+    } else {
+      if weather == "thunder" {
+        say "⛈️ 天気: 雷雨"
+      }
+    }
+  }
+  
+  say "🌐 ディメンション: " + dimension
+  
+  # 周辺情報
+  var players = nearby_players_count
+  var mobs = nearby_mobs_count
+  
+  if players > 0 {
+    say "👥 近くのプレイヤー: " + players + "人"
+  } else {
+    say "👤 近くにプレイヤーはいません"
+  }
+  
+  if mobs > 0 {
+    say "👹 近くのMob: " + mobs + "体"
+    if mobs > 3 {
+      say "⚠️ 警告: Mobが多数います！"
+    }
+  } else {
+    say "🕊️ 近くにMobはいません"
+  }
+  
+  # 特殊状況の警告
+  if bot_health < 10 {
+    say "🚨 緊急: 体力が危険レベルです！"
+  }
+  
+  if bot_air < 200 {
+    say "💨 注意: 酸素が少なくなっています"
+  }
+  
+  if is_night AND mobs > 0 {
+    say "🌙👹 夜間でMobがいます - 警戒してください"
+  }
+  
+  say "---"
+  wait 3
+}
+
+say "🏁 環境監視完了"
+say "📊 レベル: " + bot_experience + " 🎒 アイテム: " + bot_inventory_count + "個"
