@@ -1,9 +1,6 @@
 # ベースとなるNode.js v18の軽量イメージを指定
 FROM node:18-alpine
 
-# pnpmをインストール
-RUN npm install -g pnpm
-
 # コンテナ内の作業ディレクトリを作成し、移動
 WORKDIR /usr/src/app
 
