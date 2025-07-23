@@ -44,7 +44,6 @@ export class Bot {
 		forceImmediate: boolean;
 	}> = [];
 	private messageQueueTimer: NodeJS.Timeout | null = null;
-	private readonly maxQueueSize = 50; // 最大キューサイズ
 
 	constructor(options: BotOptions) {
 		this.options = options;
@@ -85,17 +84,14 @@ export class Bot {
 
 		this.mc.on("error", (err) => {
 			console.error(`Bot ${this.options.username} encountered an error:`, err);
-			this.cleanup();
 		});
 
 		this.mc.on("end", (reason) => {
 			console.log(`Bot ${this.options.username} disconnected: ${reason}`);
-			this.cleanup();
 		});
 
 		this.mc.on("kicked", (reason) => {
 			console.log(`Bot ${this.options.username} was kicked: ${reason}`);
-			this.cleanup();
 		});
 
 		this.mc.on("spawn", async () => {
@@ -196,12 +192,6 @@ export class Bot {
 
 		// 間隔チェック
 		if (currentTime - this.lastMessageTime < this.messageInterval) {
-			// キューサイズ制限チェック
-			if (this.messageQueue.length >= this.maxQueueSize) {
-				console.warn(`[${this.options.username}] Message queue full (${this.maxQueueSize}), dropping oldest message`);
-				this.messageQueue.shift(); // 古いメッセージを削除
-			}
-			
 			// キューに追加
 			this.messageQueue.push({
 				message,
@@ -246,10 +236,7 @@ export class Bot {
 
 			// 次のメッセージがある場合は再帰処理
 			if (this.messageQueue.length > 0) {
-				this.messageQueueTimer = setTimeout(() => {
-					this.messageQueueTimer = null;
-					this.processMessageQueue();
-				}, this.messageInterval);
+				setTimeout(() => this.processMessageQueue(), this.messageInterval);
 			}
 		} else {
 			// 待機が必要
@@ -508,21 +495,5 @@ export class Bot {
 	 */
 	public getMessageQueueSize(): number {
 		return this.messageQueue.length;
-	}
-
-	/**
-	 * Bot終了時のクリーンアップ処理
-	 */
-	private cleanup(): void {
-		// メッセージキューのタイマーをクリア
-		if (this.messageQueueTimer) {
-			clearTimeout(this.messageQueueTimer);
-			this.messageQueueTimer = null;
-		}
-		
-		// メッセージキューをクリア
-		this.messageQueue = [];
-		
-		console.log(`Bot ${this.options.username} cleaned up resources.`);
 	}
 }
