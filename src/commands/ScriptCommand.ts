@@ -3,8 +3,8 @@ import { Bot } from "../core/Bot";
 import { ScriptManager } from "../interpreter/manager/ScriptManager";
 
 /**
- * Scriptコマンド
- * チャット経由でBotScript言語の実行を管理する
+ * Script command
+ * Manages BotScript language execution via chat
  */
 export class ScriptCommand extends BaseCommand {
   private scriptManager: ScriptManager;
@@ -43,65 +43,58 @@ export class ScriptCommand extends BaseCommand {
       case "save":
         const scriptName = args.shift();
         if (!scriptName) {
-          bot.sendMessage(`${username}さん、保存するスクリプト名を指定してください。`);
+          bot.sendMessage(`${username}, please specify a script name to save.`);
           return;
         }
         const scriptContent = args.join(" ");
         await this.saveSubCommand(bot, username, scriptName, scriptContent);
         break;
       default:
-        bot.sendMessage(`${username}さん、不明なサブコマンド: ${subCommand}`);
-        bot.sendMessage("使用可能: list, help, run, eval, save, status, stop");
+        bot.sendMessage(`${username}, unknown subcommand: ${subCommand}`);
+        bot.sendMessage("Available commands: list, help, run, eval, save, status, stop");
         break;
     }
   }
 
   /**
-   * サブコマンドの一覧を表示
-   * @param bot - ボットインスタンス
-   * @param username - コマンド実行者
+   * Display list of saved scripts
+   * @param bot - Bot instance
+   * @param username - Command executor
    */
   private async listSubCommands(bot: Bot, username: string): Promise<void> {
     const scripts = this.scriptManager.getSavedScripts();
     if (scripts.size === 0) {
-      bot.sendMessage(`${username}さん、保存されたスクリプトはありません。`);
+      bot.sendMessage(`${username}, no saved scripts found.`);
       return;
     }
 
+    // Always show just the file names, ignore showDetails parameter
     const scriptList = Array.from(scripts.values())
-      .slice(0, 5)
-      .map(
-        (script) =>
-          `${script.name} (作成日時: ${new Date(script.created).toLocaleString()})`
-      )
+      .map((script) => script.name)
       .join(", ");
 
-    bot.sendMessage(
-      `${username}さん、保存済みスクリプト: ${scriptList}${
-        scripts.size > 5 ? ` (他${scripts.size - 5}個)` : ""
-      }`
-    );
+    bot.sendMessage(`${username}, saved scripts: ${scriptList}`);
   }
 
   /**
-   * BotScriptのヘルプを表示
+   * Display BotScript help
    */
   private showBotScriptHelp(bot: Bot, username: string): void {
-    bot.sendMessage(`${username}さん、BotScript言語について:`);
+    bot.sendMessage(`${username}, about BotScript language:`);
     bot.sendMessage("");
-    bot.sendMessage("- 変数: var count = 5, set count = count + 1");
-    bot.sendMessage('- 制御文: if count > 3 { say "多い" }');
-    bot.sendMessage('- ループ: repeat 3 { say "繰り返し" }');
+    bot.sendMessage("- Variables: var count = 5, set count = count + 1");
+    bot.sendMessage('- Control flow: if count > 3 { say "high" }');
+    bot.sendMessage('- Loops: repeat 3 { say "repeat" }');
     bot.sendMessage(
-      "- コマンド: say, move, goto, attack, dig, place, equip, drop, wait"
+      "- Commands: say, move, goto, attack, dig, place, equip, drop, wait"
     );
   }
 
   /**
-    * スクリプトを実行
-    * @param bot - 操作対象のボットインスタンス
-    * @param username - コマンドを実行したプレイヤー名
-    * @param scriptName - 実行するスクリプト名
+    * Execute script
+    * @param bot - Target bot instance
+    * @param username - Player name who executed the command
+    * @param scriptName - Name of script to execute
     */
   private async runSubCommand(
     bot: Bot,
@@ -109,20 +102,20 @@ export class ScriptCommand extends BaseCommand {
     scriptName: string
   ): Promise<void> {
     if (!scriptName) {
-      bot.sendMessage(`${username}さん、実行するスクリプト名を指定してください。`);
+      bot.sendMessage(`${username}, please specify a script name to run.`);
       return;
     }
 
     try {
-      bot.sendMessage(`${username}さん、スクリプト「${scriptName}」を実行しています...`);
+      bot.sendMessage(`${username}, running script "${scriptName}"...`);
       const result = await this.scriptManager.loadScript(scriptName);
       bot.sendMessage(
-        `${username}さん、スクリプト「${scriptName}」が正常に完了しました。` +
-        `（文: ${result.statementsExecuted}、コマンド: ${result.commandsExecuted}、時間: ${result.executionTime}ms）`
+        `${username}, script "${scriptName}" completed successfully.` +
+        ` (statements: ${result.statementsExecuted}, commands: ${result.commandsExecuted}, time: ${result.executionTime}ms)`
       );
     } catch (error) {
       bot.sendMessage(
-        `${username}さん、スクリプト「${scriptName}」の実行に失敗しました: ${
+        `${username}, failed to run script "${scriptName}": ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -130,10 +123,10 @@ export class ScriptCommand extends BaseCommand {
   }
 
   /**
-   * スクリプトを評価して実行
-   * @param bot - 操作対象のボットインスタンス
-   * @param username - コマンドを実行したプレイヤー名
-   * @param scriptContent - 実行するスクリプト内容
+   * Evaluate and execute script
+   * @param bot - Target bot instance
+   * @param username - Player name who executed the command
+   * @param scriptContent - Script content to execute
    */
   private async evalSubCommand(
     bot: Bot,
@@ -141,20 +134,20 @@ export class ScriptCommand extends BaseCommand {
     scriptContent: string
   ): Promise<void> {
     if (!scriptContent) {
-      bot.sendMessage(`${username}さん、実行するスクリプトを指定してください。`);
+      bot.sendMessage(`${username}, please specify a script to execute.`);
       return;
     }
 
     try {
-      bot.sendMessage(`${username}さん、スクリプトを実行しています...`);
+      bot.sendMessage(`${username}, executing script...`);
       const result = await this.scriptManager.executeScript(scriptContent);
       bot.sendMessage(
-        `${username}さん、スクリプトが正常に完了しました。` +
-        `（文: ${result.statementsExecuted}、コマンド: ${result.commandsExecuted}、時間: ${result.executionTime}ms）`
+        `${username}, script completed successfully.` +
+        ` (statements: ${result.statementsExecuted}, commands: ${result.commandsExecuted}, time: ${result.executionTime}ms)`
       );
     } catch (error) {
       bot.sendMessage(
-        `${username}さん、スクリプトの実行に失敗しました: ${
+        `${username}, failed to execute script: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -169,11 +162,11 @@ export class ScriptCommand extends BaseCommand {
   ): Promise<void> {
     try {
       const savedName = await this.scriptManager.saveScript(scriptName, scriptContent);
-      bot.sendMessage(`${username}さん、スクリプト「${savedName}」を保存しました。`);
+      bot.sendMessage(`${username}, script "${savedName}" saved successfully.`);
     } catch (error) {
       const errorMessage = (error as Error).message;
       bot.sendMessage(
-        `${username}さん、スクリプトの保存に失敗しました: ${errorMessage}`
+        `${username}, failed to save script: ${errorMessage}`
       );
     }
   }
@@ -182,24 +175,24 @@ export class ScriptCommand extends BaseCommand {
     const status = this.scriptManager.getStatus();
     
     if (!status.isExecuting) {
-      bot.sendMessage(`${username}さん、現在実行中のスクリプトはありません。`);
+      bot.sendMessage(`${username}, no script is currently running.`);
       return;
     }
 
     bot.sendMessage(
-      `${username}さん、現在のスクリプト実行状態: ` +
-      `文: ${status.statementsExecuted}, コマンド: ${status.commandsExecuted}, ` +
-      `時間: ${status.executionTime}ms`
+      `${username}, current script execution status: ` +
+      `statements: ${status.statementsExecuted}, commands: ${status.commandsExecuted}, ` +
+      `time: ${status.executionTime}ms`
     );
   }
 
   private stopExecution(bot: Bot, username: string): void {
     try {
       this.scriptManager.stopExecution();
-      bot.sendMessage(`${username}さん、スクリプトの実行を停止しました。`);
+      bot.sendMessage(`${username}, script execution stopped.`);
     } catch (error) {
       bot.sendMessage(
-        `${username}さん、${error instanceof Error ? error.message : "停止に失敗しました"}`
+        `${username}, ${error instanceof Error ? error.message : "failed to stop execution"}`
       );
     }
   }
@@ -209,7 +202,7 @@ export class ScriptCommand extends BaseCommand {
   }
 
   public getDescription(): string {
-    return "Script言語の実行と管理を行います";
+    return "Execute and manage Script language";
   }
 
   public getUsage(): string {

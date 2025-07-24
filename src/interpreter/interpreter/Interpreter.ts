@@ -685,7 +685,7 @@ export class Interpreter {
     const isDay = timeOfDay < 12300 || timeOfDay > 23850; // Minecraft day/night cycle
     const isNight = !isDay;
     
-    // 天気情報の取得（基本実装）
+    // 天気情報の取得
     const isRaining = this.bot.mc.isRaining || false;
     const isThundering = this.bot.mc.thunderState > 0;
     let weather = 'clear';
@@ -695,19 +695,56 @@ export class Interpreter {
       weather = 'rain';
     }
     
-    // ディメンション情報
-    const dimension = this.bot.mc.dimension || 'overworld';
+    // ディメンション情報（安全に取得）
+    let dimension = 'overworld';
+    try {
+      // mineflayerのdimensionプロパティが存在するかチェック
+      const dimName = (this.bot.mc as any).game?.dimension;
+      if (dimName === -1) dimension = 'nether';
+      else if (dimName === 1) dimension = 'end';
+      else dimension = 'overworld';
+    } catch (error) {
+      dimension = 'overworld'; // デフォルト値
+    }
     
     // 近くのエンティティ数をカウント
     const nearbyEntities = Object.values(this.bot.mc.entities || {});
-    const nearbyPlayers = nearbyEntities.filter(entity => 
-      entity.type === 'player' && entity.position && 
-      entity.position.distanceTo(this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 }) <= 16
-    );
-    const nearbyMobs = nearbyEntities.filter(entity => 
-      entity.type === 'mob' && entity.position &&
-      entity.position.distanceTo(this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 }) <= 16
-    );
+    const botPosition = this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 };
+    
+    const nearbyPlayers = nearbyEntities.filter(entity => {
+      try {
+        return entity.type === 'player' && entity.position && 
+               entity.position.distanceTo(botPosition) <= 16;
+      } catch {
+        return false;
+      }
+    });
+    
+    const nearbyMobs = nearbyEntities.filter(entity => {
+      try {
+        return entity.type === 'mob' && entity.position &&
+               entity.position.distanceTo(botPosition) <= 16;
+      } catch {
+        return false;
+      }
+    });
+
+    // 装備情報の取得
+    const slots = this.bot.mc.inventory?.slots || [];
+    const helmet = slots[5]?.name || 'none';
+    const chestplate = slots[6]?.name || 'none'; 
+    const leggings = slots[7]?.name || 'none';
+    const boots = slots[8]?.name || 'none';
+    const mainHand = slots[36]?.name || 'none'; // ホットバー1番目
+    const offHand = slots[45]?.name || 'none';
+
+    // 酸素値の安全な取得
+    let airValue = 300; // デフォルト値
+    try {
+      airValue = (this.bot.mc.entity as any)?.air || 300;
+    } catch {
+      airValue = 300;
+    }
 
     this.context.updateSystemVariables({
       health: this.bot.mc.health,
@@ -717,15 +754,75 @@ export class Interpreter {
       yaw: Math.round(yaw * 180 / Math.PI), // ラジアンから度に変換
       pitch: Math.round(pitch * 180 / Math.PI),
       experience: this.bot.mc.experience?.level || 0,
-      air: this.bot.mc.entity?.air || 300, // 水中の酸素値
+      air: airValue,
       time_of_day: timeOfDay,
       is_day: isDay,
       is_night: isNight,
       weather: weather,
       dimension: dimension,
       nearby_players_count: nearbyPlayers.length,
-      nearby_mobs_count: nearbyMobs.length
+      nearby_mobs_count: nearbyMobs.length,
+      equipped_helmet: helmet,
+      equipped_chestplate: chestplate,
+      equipped_leggings: leggings,
+      equipped_boots: boots,
+      equipped_mainhand: mainHand,
+      equipped_offhand: offHand,
+      armor_points: this.calculateArmorPoints(helmet, chestplate, leggings, boots),
+      light_level: this.getLightLevel(),
+      biome: this.getCurrentBiome()
     });
+  }
+
+  /**
+   * 防具ポイントを計算
+   */
+  private calculateArmorPoints(helmet: string, chestplate: string, leggings: string, boots: string): number {
+    let points = 0;
+    // 簡易的な防具ポイント計算
+    const armorValues: {[key: string]: number} = {
+      'leather_helmet': 1, 'leather_chestplate': 3, 'leather_leggings': 2, 'leather_boots': 1,
+      'iron_helmet': 2, 'iron_chestplate': 6, 'iron_leggings': 5, 'iron_boots': 2,
+      'diamond_helmet': 3, 'diamond_chestplate': 8, 'diamond_leggings': 6, 'diamond_boots': 3,
+      'netherite_helmet': 3, 'netherite_chestplate': 8, 'netherite_leggings': 6, 'netherite_boots': 3
+    };
+    
+    points += armorValues[helmet] || 0;
+    points += armorValues[chestplate] || 0;
+    points += armorValues[leggings] || 0;
+    points += armorValues[boots] || 0;
+    
+    return points;
+  }
+
+  /**
+   * 光レベルを取得
+   */
+  private getLightLevel(): number {
+    try {
+      const pos = this.bot.getPosition();
+      return (this.bot.mc as any).world?.getBlockLight?.(pos) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * 現在のバイオームを取得
+   */
+  private getCurrentBiome(): string {
+    try {
+      const pos = this.bot.getPosition();
+      const biomeId = (this.bot.mc as any).world?.getBiome?.(pos);
+      // バイオームIDから名前へのマッピング（簡易版）
+      const biomeNames: {[key: number]: string} = {
+        0: 'ocean', 1: 'plains', 2: 'desert', 3: 'mountains', 4: 'forest',
+        5: 'taiga', 6: 'swamp', 7: 'river', 14: 'mushroom_fields'
+      };
+      return biomeNames[biomeId] || 'unknown';
+    } catch {
+      return 'unknown';
+    }
   }
 
   /**

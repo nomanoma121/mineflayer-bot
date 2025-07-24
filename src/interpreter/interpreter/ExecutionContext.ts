@@ -305,6 +305,12 @@ export class ExecutionContext {
     
     // 動的システム変数（読み取り専用、実行時に更新される）
     this.defineVariable('timestamp', Date.now(), VariableScope.GLOBAL, true);
+    
+    // 組み込み関数的変数（文字列として結果を返す）
+    this.defineVariable('has_item', 'function', VariableScope.GLOBAL, true);
+    this.defineVariable('item_count', 'function', VariableScope.GLOBAL, true);
+    this.defineVariable('is_equipped', 'function', VariableScope.GLOBAL, true);
+    this.defineVariable('distance_to', 'function', VariableScope.GLOBAL, true);
   }
 
   /**
@@ -326,6 +332,17 @@ export class ExecutionContext {
     dimension?: string;
     nearby_players_count?: number;
     nearby_mobs_count?: number;
+    equipped_helmet?: string;
+    equipped_chestplate?: string;
+    equipped_leggings?: string;
+    equipped_boots?: string;
+    equipped_mainhand?: string;
+    equipped_offhand?: string;
+    armor_points?: number;
+    light_level?: number;
+    biome?: string;
+    has_item?: (itemName: string) => string;
+    item_count?: (itemName: string) => string;
   }): void {
     // タイムスタンプを更新
     this.globalVariables.get('timestamp')!.value = Date.now();
@@ -457,6 +474,80 @@ export class ExecutionContext {
           this.globalVariables.get('nearby_mobs_count')!.value = botData.nearby_mobs_count;
         } else {
           this.defineVariable('nearby_mobs_count', botData.nearby_mobs_count, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 装備情報
+      if (botData.equipped_helmet !== undefined) {
+        if (this.hasVariable('equipped_helmet')) {
+          this.globalVariables.get('equipped_helmet')!.value = botData.equipped_helmet;
+        } else {
+          this.defineVariable('equipped_helmet', botData.equipped_helmet, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.equipped_chestplate !== undefined) {
+        if (this.hasVariable('equipped_chestplate')) {
+          this.globalVariables.get('equipped_chestplate')!.value = botData.equipped_chestplate;
+        } else {
+          this.defineVariable('equipped_chestplate', botData.equipped_chestplate, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.equipped_leggings !== undefined) {
+        if (this.hasVariable('equipped_leggings')) {
+          this.globalVariables.get('equipped_leggings')!.value = botData.equipped_leggings;
+        } else {
+          this.defineVariable('equipped_leggings', botData.equipped_leggings, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.equipped_boots !== undefined) {
+        if (this.hasVariable('equipped_boots')) {
+          this.globalVariables.get('equipped_boots')!.value = botData.equipped_boots;
+        } else {
+          this.defineVariable('equipped_boots', botData.equipped_boots, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.equipped_mainhand !== undefined) {
+        if (this.hasVariable('equipped_mainhand')) {
+          this.globalVariables.get('equipped_mainhand')!.value = botData.equipped_mainhand;
+        } else {
+          this.defineVariable('equipped_mainhand', botData.equipped_mainhand, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.equipped_offhand !== undefined) {
+        if (this.hasVariable('equipped_offhand')) {
+          this.globalVariables.get('equipped_offhand')!.value = botData.equipped_offhand;
+        } else {
+          this.defineVariable('equipped_offhand', botData.equipped_offhand, VariableScope.GLOBAL, true);
+        }
+      }
+
+      // 計算された情報
+      if (botData.armor_points !== undefined) {
+        if (this.hasVariable('armor_points')) {
+          this.globalVariables.get('armor_points')!.value = botData.armor_points;
+        } else {
+          this.defineVariable('armor_points', botData.armor_points, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.light_level !== undefined) {
+        if (this.hasVariable('light_level')) {
+          this.globalVariables.get('light_level')!.value = botData.light_level;
+        } else {
+          this.defineVariable('light_level', botData.light_level, VariableScope.GLOBAL, true);
+        }
+      }
+
+      if (botData.biome !== undefined) {
+        if (this.hasVariable('biome')) {
+          this.globalVariables.get('biome')!.value = botData.biome;
+        } else {
+          this.defineVariable('biome', botData.biome, VariableScope.GLOBAL, true);
         }
       }
     }
