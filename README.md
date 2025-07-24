@@ -150,10 +150,23 @@ weather                  # 天気 ("clear", "rain", "thunder")
 dimension                # 現在のディメンション ("overworld", "nether", "end")
 ```
 
-**周辺情報**
+**装備情報**
+```bash
+equipped_helmet          # 装備中のヘルメット ("none"または装備名)
+equipped_chestplate      # 装備中のチェストプレート
+equipped_leggings        # 装備中のレギンス
+equipped_boots           # 装備中のブーツ
+equipped_mainhand        # メインハンドのアイテム
+equipped_offhand         # オフハンドのアイテム
+armor_points             # 現在の防具ポイント合計
+```
+
+**周辺・環境情報**
 ```bash
 nearby_players_count     # 16ブロック以内のプレイヤー数
 nearby_mobs_count        # 16ブロック以内のMob数
+light_level              # 現在地の光レベル (0-15)
+biome                    # 現在のバイオーム ("plains", "forest", "desert"等)
 ```
 
 **ループ変数**
