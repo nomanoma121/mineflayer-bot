@@ -8,7 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * 保存されたスクリプト
+ * Saved script
  */
 interface SavedScript {
   name: string;
@@ -17,7 +17,7 @@ interface SavedScript {
 }
 
 /**
- * スクリプト実行結果
+ * Script execution result
  */
 export interface ExecutionResult {
   statementsExecuted: number;
@@ -26,15 +26,15 @@ export interface ExecutionResult {
 }
 
 /**
- * スクリプト実行状態
+ * Script execution status
  */
 export interface ExecutionStatus extends ExecutionResult {
   isExecuting: boolean;
 }
 
 /**
- * BotScript チャットインターフェース
- * Minecraftチャットを通じてBotScriptの実行を可能にする
+ * BotScript chat interface
+ * Enables BotScript execution through Minecraft chat
  */
 
 export class ScriptManager {
@@ -51,33 +51,33 @@ export class ScriptManager {
     this.context = new ExecutionContext();
     this.interpreter = new Interpreter(bot, this.context);
 
-    // スクリプト保存ディレクトリを作成
+    // Create script save directory
     this.ensureScriptsDirectory();
 
-    // 保存済みスクリプトを読み込み
+    // Load saved scripts
     this.loadSavedScriptsFromDisk();
   }
 
   /**
-   * 単発スクリプトを実行
-   * @returns 実行結果の統計情報
+   * Execute one-time script
+   * @returns Execution result statistics
    */
   public async executeScript(scriptContent: string): Promise<ExecutionResult> {
     if (!scriptContent.trim()) {
-      throw new Error('実行するスクリプトが空です');
+      throw new Error('Script to execute is empty');
     }
 
-    // スクリプトをパース
+    // Parse script
     const lexer = new Lexer(scriptContent);
     const tokens = lexer.tokenize();
     const parser = new Parser(tokens);
     const ast = parser.parse();
 
-    // スクリプトを実行
+    // Execute script
     const result = await this.interpreter.execute(ast);
 
     if (result.type !== ExecutionResultType.SUCCESS) {
-      throw new Error(`スクリプト実行エラー: ${result.message}`);
+      throw new Error(`Script execution error: ${result.message}`);
     }
 
     const stats = this.context.getStats();
@@ -89,18 +89,18 @@ export class ScriptManager {
   }
 
   /**
-   * スクリプトを保存
-   * @returns サニタイズされたスクリプト名
+   * Save script
+   * @returns Sanitized script name
    */
   public async saveScript(
     scriptName: string,
     scriptContent: string
   ): Promise<string> {
     if (!scriptName) {
-      throw new Error('保存するスクリプト名を指定してください');
+      throw new Error('Please specify a script name to save');
     }
     if (!scriptContent.trim()) {
-      throw new Error('保存するスクリプトが空です');
+      throw new Error('Script to save is empty');
     }
 
     try {
@@ -140,12 +140,12 @@ export class ScriptManager {
    */
   public async loadScript(name: string): Promise<ExecutionResult> {
     if (!name) {
-      throw new Error('実行するスクリプト名を指定してください');
+      throw new Error('Please specify a script name to execute');
     }
 
     const script = this.savedScripts.get(name);
     if (!script) {
-      throw new Error(`スクリプト「${name}」が見つかりません`);
+      throw new Error(`Script "${name}" not found`);
     }
 
     return await this.executeScript(script.content);
@@ -186,22 +186,22 @@ export class ScriptManager {
    */
   private sanitizeFileName(fileName: string): string {
     if (!fileName || typeof fileName !== "string") {
-      throw new Error("ファイル名が無効です");
+      throw new Error("Invalid filename");
     }
 
     // 基本的なバリデーション
     if (fileName.trim().length === 0) {
-      throw new Error("ファイル名が空です");
+      throw new Error("Filename is empty");
     }
 
     if (fileName.length > 100) {
-      throw new Error("ファイル名が長すぎます（100文字以内）");
+      throw new Error("Filename is too long (max 100 characters)");
     }
 
     // パストラバーサル攻撃の検出
     const parsed = path.parse(fileName);
     if (parsed.dir !== "" || parsed.root !== "") {
-      throw new Error("ファイル名にディレクトリパスを含めることはできません");
+      throw new Error("Filename cannot contain directory paths");
     }
 
     // 危険な文字の検出
@@ -209,7 +209,7 @@ export class ScriptManager {
     for (const char of dangerousChars) {
       if (fileName.includes(char)) {
         throw new Error(
-          `ファイル名に使用できない文字が含まれています: ${char}`
+          `Filename contains invalid character: ${char}`
         );
       }
     }
@@ -219,7 +219,7 @@ export class ScriptManager {
       /^[a-zA-Z0-9\-_\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
     if (!allowedPattern.test(fileName)) {
       throw new Error(
-        "ファイル名には英数字、ハイフン、アンダースコア、日本語のみ使用できます"
+        "Filename can only contain alphanumeric characters, hyphens, underscores, and Japanese characters"
       );
     }
 
@@ -234,20 +234,20 @@ export class ScriptManager {
     
     // セキュリティチェック: ディレクトリ自体、親ディレクトリ、絶対パスを禁止
     if (relativePath === "") {
-      throw new Error("ディレクトリ自体にはアクセスできません");
+      throw new Error("Cannot access directory itself");
     }
     
     if (relativePath.startsWith("..")) {
-      throw new Error("親ディレクトリへのアクセスは禁止されています");
+      throw new Error("Access to parent directory is prohibited");
     }
     
     if (path.isAbsolute(relativePath)) {
-      throw new Error("絶対パスは許可されていません");
+      throw new Error("Absolute paths are not allowed");
     }
     
     // Windows環境での追加チェック: バックスラッシュでの親ディレクトリアクセス
     if (relativePath.includes("..")) {
-      throw new Error("パストラバーサル攻撃が検出されました");
+      throw new Error("Path traversal attack detected");
     }
 
     return sanitizedName;
