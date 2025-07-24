@@ -119,16 +119,37 @@ export class Lexer {
   }
   
   /**
-   * 空白文字をスキップ（改行以外）
+   * 空白文字とコメントをスキップ（改行以外）
    */
   private skipWhitespace(): void {
     while (this.position < this.input.length) {
       const char = this.input[this.position];
       if (char === ' ' || char === '\t' || char === '\r') {
         this.advance();
+      } else if (char === '#') {
+        // コメント行をスキップ
+        this.skipComment();
       } else {
         break;
       }
+    }
+  }
+
+  /**
+   * コメント行をスキップ（#から行末まで）
+   */
+  private skipComment(): void {
+    // #をスキップ
+    this.advance();
+    
+    // 行末まで読み飛ばし
+    while (this.position < this.input.length) {
+      const char = this.input[this.position];
+      if (char === '\n') {
+        // 改行文字は次のnextToken()で処理されるので、ここでは進めない
+        break;
+      }
+      this.advance();
     }
   }
 
