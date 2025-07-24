@@ -698,16 +698,15 @@ export class Interpreter {
     // ディメンション情報（安全に取得）
     let dimension = 'overworld';
     try {
-      // mineflayerのdimensionプロパティが存在するかチェック
       const dimName = (this.bot.mc as any).game?.dimension;
       if (dimName === -1) dimension = 'nether';
       else if (dimName === 1) dimension = 'end';
       else dimension = 'overworld';
-    } catch (error) {
-      dimension = 'overworld'; // デフォルト値
+    } catch {
+      dimension = 'overworld';
     }
     
-    // 近くのエンティティ数をカウント
+    // 近くのエンティティ情報
     const nearbyEntities = Object.values(this.bot.mc.entities || {});
     const botPosition = this.bot.mc.entity?.position || { x: 0, y: 0, z: 0 };
     
@@ -735,23 +734,25 @@ export class Interpreter {
     const chestplate = slots[6]?.name || 'none'; 
     const leggings = slots[7]?.name || 'none';
     const boots = slots[8]?.name || 'none';
-    const mainHand = slots[36]?.name || 'none'; // ホットバー1番目
+    const mainHand = slots[36]?.name || 'none';
     const offHand = slots[45]?.name || 'none';
 
     // 酸素値の安全な取得
-    let airValue = 300; // デフォルト値
+    let airValue = 300;
     try {
       airValue = (this.bot.mc.entity as any)?.air || 300;
     } catch {
       airValue = 300;
     }
 
-    this.context.updateSystemVariables({
+    // 全ての新しい変数のデータを収集
+    const updateData = {
+      // 基本情報
       health: this.bot.mc.health,
       food: this.bot.mc.food,
       position: position,
       inventory_count: this.bot.getInventory().length,
-      yaw: Math.round(yaw * 180 / Math.PI), // ラジアンから度に変換
+      yaw: Math.round(yaw * 180 / Math.PI),
       pitch: Math.round(pitch * 180 / Math.PI),
       experience: this.bot.mc.experience?.level || 0,
       air: airValue,
@@ -770,8 +771,40 @@ export class Interpreter {
       equipped_offhand: offHand,
       armor_points: this.calculateArmorPoints(helmet, chestplate, leggings, boots),
       light_level: this.getLightLevel(),
-      biome: this.getCurrentBiome()
-    });
+      biome: this.getCurrentBiome(),
+
+      // ステータス・能力系
+      ...this.getStatusAndAbilityData(),
+      
+      // インベントリ詳細系
+      ...this.getInventoryDetailData(),
+      
+      // ワールド・ブロック情報系
+      ...this.getWorldBlockData(),
+      
+      // 戦闘・PvP系
+      ...this.getCombatData(nearbyEntities, botPosition),
+      
+      // 建築・クラフト系
+      ...this.getBuildingCraftData(nearbyEntities, botPosition),
+      
+      // 移動・ナビゲーション系
+      ...this.getNavigationData(),
+      
+      // サーバー・接続系
+      ...this.getServerConnectionData(),
+      
+      // 時間・イベント系
+      ...this.getTimeEventData(timeOfDay),
+      
+      // AI・学習系（基本実装）
+      ...this.getAILearningData(),
+      
+      // コミュニケーション系（基本実装）
+      ...this.getCommunicationData()
+    };
+
+    this.context.updateSystemVariables(updateData);
   }
 
   /**
@@ -814,7 +847,6 @@ export class Interpreter {
     try {
       const pos = this.bot.getPosition();
       const biomeId = (this.bot.mc as any).world?.getBiome?.(pos);
-      // バイオームIDから名前へのマッピング（簡易版）
       const biomeNames: {[key: number]: string} = {
         0: 'ocean', 1: 'plains', 2: 'desert', 3: 'mountains', 4: 'forest',
         5: 'taiga', 6: 'swamp', 7: 'river', 14: 'mushroom_fields'
@@ -822,6 +854,392 @@ export class Interpreter {
       return biomeNames[biomeId] || 'unknown';
     } catch {
       return 'unknown';
+    }
+  }
+
+  /**
+   * ステータス・能力系データを取得
+   */
+  private getStatusAndAbilityData(): any {
+    try {
+      const entity = this.bot.mc.entity;
+      const effects = (this.bot.mc as any).entity?.effects || {};
+      const activeEffectsList = Object.keys(effects).join(', ') || 'none';
+      
+      return {
+        bot_saturation: (this.bot.mc as any).food?.saturation || 0,
+        bot_oxygen_time: entity ? Math.max(0, (entity as any).air || 300) / 20 : 15, // 秒に変換
+        bot_fall_distance: (entity as any)?.fallDistance || 0,
+        bot_speed_modifier: 1.0, // 基本実装
+        bot_jump_boost: 0, // 基本実装
+        active_effects: activeEffectsList
+      };
+    } catch {
+      return {
+        bot_saturation: 0,
+        bot_oxygen_time: 15,
+        bot_fall_distance: 0,
+        bot_speed_modifier: 1.0,
+        bot_jump_boost: 0,
+        active_effects: 'none'
+      };
+    }
+  }
+
+  /**
+   * インベントリ詳細系データを取得
+   */
+  private getInventoryDetailData(): any {
+    try {
+      const inventory = this.bot.getInventory();
+      const slots = this.bot.mc.inventory?.slots || [];
+      
+      // 空きスロット数を計算
+      const totalSlots = 36; // メインインベントリ
+      const freeSlots = totalSlots - inventory.length;
+      
+      // 食べ物・武器・ツールの有無をチェック
+      const hasFood = inventory.some(item => this.isFood(item?.name || ''));
+      const hasWeapon = inventory.some(item => this.isWeapon(item?.name || ''));
+      const hasTool = inventory.some(item => this.isTool(item?.name || ''));
+      
+      // 最強の武器を特定
+      const weapons = inventory.filter(item => this.isWeapon(item?.name || ''));
+      const strongestWeapon = this.getStrongestWeapon(weapons);
+      
+      return {
+        hotbar_selected_slot: (this.bot.mc as any).quickBarSlot || 0,
+        inventory_free_slots: freeSlots,
+        has_food: hasFood,
+        has_weapon: hasWeapon,
+        has_tool: hasTool,
+        strongest_weapon: strongestWeapon,
+        best_tool_for: 'auto' // 基本実装
+      };
+    } catch {
+      return {
+        hotbar_selected_slot: 0,
+        inventory_free_slots: 36,
+        has_food: false,
+        has_weapon: false,
+        has_tool: false,
+        strongest_weapon: 'none',
+        best_tool_for: 'none'
+      };
+    }
+  }
+
+  /**
+   * ワールド・ブロック情報系データを取得
+   */
+  private getWorldBlockData(): any {
+    try {
+      const pos = this.bot.getPosition();
+      const blockAtFeet = this.getBlockAt(pos.x, pos.y - 1, pos.z);
+      const blockAboveHead = this.getBlockAt(pos.x, pos.y + 2, pos.z);
+      
+      // 見ているブロックを取得
+      let blockLookingAt = 'air';
+      try {
+        const block = (this.bot.mc as any).blockAt?.(this.bot.mc.entity?.position);
+        blockLookingAt = block?.name || 'air';
+      } catch {
+        blockLookingAt = 'air';
+      }
+      
+      // 空が見えるかチェック
+      const canSeeSky = this.canSeeSkyfromPosition(pos);
+      
+      // スポーン地点とベッド位置
+      const spawnPoint = (this.bot.mc as any).spawnPoint || { x: 0, y: 64, z: 0 };
+      
+      return {
+        block_at_feet: blockAtFeet,
+        block_looking_at: blockLookingAt,
+        block_above_head: blockAboveHead,
+        can_see_sky: canSeeSky,
+        spawn_point_x: spawnPoint.x,
+        spawn_point_y: spawnPoint.y,
+        spawn_point_z: spawnPoint.z,
+        bed_location_x: spawnPoint.x, // 基本実装
+        bed_location_y: spawnPoint.y,
+        bed_location_z: spawnPoint.z
+      };
+    } catch {
+      return {
+        block_at_feet: 'air',
+        block_looking_at: 'air',
+        block_above_head: 'air',
+        can_see_sky: true,
+        spawn_point_x: 0,
+        spawn_point_y: 64,
+        spawn_point_z: 0,
+        bed_location_x: 0,
+        bed_location_y: 64,
+        bed_location_z: 0
+      };
+    }
+  }
+
+  /**
+   * 戦闘・PvP系データを取得
+   */
+  private getCombatData(nearbyEntities: any[], botPosition: any): any {
+    try {
+      // 最も近い敵対Mobを特定
+      const hostileMobs = nearbyEntities.filter(entity => 
+        this.isHostileMob(entity.name || '') && entity.position
+      );
+      
+      let nearestHostileMob = 'none';
+      let nearestMobDistance = 999;
+      
+      if (hostileMobs.length > 0) {
+        const nearest = hostileMobs.reduce((closest, mob) => {
+          const distance = mob.position.distanceTo(botPosition);
+          return distance < closest.distance ? { mob, distance } : closest;
+        }, { mob: null, distance: Infinity });
+        
+        nearestHostileMob = nearest.mob?.name || 'none';
+        nearestMobDistance = Math.round(nearest.distance);
+      }
+      
+      return {
+        nearest_hostile_mob: nearestHostileMob,
+        nearest_mob_distance: nearestMobDistance,
+        is_being_attacked: (this.bot.mc as any).entity?.hurtTime > 0 || false,
+        last_damage_source: 'none', // 基本実装
+        can_attack_target: nearestMobDistance <= 4
+      };
+    } catch {
+      return {
+        nearest_hostile_mob: 'none',
+        nearest_mob_distance: 999,
+        is_being_attacked: false,
+        last_damage_source: 'none',
+        can_attack_target: false
+      };
+    }
+  }
+
+  /**
+   * 建築・クラフト系データを取得
+   */
+  private getBuildingCraftData(nearbyEntities: any[], botPosition: any): any {
+    try {
+      // 近くの特定ブロックをチェック
+      const craftingTableNearby = this.isBlockNearby('crafting_table', botPosition, 5);
+      const furnaceNearby = this.isBlockNearby('furnace', botPosition, 5);
+      const chestNearby = this.isBlockNearby('chest', botPosition, 5);
+      
+      return {
+        can_craft: 'basic', // 基本実装
+        crafting_table_nearby: craftingTableNearby,
+        furnace_nearby: furnaceNearby,
+        chest_nearby: chestNearby,
+        can_place_block: true // 基本実装
+      };
+    } catch {
+      return {
+        can_craft: 'none',
+        crafting_table_nearby: false,
+        furnace_nearby: false,
+        chest_nearby: false,
+        can_place_block: false
+      };
+    }
+  }
+
+  /**
+   * 移動・ナビゲーション系データを取得
+   */
+  private getNavigationData(): any {
+    try {
+      const entity = this.bot.mc.entity;
+      const position = this.bot.getPosition();
+      
+      return {
+        is_on_ground: entity?.onGround || false,
+        is_in_water: (entity as any)?.isInWater || false,
+        is_in_lava: (entity as any)?.isInLava || false,
+        is_climbing: (entity as any)?.isClimbing || false,
+        path_blocked: false, // 基本実装
+        distance_to_spawn: this.getDistanceToSpawn(position),
+        can_reach_position: true // 基本実装
+      };
+    } catch {
+      return {
+        is_on_ground: true,
+        is_in_water: false,
+        is_in_lava: false,
+        is_climbing: false,
+        path_blocked: false,
+        distance_to_spawn: 0,
+        can_reach_position: true
+      };
+    }
+  }
+
+  /**
+   * サーバー・接続系データを取得
+   */
+  private getServerConnectionData(): any {
+    try {
+      const players = Object.keys(this.bot.mc.players || {}).length;
+      
+      return {
+        server_tps: 20.0, // 基本実装
+        ping_ms: (this.bot.mc as any).ping || 0,
+        player_count: players,
+        server_difficulty: 'normal', // 基本実装
+        game_mode: 'survival' // 基本実装
+      };
+    } catch {
+      return {
+        server_tps: 20.0,
+        ping_ms: 0,
+        player_count: 1,
+        server_difficulty: 'normal',
+        game_mode: 'survival'
+      };
+    }
+  }
+
+  /**
+   * 時間・イベント系データを取得
+   */
+  private getTimeEventData(timeOfDay: number): any {
+    try {
+      // 夜明けと夕暮れまでの時間を計算
+      const timeUntilDawn = timeOfDay > 23000 ? (24000 - timeOfDay) + 1000 : 
+                           timeOfDay < 1000 ? 1000 - timeOfDay : 0;
+      const timeUntilDusk = timeOfDay < 13000 ? 13000 - timeOfDay : 
+                           (24000 - timeOfDay) + 13000;
+      
+      // 月の満ち欠け（簡易版）
+      const moonPhase = Math.floor(timeOfDay / 3000) % 8;
+      const isFullMoon = moonPhase === 0;
+      
+      return {
+        days_played: Math.floor(timeOfDay / 24000) + 1,
+        time_until_dawn: Math.round(timeUntilDawn / 20), // 秒に変換
+        time_until_dusk: Math.round(timeUntilDusk / 20),
+        moon_phase: moonPhase,
+        is_full_moon: isFullMoon
+      };
+    } catch {
+      return {
+        days_played: 1,
+        time_until_dawn: 0,
+        time_until_dusk: 0,
+        moon_phase: 0,
+        is_full_moon: false
+      };
+    }
+  }
+
+  /**
+   * AI・学習系データを取得（基本実装）
+   */
+  private getAILearningData(): any {
+    return {
+      death_count: 0,
+      blocks_mined_today: 0,
+      distance_walked: 0,
+      items_crafted_count: 0,
+      mobs_killed_count: 0
+    };
+  }
+
+  /**
+   * コミュニケーション系データを取得（基本実装）
+   */
+  private getCommunicationData(): any {
+    return {
+      last_chat_message: '',
+      last_chat_sender: '',
+      whisper_target: ''
+    };
+  }
+
+  // ヘルパーメソッド群
+  private isFood(itemName: string): boolean {
+    const foods = ['bread', 'apple', 'cooked_beef', 'cooked_porkchop', 'cooked_chicken', 
+                   'cooked_fish', 'cookie', 'cake', 'carrot', 'potato', 'baked_potato'];
+    return foods.includes(itemName);
+  }
+
+  private isWeapon(itemName: string): boolean {
+    return itemName.includes('sword') || itemName.includes('axe') || itemName.includes('bow');
+  }
+
+  private isTool(itemName: string): boolean {
+    return itemName.includes('pickaxe') || itemName.includes('shovel') || 
+           itemName.includes('hoe') || itemName.includes('axe');
+  }
+
+  private getStrongestWeapon(weapons: any[]): string {
+    if (weapons.length === 0) return 'none';
+    // 簡易的な武器強度判定
+    const priorities = ['netherite_sword', 'diamond_sword', 'iron_sword', 'stone_sword', 'wooden_sword'];
+    for (const priority of priorities) {
+      const weapon = weapons.find(w => w?.name === priority);
+      if (weapon) return weapon.name;
+    }
+    return weapons[0]?.name || 'none';
+  }
+
+  private getBlockAt(x: number, y: number, z: number): string {
+    try {
+      const block = (this.bot.mc as any).world?.getBlock?.({ x: Math.floor(x), y: Math.floor(y), z: Math.floor(z) });
+      return block?.name || 'air';
+    } catch {
+      return 'air';
+    }
+  }
+
+  private canSeeSkyfromPosition(pos: any): boolean {
+    try {
+      // 簡易的な空の見え方判定
+      for (let y = Math.floor(pos.y) + 1; y < 256; y++) {
+        const block = this.getBlockAt(pos.x, y, pos.z);
+        if (block !== 'air') return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  }
+
+  private isHostileMob(mobName: string): boolean {
+    const hostileMobs = ['zombie', 'skeleton', 'creeper', 'spider', 'enderman', 'witch', 'phantom'];
+    return hostileMobs.some(hostile => mobName.includes(hostile));
+  }
+
+  private isBlockNearby(blockType: string, position: any, radius: number): boolean {
+    try {
+      for (let x = -radius; x <= radius; x++) {
+        for (let y = -radius; y <= radius; y++) {
+          for (let z = -radius; z <= radius; z++) {
+            const block = this.getBlockAt(position.x + x, position.y + y, position.z + z);
+            if (block === blockType) return true;
+          }
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  private getDistanceToSpawn(currentPos: any): number {
+    try {
+      const spawnPoint = (this.bot.mc as any).spawnPoint || { x: 0, y: 64, z: 0 };
+      const dx = currentPos.x - spawnPoint.x;
+      const dz = currentPos.z - spawnPoint.z;
+      return Math.round(Math.sqrt(dx * dx + dz * dz));
+    } catch {
+      return 0;
     }
   }
 

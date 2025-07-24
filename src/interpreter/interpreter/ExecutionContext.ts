@@ -317,6 +317,7 @@ export class ExecutionContext {
    * システム変数を更新
    */
   updateSystemVariables(botData?: {
+    // 基本ボット情報
     health?: number;
     food?: number;
     position?: { x: number; y: number; z: number };
@@ -341,8 +342,84 @@ export class ExecutionContext {
     armor_points?: number;
     light_level?: number;
     biome?: string;
-    has_item?: (itemName: string) => string;
-    item_count?: (itemName: string) => string;
+    
+    // ステータス・能力系
+    bot_saturation?: number;
+    bot_oxygen_time?: number;
+    bot_fall_distance?: number;
+    bot_speed_modifier?: number;
+    bot_jump_boost?: number;
+    active_effects?: string;
+    
+    // インベントリ詳細系
+    hotbar_selected_slot?: number;
+    inventory_free_slots?: number;
+    has_food?: boolean;
+    has_weapon?: boolean;
+    has_tool?: boolean;
+    strongest_weapon?: string;
+    best_tool_for?: string;
+    
+    // ワールド・ブロック情報系
+    block_at_feet?: string;
+    block_looking_at?: string;
+    block_above_head?: string;
+    can_see_sky?: boolean;
+    spawn_point_x?: number;
+    spawn_point_y?: number;
+    spawn_point_z?: number;
+    bed_location_x?: number;
+    bed_location_y?: number;
+    bed_location_z?: number;
+    
+    // 戦闘・PvP系
+    nearest_hostile_mob?: string;
+    nearest_mob_distance?: number;
+    is_being_attacked?: boolean;
+    last_damage_source?: string;
+    can_attack_target?: boolean;
+    
+    // 建築・クラフト系
+    can_craft?: string;
+    crafting_table_nearby?: boolean;
+    furnace_nearby?: boolean;
+    chest_nearby?: boolean;
+    can_place_block?: boolean;
+    
+    // 移動・ナビゲーション系
+    is_on_ground?: boolean;
+    is_in_water?: boolean;
+    is_in_lava?: boolean;
+    is_climbing?: boolean;
+    path_blocked?: boolean;
+    distance_to_spawn?: number;
+    can_reach_position?: boolean;
+    
+    // サーバー・接続系
+    server_tps?: number;
+    ping_ms?: number;
+    player_count?: number;
+    server_difficulty?: string;
+    game_mode?: string;
+    
+    // 時間・イベント系
+    days_played?: number;
+    time_until_dawn?: number;
+    time_until_dusk?: number;
+    moon_phase?: number;
+    is_full_moon?: boolean;
+    
+    // AI・学習系
+    death_count?: number;
+    blocks_mined_today?: number;
+    distance_walked?: number;
+    items_crafted_count?: number;
+    mobs_killed_count?: number;
+    
+    // コミュニケーション系
+    last_chat_message?: string;
+    last_chat_sender?: string;
+    whisper_target?: string;
   }): void {
     // タイムスタンプを更新
     this.globalVariables.get('timestamp')!.value = Date.now();
@@ -549,6 +626,97 @@ export class ExecutionContext {
         } else {
           this.defineVariable('biome', botData.biome, VariableScope.GLOBAL, true);
         }
+      }
+
+      // ステータス・能力系変数
+      this.updateVariableIfExists('bot_saturation', botData.bot_saturation);
+      this.updateVariableIfExists('bot_oxygen_time', botData.bot_oxygen_time);
+      this.updateVariableIfExists('bot_fall_distance', botData.bot_fall_distance);
+      this.updateVariableIfExists('bot_speed_modifier', botData.bot_speed_modifier);
+      this.updateVariableIfExists('bot_jump_boost', botData.bot_jump_boost);
+      this.updateVariableIfExists('active_effects', botData.active_effects);
+
+      // インベントリ詳細系変数
+      this.updateVariableIfExists('hotbar_selected_slot', botData.hotbar_selected_slot);
+      this.updateVariableIfExists('inventory_free_slots', botData.inventory_free_slots);
+      this.updateVariableIfExists('has_food', botData.has_food);
+      this.updateVariableIfExists('has_weapon', botData.has_weapon);
+      this.updateVariableIfExists('has_tool', botData.has_tool);
+      this.updateVariableIfExists('strongest_weapon', botData.strongest_weapon);
+      this.updateVariableIfExists('best_tool_for', botData.best_tool_for);
+
+      // ワールド・ブロック情報系変数
+      this.updateVariableIfExists('block_at_feet', botData.block_at_feet);
+      this.updateVariableIfExists('block_looking_at', botData.block_looking_at);
+      this.updateVariableIfExists('block_above_head', botData.block_above_head);
+      this.updateVariableIfExists('can_see_sky', botData.can_see_sky);
+      this.updateVariableIfExists('spawn_point_x', botData.spawn_point_x);
+      this.updateVariableIfExists('spawn_point_y', botData.spawn_point_y);
+      this.updateVariableIfExists('spawn_point_z', botData.spawn_point_z);
+      this.updateVariableIfExists('bed_location_x', botData.bed_location_x);
+      this.updateVariableIfExists('bed_location_y', botData.bed_location_y);
+      this.updateVariableIfExists('bed_location_z', botData.bed_location_z);
+
+      // 戦闘・PvP系変数
+      this.updateVariableIfExists('nearest_hostile_mob', botData.nearest_hostile_mob);
+      this.updateVariableIfExists('nearest_mob_distance', botData.nearest_mob_distance);
+      this.updateVariableIfExists('is_being_attacked', botData.is_being_attacked);
+      this.updateVariableIfExists('last_damage_source', botData.last_damage_source);
+      this.updateVariableIfExists('can_attack_target', botData.can_attack_target);
+
+      // 建築・クラフト系変数
+      this.updateVariableIfExists('can_craft', botData.can_craft);
+      this.updateVariableIfExists('crafting_table_nearby', botData.crafting_table_nearby);
+      this.updateVariableIfExists('furnace_nearby', botData.furnace_nearby);
+      this.updateVariableIfExists('chest_nearby', botData.chest_nearby);
+      this.updateVariableIfExists('can_place_block', botData.can_place_block);
+
+      // 移動・ナビゲーション系変数
+      this.updateVariableIfExists('is_on_ground', botData.is_on_ground);
+      this.updateVariableIfExists('is_in_water', botData.is_in_water);
+      this.updateVariableIfExists('is_in_lava', botData.is_in_lava);
+      this.updateVariableIfExists('is_climbing', botData.is_climbing);
+      this.updateVariableIfExists('path_blocked', botData.path_blocked);
+      this.updateVariableIfExists('distance_to_spawn', botData.distance_to_spawn);
+      this.updateVariableIfExists('can_reach_position', botData.can_reach_position);
+
+      // サーバー・接続系変数
+      this.updateVariableIfExists('server_tps', botData.server_tps);
+      this.updateVariableIfExists('ping_ms', botData.ping_ms);
+      this.updateVariableIfExists('player_count', botData.player_count);
+      this.updateVariableIfExists('server_difficulty', botData.server_difficulty);
+      this.updateVariableIfExists('game_mode', botData.game_mode);
+
+      // 時間・イベント系変数
+      this.updateVariableIfExists('days_played', botData.days_played);
+      this.updateVariableIfExists('time_until_dawn', botData.time_until_dawn);
+      this.updateVariableIfExists('time_until_dusk', botData.time_until_dusk);
+      this.updateVariableIfExists('moon_phase', botData.moon_phase);
+      this.updateVariableIfExists('is_full_moon', botData.is_full_moon);
+
+      // AI・学習系変数
+      this.updateVariableIfExists('death_count', botData.death_count);
+      this.updateVariableIfExists('blocks_mined_today', botData.blocks_mined_today);
+      this.updateVariableIfExists('distance_walked', botData.distance_walked);
+      this.updateVariableIfExists('items_crafted_count', botData.items_crafted_count);
+      this.updateVariableIfExists('mobs_killed_count', botData.mobs_killed_count);
+
+      // コミュニケーション系変数
+      this.updateVariableIfExists('last_chat_message', botData.last_chat_message);
+      this.updateVariableIfExists('last_chat_sender', botData.last_chat_sender);
+      this.updateVariableIfExists('whisper_target', botData.whisper_target);
+    }
+  }
+
+  /**
+   * 変数が存在する場合のみ更新するヘルパーメソッド
+   */
+  private updateVariableIfExists(name: string, value: any): void {
+    if (value !== undefined) {
+      if (this.hasVariable(name)) {
+        this.globalVariables.get(name)!.value = value;
+      } else {
+        this.defineVariable(name, value, VariableScope.GLOBAL, true);
       }
     }
   }

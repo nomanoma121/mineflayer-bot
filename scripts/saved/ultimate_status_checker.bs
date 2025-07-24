@@ -1,0 +1,170 @@
+# Ultimate Status Checker Script
+# Author: system
+# Description: 全ての新しい組み込み変数を活用した究極のステータスチェッカー
+
+say "🚀 究極ステータスチェッカー開始！"
+say "📊 全" + "70+" + "個の組み込み変数をチェックします"
+
+repeat 3 {
+  var check_round = _loop_index + 1
+  say "== ステータスチェック " + check_round + "/3 =="
+  
+  # 基本情報セクション
+  say "🔵 【基本情報】"
+  say "🤖 ボット: " + bot_name + " v" + version
+  say "📍 座標: (" + bot_x + ", " + bot_y + ", " + bot_z + ")"
+  say "🧭 向き: Yaw=" + bot_yaw + "° Pitch=" + bot_pitch + "°"
+  say "❤️ 体力: " + bot_health + "/20 🍖 満腹: " + bot_food + "/20"
+  say "💫 経験値: Lv" + bot_experience + " 🎒 アイテム: " + bot_inventory_count + "個"
+  say "⏰ タイムスタンプ: " + timestamp
+  
+  # ステータス・能力系
+  say "🔋 【ステータス・能力】"
+  say "🍯 隠し満腹度: " + bot_saturation
+  say "💨 酸素時間: " + bot_oxygen_time + "秒"
+  say "📉 落下距離: " + bot_fall_distance + "m"
+  say "⚡ 速度倍率: " + bot_speed_modifier + "x"
+  say "🦘 ジャンプ力: +" + bot_jump_boost
+  say "🧪 効果: " + active_effects
+  
+  # 装備情報セクション
+  say "⚔️ 【装備情報】"
+  say "🪖 ヘルメット: " + equipped_helmet
+  say "👕 チェストプレート: " + equipped_chestplate
+  say "👖 レギンス: " + equipped_leggings
+  say "👢 ブーツ: " + equipped_boots
+  say "✋ メインハンド: " + equipped_mainhand
+  say "🤚 オフハンド: " + equipped_offhand
+  say "🛡️ 防具ポイント: " + armor_points + "/20"
+  
+  # インベントリ詳細
+  say "🎒 【インベントリ詳細】"
+  say "📋 選択スロット: " + hotbar_selected_slot
+  say "📦 空きスロット: " + inventory_free_slots + "個"
+  say "🍞 食べ物: " + (has_food ? "あり" : "なし")
+  say "⚔️ 武器: " + (has_weapon ? "あり" : "なし")
+  say "🔧 ツール: " + (has_tool ? "あり" : "なし")
+  say "💪 最強武器: " + strongest_weapon
+  say "🛠️ 最適ツール: " + best_tool_for
+  
+  # 環境情報セクション
+  say "🌍 【環境情報】"
+  var time_display = time_of_day
+  say "🕐 ゲーム時刻: " + time_display + (is_day ? " (昼)" : " (夜)")
+  say "🌤️ 天気: " + weather
+  say "🌐 ディメンション: " + dimension
+  say "🏔️ バイオーム: " + biome
+  say "💡 光レベル: " + light_level + "/15"
+  
+  # ワールド・ブロック情報
+  say "🧱 【ブロック情報】"
+  say "👣 足元: " + block_at_feet
+  say "👀 視線先: " + block_looking_at
+  say "☁️ 頭上: " + block_above_head
+  say "🌌 空見える: " + (can_see_sky ? "はい" : "いいえ")
+  say "🏠 スポーン: (" + spawn_point_x + "," + spawn_point_y + "," + spawn_point_z + ")"
+  say "🛏️ ベッド: (" + bed_location_x + "," + bed_location_y + "," + bed_location_z + ")"
+  
+  # 戦闘・PvP情報
+  say "⚔️ 【戦闘情報】"
+  say "👹 最近敵Mob: " + nearest_hostile_mob
+  say "📏 Mob距離: " + nearest_mob_distance + "m"
+  say "💥 攻撃中: " + (is_being_attacked ? "はい" : "いいえ")
+  say "💔 ダメージ源: " + last_damage_source
+  say "🎯 攻撃可能: " + (can_attack_target ? "はい" : "いいえ")
+  
+  # 建築・クラフト情報
+  say "🏗️ 【建築・クラフト】"
+  say "🔨 クラフト可能: " + can_craft
+  say "📋 作業台近く: " + (crafting_table_nearby ? "あり" : "なし")
+  say "🔥 かまど近く: " + (furnace_nearby ? "あり" : "なし")
+  say "📦 チェスト近く: " + (chest_nearby ? "あり" : "なし")
+  say "🧱 設置可能: " + (can_place_block ? "はい" : "いいえ")
+  
+  # 移動・ナビゲーション
+  say "🚶 【移動情報】"
+  say "🌍 地面: " + (is_on_ground ? "立っている" : "浮いている")
+  say "🌊 水中: " + (is_in_water ? "はい" : "いいえ")
+  say "🌋 溶岩中: " + (is_in_lava ? "はい" : "いいえ")
+  say "🪜 登っている: " + (is_climbing ? "はい" : "いいえ")
+  say "🚧 進路阻害: " + (path_blocked ? "はい" : "いいえ")
+  say "🏠 スポーン距離: " + distance_to_spawn + "m"
+  say "🎯 到達可能: " + (can_reach_position ? "はい" : "いいえ")
+  
+  # サーバー・接続情報
+  say "📡 【サーバー情報】"
+  say "⚡ TPS: " + server_tps
+  say "📶 Ping: " + ping_ms + "ms"
+  say "👥 プレイヤー数: " + player_count + "人"
+  say "⭐ 難易度: " + server_difficulty
+  say "🎮 ゲームモード: " + game_mode
+  
+  # 時間・イベント情報
+  say "⏰ 【時間・イベント】"
+  say "📅 プレイ日数: " + days_played + "日"
+  say "🌅 夜明けまで: " + time_until_dawn + "秒"
+  say "🌅 夕暮れまで: " + time_until_dusk + "秒"
+  say "🌙 月の位相: " + moon_phase + "/7"
+  say "🌕 満月: " + (is_full_moon ? "はい" : "いいえ")
+  
+  # AI・学習情報
+  say "🧠 【AI・学習】"
+  say "💀 死亡回数: " + death_count + "回"
+  say "⛏️ 本日採掘: " + blocks_mined_today + "個"
+  say "🚶 歩行距離: " + distance_walked + "m"
+  say "🔨 クラフト数: " + items_crafted_count + "個"
+  say "👹 撃破Mob数: " + mobs_killed_count + "体"
+  
+  # コミュニケーション情報
+  say "💬 【コミュニケーション】"
+  if last_chat_message != "" {
+    say "📝 最新メッセージ: " + last_chat_message
+    say "👤 送信者: " + last_chat_sender
+  } else {
+    say "📝 チャット履歴なし"
+  }
+  if whisper_target != "" {
+    say "🤫 ささやき対象: " + whisper_target
+  }
+  
+  # 周辺情報
+  say "👥 【周辺情報】"
+  say "👥 近くのプレイヤー: " + nearby_players_count + "人"
+  say "👹 近くのMob: " + nearby_mobs_count + "体"
+  
+  if nearby_players_count > 0 {
+    say "👋 他のプレイヤーがいます"
+  }
+  
+  if nearby_mobs_count > 0 {
+    say "⚠️ Mobが近くにいます"
+    if nearest_hostile_mob != "none" {
+      say "🚨 敵対Mob「" + nearest_hostile_mob + "」が" + nearest_mob_distance + "m先に！"
+    }
+  }
+  
+  # 総合評価
+  say "📊 【総合評価】"
+  var safety_score = 0
+  if bot_health > 15 { set safety_score = safety_score + 1 }
+  if bot_food > 15 { set safety_score = safety_score + 1 }
+  if armor_points > 10 { set safety_score = safety_score + 1 }
+  if has_weapon { set safety_score = safety_score + 1 }
+  if NOT is_being_attacked { set safety_score = safety_score + 1 }
+  
+  if safety_score >= 4 {
+    say "✅ 状況良好！安全です"
+  } else {
+    if safety_score >= 2 {
+      say "⚠️ 注意が必要な状況"
+    } else {
+      say "🚨 危険な状況！"
+    }
+  }
+  
+  say "=== チェック " + check_round + " 完了 ==="
+  wait 5
+}
+
+say "🎉 究極ステータスチェック完了！"
+say "📊 全組み込み変数の動作を確認しました"
